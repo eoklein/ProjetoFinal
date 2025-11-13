@@ -1,12 +1,12 @@
 const {PrismaClient} = require('@prisma/client');
 const prisma = new PrismaClient();
 
-const contaController = {
-    async getAllContas(req, res) {
+const patrimonioController = {
+    async getAllPatrimonios(req, res) {
         try {
             const userId = req.user.id;
 
-            const contas = await prisma.conta.findMany({
+            const patrimonios = await prisma.patrimonio.findMany({
                 where: {userId},
                 select: {
                     id: true,
@@ -17,21 +17,21 @@ const contaController = {
                 }
             });
 
-            res.json(contas);
+            res.json(patrimonios);
         } catch (error) {
-            console.error('Erro ao buscar contas:', error);
+            console.error('Erro ao buscar patrimonios:', error);
             res.status(500).json({error: 'Erro interno do servidor'});
         }
     },
 
-    async getContaById(req, res) {
+    async getPatrimonioById(req, res) {
         try {
-            const contaId = parseInt(req.params.id);
+            const patrimonioId = parseInt(req.params.id);
             const userId = req.user.id;
 
-            const conta = await prisma.conta.findFirst({
+            const patrimonio = await prisma.patrimonio.findFirst({
                 where: {
-                    id: contaId,
+                    id: patrimonioId,
                     userId
                 },
                 select: {
@@ -43,18 +43,18 @@ const contaController = {
                 }
             });
 
-            if (!conta) {
-                return res.status(404).json({error: 'Conta não encontrada'});
+            if (!patrimonio) {
+                return res.status(404).json({error: 'Patrimonio não encontrado'});
             }
 
-            res.json(conta);
+            res.json(patrimonio);
         } catch (error) {
-            console.error('Erro ao buscar conta:', error);
+            console.error('Erro ao buscar patrimonio:', error);
             res.status(500).json({error: 'Erro interno do servidor'});
         }
     },
 
-    async createConta(req, res) {
+    async createPatrimonio(req, res) {
         try {
             const {descricao, saldo, limite} = req.body;
             const userId = req.user.id;
@@ -71,7 +71,7 @@ const contaController = {
                 return res.status(400).json({error: 'Limite é obrigatório'});
             }
 
-            const conta = await prisma.conta.create({
+            const patrimonio = await prisma.patrimonio.create({
                 data: {
                     descricao,
                     saldo: parseFloat(saldo),
@@ -81,37 +81,37 @@ const contaController = {
             });
 
             res.status(201).json({
-                message: 'Conta criada com sucesso',
-                conta: {
-                    id: conta.id,
-                    descricao: conta.descricao,
-                    saldo: conta.saldo,
-                    limite: conta.limite,
-                    userId: conta.userId
+                message: 'Patrimonio criado com sucesso',
+                patrimonio: {
+                    id: patrimonio.id,
+                    descricao: patrimonio.descricao,
+                    saldo: patrimonio.saldo,
+                    limite: patrimonio.limite,
+                    userId: patrimonio.userId
                 }
             });
         } catch (error) {
-            console.error('Erro ao criar conta:', error);
+            console.error('Erro ao criar patrimonio:', error);
             res.status(500).json({error: 'Erro interno do servidor'});
         }
     },
 
-    async updateConta(req, res) {
+    async updatePatrimonio(req, res) {
         try {
-            console.log('Requisição de atualização de conta recebida:', req.params.id, req.body);
-            const contaId = parseInt(req.params.id);
+            console.log('Requisição de atualização de patrimonio recebida:', req.params.id, req.body);
+            const patrimonioId = parseInt(req.params.id);
             const {descricao, saldo, limite} = req.body;
             const userId = req.user.id;
 
-            const existingConta = await prisma.conta.findFirst({
+            const existingPatrimonio = await prisma.patrimonio.findFirst({
                 where: {
-                    id: contaId,
+                    id: patrimonioId,
                     userId
                 }
             });
 
-            if (!existingConta) {
-                return res.status(404).json({error: 'Conta não encontrada'});
+            if (!existingPatrimonio) {
+                return res.status(404).json({error: 'Patrimonio não encontrado'});
             }
 
             const updateData = {};
@@ -125,54 +125,53 @@ const contaController = {
                 updateData.limite = parseFloat(limite);
             }
 
-            const conta = await prisma.conta.update({
-                where: {id: contaId},
+            const patrimonio = await prisma.patrimonio.update({
+                where: {id: patrimonioId},
                 data: updateData
             });
 
             res.json({
-                message: 'Conta atualizada com sucesso',
-                conta: {
-                    id: conta.id,
-                    descricao: conta.descricao,
-                    saldo: conta.saldo,
-                    limite: conta.limite,
-                    userId: conta.userId
+                message: 'Patrimonio atualizado com sucesso',
+                patrimonio: {
+                    id: patrimonio.id,
+                    descricao: patrimonio.descricao,
+                    saldo: patrimonio.saldo,
+                    limite: patrimonio.limite,
+                    userId: patrimonio.userId
                 }
             });
         } catch (error) {
-            console.error('Erro ao atualizar conta:', error);
+            console.error('Erro ao atualizar patrimonio:', error);
             res.status(500).json({error: 'Erro interno do servidor'});
         }
     },
 
-    async deleteConta(req, res) {
+    async deletePatrimonio(req, res) {
         try {
-            const contaId = parseInt(req.params.id);
+            const patrimonioId = parseInt(req.params.id);
             const userId = req.user.id;
 
-            const existingConta = await prisma.conta.findFirst({
+            const existingPatrimonio = await prisma.patrimonio.findFirst({
                 where: {
-                    id: contaId,
+                    id: patrimonioId,
                     userId
                 }
             });
 
-            if (!existingConta) {
-                return res.status(404).json({error: 'Conta não encontrada'});
+            if (!existingPatrimonio) {
+                return res.status(404).json({error: 'Patrimonio não encontrado'});
             }
 
-            await prisma.conta.delete({
-                where: {id: contaId}
+            await prisma.patrimonio.delete({
+                where: {id: patrimonioId}
             });
 
             res.status(204).send();
         } catch (error) {
-            console.error('Erro ao deletar conta:', error);
+            console.error('Erro ao deletar patrimonio:', error);
             res.status(500).json({error: 'Erro interno do servidor'});
         }
     }
 };
 
-module.exports = contaController;
-
+module.exports = patrimonioController;

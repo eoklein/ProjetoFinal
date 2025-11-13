@@ -3,8 +3,8 @@ const cors = require('cors');
 const authRoutes = require('./src/routes/auth');
 const bookRoutes = require('./src/routes/books');
 const userRoutes = require('./src/routes/users');
-const categoryRoutes = require('./src/routes/categories');
-const contaRoutes = require('./src/routes/contas');
+const tipoPatrimonioRoutes = require('./src/routes/tiposPatrimonio');
+const patrimonioRoutes = require('./src/routes/patrimonios');
 const lancamentoRoutes = require('./src/routes/lancamentos');
 
 const app = express();
@@ -23,8 +23,8 @@ app.use(express.json());
 app.use('/auth', authRoutes);
 app.use('/books', bookRoutes);
 app.use('/users', userRoutes);
-app.use('/categories', categoryRoutes);
-app.use('/contas', contaRoutes);
+app.use('/tiposPatrimonio', tipoPatrimonioRoutes);
+app.use('/patrimonios', patrimonioRoutes);
 app.use('/lancamentos', lancamentoRoutes);
 
 app.get('/', (req, res) => {
@@ -34,13 +34,13 @@ app.get('/', (req, res) => {
     endpoints: {
       auth: {
         'POST /auth/login': 'Login (retorna token)',
+        'POST /auth/register': 'Registrar novo usuário'
+      },
       users: {
         'GET /users': 'Listar todos os usuários (admin only)',
         'GET /users/:id': 'Buscar usuário por ID (admin only)',
         'DELETE /users/:id': 'Deletar usuário (admin only)',
         'PATCH /users/:id/admin': 'Atualizar status de admin (admin only)'
-      },
-        'POST /auth/register': 'Registrar novo usuário'
       },
       books: {
         'GET /books': 'Listar todos os livros (auth required)',
@@ -51,19 +51,19 @@ app.get('/', (req, res) => {
         'POST /books/:id/borrow': 'Pegar livro emprestado (auth required)',
         'POST /books/:id/return': 'Devolver livro (auth required)'
       },
-      categories: {
-        'GET /categories': 'Listar todas as categorias (auth required)',
-        'GET /categories/:id': 'Buscar categoria por ID (auth required)',
-        'POST /categories': 'Criar categoria (admin only)',
-        'PUT /categories/:id': 'Atualizar categoria (admin only)',
-        'DELETE /categories/:id': 'Deletar categoria (admin only)'
+      tiposPatrimonio: {
+        'GET /tiposPatrimonio': 'Listar todos os tipos de patrimonio (auth required)',
+        'GET /tiposPatrimonio/:id': 'Buscar tipo de patrimonio por ID (auth required)',
+        'POST /tiposPatrimonio': 'Criar tipo de patrimonio (auth required)',
+        'PUT /tiposPatrimonio/:id': 'Atualizar tipo de patrimonio (auth required)',
+        'DELETE /tiposPatrimonio/:id': 'Deletar tipo de patrimonio (auth required)'
       },
-      contas: {
-        'GET /contas': 'Listar todas as contas (auth required)',
-        'GET /contas/:id': 'Buscar conta por ID (auth required)',
-        'POST /contas': 'Criar conta (admin only)',
-        'PUT /contas/:id': 'Atualizar conta (admin only)',
-        'DELETE /contas/:id': 'Deletar conta (admin only)'
+      patrimonios: {
+        'GET /patrimonios': 'Listar todos os patrimonios (auth required)',
+        'GET /patrimonios/:id': 'Buscar patrimonio por ID (auth required)',
+        'POST /patrimonios': 'Criar patrimonio (auth required)',
+        'PUT /patrimonios/:id': 'Atualizar patrimonio (auth required)',
+        'DELETE /patrimonios/:id': 'Deletar patrimonio (auth required)'
       },
       lancamentos: {
         'GET /lancamentos': 'Listar todos os lançamentos (auth required)',

@@ -15,19 +15,19 @@ const lancamentoController = {
                     data: true,
                     tipo: true,
                     userId: true,
-                    categoriaId: true,
-                    contaId: true,
+                    tipoPatrimonioId: true,
+                    patrimonioId: true,
                     numeroParcelas: true,
                     parcelaAtual: true,
                     lancamentoPaiId: true,
                     efetivado: true,
-                    categoria: {
+                    tipoPatrimonio: {
                         select: {
                             id: true,
                             nome: true
                         }
                     },
-                    conta: {
+                    patrimonio: {
                         select: {
                             id: true,
                             descricao: true
@@ -63,19 +63,19 @@ const lancamentoController = {
                     data: true,
                     tipo: true,
                     userId: true,
-                    categoriaId: true,
-                    contaId: true,
+                    tipoPatrimonioId: true,
+                    patrimonioId: true,
                     numeroParcelas: true,
                     parcelaAtual: true,
                     lancamentoPaiId: true,
                     efetivado: true,
-                    categoria: {
+                    tipoPatrimonio: {
                         select: {
                             id: true,
                             nome: true
                         }
                     },
-                    conta: {
+                    patrimonio: {
                         select: {
                             id: true,
                             descricao: true,
@@ -111,7 +111,7 @@ const lancamentoController = {
 
     async createLancamento(req, res) {
         try {
-            const {descricao, valor, data, tipo, categoriaId, contaId, numeroParcelas, parcelaAtual, lancamentoPaiId, efetivado} = req.body;
+            const {descricao, valor, data, tipo, tipoPatrimonioId, patrimonioId, numeroParcelas, parcelaAtual, lancamentoPaiId, efetivado} = req.body;
             const userId = req.user.id;
 
             // Validações
@@ -135,31 +135,31 @@ const lancamentoController = {
                 return res.status(400).json({error: 'Tipo deve ser RECEITA ou DESPESA'});
             }
 
-            // Validar se categoria existe e pertence ao usuário
-            if (categoriaId) {
-                const categoria = await prisma.category.findFirst({
+            // Validar se tipoPatrimonio existe e pertence ao usuário
+            if (tipoPatrimonioId) {
+                const tipoPatrimonio = await prisma.tipoPatrimonio.findFirst({
                     where: {
-                        id: parseInt(categoriaId),
+                        id: parseInt(tipoPatrimonioId),
                         userId
                     }
                 });
 
-                if (!categoria) {
-                    return res.status(404).json({error: 'Categoria não encontrada'});
+                if (!tipoPatrimonio) {
+                    return res.status(404).json({error: 'Tipo de patrimonio não encontrado'});
                 }
             }
 
-            // Validar se conta existe e pertence ao usuário
-            if (contaId) {
-                const conta = await prisma.conta.findFirst({
+            // Validar se patrimonio existe e pertence ao usuário
+            if (patrimonioId) {
+                const patrimonio = await prisma.patrimonio.findFirst({
                     where: {
-                        id: parseInt(contaId),
+                        id: parseInt(patrimonioId),
                         userId
                     }
                 });
 
-                if (!conta) {
-                    return res.status(404).json({error: 'Conta não encontrada'});
+                if (!patrimonio) {
+                    return res.status(404).json({error: 'patrimonio não encontrada'});
                 }
             }
 
@@ -193,21 +193,21 @@ const lancamentoController = {
                     data: new Date(data),
                     tipo,
                     userId,
-                    categoriaId: categoriaId ? parseInt(categoriaId) : null,
-                    contaId: contaId ? parseInt(contaId) : null,
+                    tipoPatrimonioId: tipoPatrimonioId ? parseInt(tipoPatrimonioId) : null,
+                    patrimonioId: patrimonioId ? parseInt(patrimonioId) : null,
                     numeroParcelas: numeroParcelas ? parseInt(numeroParcelas) : null,
                     parcelaAtual: parcelaAtual ? parseInt(parcelaAtual) : null,
                     lancamentoPaiId: lancamentoPaiId ? parseInt(lancamentoPaiId) : null,
                     efetivado: efetivado !== undefined ? efetivado : false
                 },
                 include: {
-                    categoria: {
+                    tipoPatrimonio: {
                         select: {
                             id: true,
                             nome: true
                         }
                     },
-                    conta: {
+                    patrimonio: {
                         select: {
                             id: true,
                             descricao: true
@@ -225,14 +225,14 @@ const lancamentoController = {
                     data: lancamento.data,
                     tipo: lancamento.tipo,
                     userId: lancamento.userId,
-                    categoriaId: lancamento.categoriaId,
-                    contaId: lancamento.contaId,
+                    tipoPatrimonioId: lancamento.tipoPatrimonioId,
+                    patrimonioId: lancamento.patrimonioId,
                     numeroParcelas: lancamento.numeroParcelas,
                     parcelaAtual: lancamento.parcelaAtual,
                     lancamentoPaiId: lancamento.lancamentoPaiId,
                     efetivado: lancamento.efetivado,
-                    categoria: lancamento.categoria,
-                    conta: lancamento.conta
+                    tipoPatrimonio: lancamento.tipoPatrimonio,
+                    patrimonio: lancamento.patrimonio
                 }
             });
         } catch (error) {
@@ -245,7 +245,7 @@ const lancamentoController = {
         try {
             console.log('Requisição de atualização recebida:', req.params.id, req.body);
             const lancamentoId = parseInt(req.params.id);
-            const {descricao, valor, data, tipo, categoriaId, contaId, numeroParcelas, parcelaAtual, lancamentoPaiId, efetivado} = req.body;
+            const {descricao, valor, data, tipo, tipoPatrimonioId, patrimonioId, numeroParcelas, parcelaAtual, lancamentoPaiId, efetivado} = req.body;
             const userId = req.user.id;
 
             const existingLancamento = await prisma.lancamento.findFirst({
@@ -264,31 +264,31 @@ const lancamentoController = {
                 return res.status(400).json({error: 'Tipo deve ser RECEITA ou DESPESA'});
             }
 
-            // Validar se categoria existe e pertence ao usuário
-            if (categoriaId !== undefined && categoriaId !== null) {
-                const categoria = await prisma.category.findFirst({
+            // Validar se tipoPatrimonio existe e pertence ao usuário
+            if (tipoPatrimonioId !== undefined && tipoPatrimonioId !== null) {
+                const tipoPatrimonio = await prisma.tipoPatrimonio.findFirst({
                     where: {
-                        id: parseInt(categoriaId),
+                        id: parseInt(tipoPatrimonioId),
                         userId
                     }
                 });
 
-                if (!categoria) {
-                    return res.status(404).json({error: 'Categoria não encontrada'});
+                if (!tipoPatrimonio) {
+                    return res.status(404).json({error: 'Tipo de patrimonio não encontrado'});
                 }
             }
 
-            // Validar se conta existe e pertence ao usuário
-            if (contaId !== undefined && contaId !== null) {
-                const conta = await prisma.conta.findFirst({
+            // Validar se patrimonio existe e pertence ao usuário
+            if (patrimonioId !== undefined && patrimonioId !== null) {
+                const patrimonio = await prisma.patrimonio.findFirst({
                     where: {
-                        id: parseInt(contaId),
+                        id: parseInt(patrimonioId),
                         userId
                     }
                 });
 
-                if (!conta) {
-                    return res.status(404).json({error: 'Conta não encontrada'});
+                if (!patrimonio) {
+                    return res.status(404).json({error: 'patrimonio não encontrada'});
                 }
             }
 
@@ -324,11 +324,11 @@ const lancamentoController = {
             if (tipo !== undefined) {
                 updateData.tipo = tipo;
             }
-            if (categoriaId !== undefined) {
-                updateData.categoriaId = categoriaId ? parseInt(categoriaId) : null;
+            if (tipoPatrimonioId !== undefined) {
+                updateData.tipoPatrimonioId = tipoPatrimonioId ? parseInt(tipoPatrimonioId) : null;
             }
-            if (contaId !== undefined) {
-                updateData.contaId = contaId ? parseInt(contaId) : null;
+            if (patrimonioId !== undefined) {
+                updateData.patrimonioId = patrimonioId ? parseInt(patrimonioId) : null;
             }
             if (numeroParcelas !== undefined) {
                 updateData.numeroParcelas = numeroParcelas ? parseInt(numeroParcelas) : null;
@@ -347,13 +347,13 @@ const lancamentoController = {
                 where: {id: lancamentoId},
                 data: updateData,
                 include: {
-                    categoria: {
+                    tipoPatrimonio: {
                         select: {
                             id: true,
                             nome: true
                         }
                     },
-                    conta: {
+                    patrimonio: {
                         select: {
                             id: true,
                             descricao: true
@@ -371,14 +371,14 @@ const lancamentoController = {
                     data: lancamento.data,
                     tipo: lancamento.tipo,
                     userId: lancamento.userId,
-                    categoriaId: lancamento.categoriaId,
-                    contaId: lancamento.contaId,
+                    tipoPatrimonioId: lancamento.tipoPatrimonioId,
+                    patrimonioId: lancamento.patrimonioId,
                     numeroParcelas: lancamento.numeroParcelas,
                     parcelaAtual: lancamento.parcelaAtual,
                     lancamentoPaiId: lancamento.lancamentoPaiId,
                     efetivado: lancamento.efetivado,
-                    categoria: lancamento.categoria,
-                    conta: lancamento.conta
+                    tipoPatrimonio: lancamento.tipoPatrimonio,
+                    patrimonio: lancamento.patrimonio
                 }
             });
         } catch (error) {
@@ -416,7 +416,7 @@ const lancamentoController = {
 
     async createLancamentoParcelado(req, res) {
         try {
-            const {descricao, valorTotal, dataInicial, tipo, categoriaId, contaId, numeroParcelas} = req.body;
+            const {descricao, valorTotal, dataInicial, tipo, tipoPatrimonioId, patrimonioId, numeroParcelas} = req.body;
             const userId = req.user.id;
 
             // Validações
@@ -444,31 +444,31 @@ const lancamentoController = {
                 return res.status(400).json({error: 'Número de parcelas deve ser maior ou igual a 2'});
             }
 
-            // Validar se categoria existe e pertence ao usuário
-            if (categoriaId) {
-                const categoria = await prisma.category.findFirst({
+            // Validar se tipoPatrimonio existe e pertence ao usuário
+            if (tipoPatrimonioId) {
+                const tipoPatrimonio = await prisma.tipoPatrimonio.findFirst({
                     where: {
-                        id: parseInt(categoriaId),
+                        id: parseInt(tipoPatrimonioId),
                         userId
                     }
                 });
 
-                if (!categoria) {
-                    return res.status(404).json({error: 'Categoria não encontrada'});
+                if (!tipoPatrimonio) {
+                    return res.status(404).json({error: 'Tipo de patrimonio não encontrado'});
                 }
             }
 
-            // Validar se conta existe e pertence ao usuário
-            if (contaId) {
-                const conta = await prisma.conta.findFirst({
+            // Validar se patrimonio existe e pertence ao usuário
+            if (patrimonioId) {
+                const patrimonio = await prisma.patrimonio.findFirst({
                     where: {
-                        id: parseInt(contaId),
+                        id: parseInt(patrimonioId),
                         userId
                     }
                 });
 
-                if (!conta) {
-                    return res.status(404).json({error: 'Conta não encontrada'});
+                if (!patrimonio) {
+                    return res.status(404).json({error: 'patrimonio não encontrada'});
                 }
             }
 
@@ -484,8 +484,8 @@ const lancamentoController = {
                     data: dataBase,
                     tipo,
                     userId,
-                    categoriaId: categoriaId ? parseInt(categoriaId) : null,
-                    contaId: contaId ? parseInt(contaId) : null,
+                    tipoPatrimonioId: tipoPatrimonioId ? parseInt(tipoPatrimonioId) : null,
+                    patrimonioId: patrimonioId ? parseInt(patrimonioId) : null,
                     numeroParcelas: parseInt(numeroParcelas),
                     parcelaAtual: 0
                 }
@@ -503,20 +503,20 @@ const lancamentoController = {
                         data: dataParcela,
                         tipo,
                         userId,
-                        categoriaId: categoriaId ? parseInt(categoriaId) : null,
-                        contaId: contaId ? parseInt(contaId) : null,
+                        tipoPatrimonioId: tipoPatrimonioId ? parseInt(tipoPatrimonioId) : null,
+                        patrimonioId: patrimonioId ? parseInt(patrimonioId) : null,
                         numeroParcelas: parseInt(numeroParcelas),
                         parcelaAtual: i,
                         lancamentoPaiId: lancamentoPai.id
                     },
                     include: {
-                        categoria: {
+                        tipoPatrimonio: {
                             select: {
                                 id: true,
                                 nome: true
                             }
                         },
-                        conta: {
+                        patrimonio: {
                             select: {
                                 id: true,
                                 descricao: true
@@ -542,8 +542,8 @@ const lancamentoController = {
                     valor: p.valor,
                     data: p.data,
                     parcelaAtual: p.parcelaAtual,
-                    categoria: p.categoria,
-                    conta: p.conta
+                    tipoPatrimonio: p.tipoPatrimonio,
+                    patrimonio: p.patrimonio
                 }))
             });
         } catch (error) {

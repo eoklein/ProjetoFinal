@@ -55,15 +55,15 @@ PUT /categories/:id (admin)
 
 DELETE /categories/:id (admin)
 
-GET /contas
+GET /patrimonios
 
-GET /contas/:id
+GET /patrimonios/:id
 
-POST /contas (admin)
+POST /patrimonios (admin)
 
-PUT /contas/:id (admin)
+PUT /patrimonios/:id (admin)
 
-DELETE /contas/:id (admin)
+DELETE /patrimonios/:id (admin)
 
 GET /lancamentos
 
