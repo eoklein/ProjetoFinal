@@ -181,14 +181,14 @@ export class LancamentosList implements OnInit {
         this.patrimonioOriginal = {
             id: patrimonio.id,
             nome: patrimonio.nome,
-            status: patrimonio.status,
+            estado: patrimonio.estado,
             tipoPatrimonioId: patrimonio.tipoPatrimonioId,
             valor: patrimonio.valor
         };
         this.novoPatrimonio = {
             id: patrimonio.id,
             nome: patrimonio.nome,
-            status: patrimonio.status,
+            estado: patrimonio.estado,
             tipoPatrimonioId: patrimonio.tipoPatrimonioId,
             valor: patrimonio.valor
         };
@@ -559,8 +559,8 @@ export class LancamentosList implements OnInit {
             if (!this.novoPatrimonio.nome?.trim()) {
                 this.novoPatrimonio.nome = this.patrimonioOriginal.nome;
             }
-            if (!this.novoPatrimonio.status) {
-                this.novoPatrimonio.status = this.patrimonioOriginal.status;
+            if (!this.novoPatrimonio.estado) {
+                this.novoPatrimonio.estado = this.patrimonioOriginal.estado;
             }
             if (!this.novoPatrimonio.tipoPatrimonioId) {
                 this.novoPatrimonio.tipoPatrimonioId = this.patrimonioOriginal.tipoPatrimonioId;
@@ -570,7 +570,7 @@ export class LancamentosList implements OnInit {
         // Validação diferenciada: criar requer todos os campos, editar é opcional
         const isValid = this.isEditMode 
             ? true  // Edição: não requer validação (todos os campos são opcionais)
-            : (this.novoPatrimonio.nome?.trim() && this.novoPatrimonio.status && this.novoPatrimonio.tipoPatrimonioId);  // Criação: requer os campos
+            : (this.novoPatrimonio.nome?.trim() && this.novoPatrimonio.estado && this.novoPatrimonio.tipoPatrimonioId);  // Criação: requer os campos
 
         if (!isValid) {
             this.messageService.add({

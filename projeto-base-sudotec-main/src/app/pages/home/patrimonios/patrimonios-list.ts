@@ -96,7 +96,7 @@ export class PatrimoniosList implements OnInit {
     }
 
     openNew() {
-        this.patrimonio = { status: 'danificado' } as Patrimonio;
+        this.patrimonio = { estado: 'danificado' } as Patrimonio;
         this.submitted = false;
         this.isEditMode = false;
         this.patrimonioDialog = true;
@@ -123,8 +123,8 @@ export class PatrimoniosList implements OnInit {
             if (!this.patrimonio.nome?.trim()) {
                 this.patrimonio.nome = this.patrimonioOriginal.nome;
             }
-            if (!this.patrimonio.status) {
-                this.patrimonio.status = this.patrimonioOriginal.status;
+            if (!this.patrimonio.estado) {
+                this.patrimonio.estado = this.patrimonioOriginal.estado;
             }
             if (!this.patrimonio.tipoPatrimonioId) {
                 this.patrimonio.tipoPatrimonioId = this.patrimonioOriginal.tipoPatrimonioId;
@@ -134,7 +134,7 @@ export class PatrimoniosList implements OnInit {
         // Validação diferenciada: criar requer todos os campos, editar é opcional
         const isValid = this.isEditMode 
             ? true  // Edição: não requer validação (todos os campos são opcionais)
-            : (this.patrimonio.nome?.trim() && this.patrimonio.status && this.patrimonio.tipoPatrimonioId);  // Criação: requer os 3 campos
+            : (this.patrimonio.nome?.trim() && this.patrimonio.estado && this.patrimonio.tipoPatrimonioId);  // Criação: requer os 3 campos
 
         if (isValid) {
             if (this.patrimonio.id) {

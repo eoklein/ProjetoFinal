@@ -4,13 +4,13 @@ export interface Reserva {
     userId?: number;
     dataReserva?: Date;
     dataDevolucao: Date;
-    status?: string;
+    estado?: string;
     criadoEm?: Date;
     patrimonio?: {
         id: number;
         nome: string;
         codigo?: string;
-        status: string;
+        estado: string;
         valor?: number;
     };
     user?: {

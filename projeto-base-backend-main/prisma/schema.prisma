@@ -30,7 +30,7 @@ model Patrimonio {
   id          Int          @id @default(autoincrement())
   nome        String
   codigo      String?
-  status      String //critico / normal / bom
+  estado      String //critico / danificado / bom
   valor       Float?
   data        DateTime @default(now()) // de quando foi requisitado
   userId      Int
@@ -67,6 +67,6 @@ model Reserva {
   user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   dataReserva     DateTime    @default(now())
   dataDevolucao   DateTime
-  status          String      @default("ativa") // ativa / devolvido / cancelado
+  estado          String      @default("ativa") // ativa / devolvido / cancelado
   criadoEm        DateTime    @default(now())
 }

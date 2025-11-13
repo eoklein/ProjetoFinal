@@ -12,7 +12,7 @@ const patrimonioController = {
                     id: true,
                     nome: true,
                     codigo: true,
-                    status: true,
+                    estado: true,
                     data: true,
                     userId: true,
                     valor: true
@@ -48,7 +48,7 @@ const patrimonioController = {
                     id: true,
                     nome: true,
                     codigo: true,
-                    status: true,
+                    estado: true,
                     data: true,
                     userId: true,
                     valor: true,
@@ -91,7 +91,7 @@ const patrimonioController = {
                 select: {
                     id: true,
                     nome: true,
-                    status: true,
+                    estado: true,
                     data: true,
                     userId: true,
                     valor: true,
@@ -141,7 +141,7 @@ const patrimonioController = {
                     id: true,
                     nome: true,
                     codigo: true,
-                    status: true,
+                    estado: true,
                     data: true,
                     userId: true,
                     valor: true
@@ -172,31 +172,31 @@ const patrimonioController = {
 
     async createPatrimonio(req, res) {
         try {
-            const {nome, codigo, status, valor, tipoPatrimonioId} = req.body;
+            const {nome, codigo, estado, valor, tipoPatrimonioId} = req.body;
             const userId = req.user.id;
 
             if (!nome) {
                 return res.status(400).json({error: 'Nome é obrigatório'});
             }
 
-            if (!status) {
-                return res.status(400).json({error: 'Status é obrigatório'});
+            if (!estado) {
+                return res.status(400).json({error: 'Estado é obrigatório'});
             }
 
             if (!tipoPatrimonioId) {
                 return res.status(400).json({error: 'Tipo de patrimonio é obrigatório'});
             }
 
-            const validStatuses = ['critico', 'danificado', 'bom'];
-            if (!validStatuses.includes(status)) {
-                return res.status(400).json({error: 'Status deve ser: critico, danificado ou bom'});
+            const validEstados = ['critico', 'danificado', 'bom'];
+            if (!validEstados.includes(estado)) {
+                return res.status(400).json({error: 'Estado deve ser: critico, danificado ou bom'});
             }
 
             const patrimonio = await prisma.patrimonio.create({
                 data: {
                     nome,
                     codigo: codigo || null,
-                    status,
+                    estado,
                     valor: valor || null,
                     userId
                 }
@@ -236,9 +236,9 @@ const patrimonioController = {
 
     async updatePatrimonio(req, res) {
         try {
-            console.log('Requisição de atualização de patrimonio recebida:', req.params.id, req.body);
+            console.log('Requisição de atualização recebida:', req.params.id, req.body);
             const patrimonioId = parseInt(req.params.id);
-            const {nome, codigo, status, valor, tipoPatrimonioId} = req.body;
+            const {nome, codigo, estado, valor, tipoPatrimonioId} = req.body;
             const userId = req.user.id;
 
             const existingPatrimonio = await prisma.patrimonio.findFirst({
@@ -261,12 +261,12 @@ const patrimonioController = {
             if (codigo !== undefined && codigo !== null) {
                 updateData.codigo = codigo;
             }
-            if (status !== undefined && status !== null && status !== '') {
-                const validStatuses = ['critico', 'danificado', 'bom'];
-                if (!validStatuses.includes(status)) {
-                    return res.status(400).json({error: 'Status deve ser: critico, danificado ou bom'});
+            if (estado !== undefined && estado !== null && estado !== '') {
+                const validEstados = ['critico', 'danificado', 'bom'];
+                if (!validEstados.includes(estado)) {
+                    return res.status(400).json({error: 'Estado deve ser: critico, danificado ou bom'});
                 }
-                updateData.status = status;
+                updateData.estado = estado;
             }
             if (valor !== undefined && valor !== null) {
                 updateData.valor = valor;
@@ -302,7 +302,7 @@ const patrimonioController = {
                     id: patrimonio.id,
                     nome: patrimonio.nome,
                     codigo: patrimonio.codigo,
-                    status: patrimonio.status,
+                    estado: patrimonio.estado,
                     valor: patrimonio.valor,
                     data: patrimonio.data,
                     userId: patrimonio.userId,

@@ -78,9 +78,9 @@
                     Tipo
                     <p-sortIcon field="tipoPatrimonioId" />
                 </th>
-                <th pSortableColumn="status" style="width: 15%">
-                    Status
-                    <p-sortIcon field="status" />
+                <th pSortableColumn="estado" style="width: 15%">
+                    Estado
+                    <p-sortIcon field="estado" />
                 </th>
                 <th pSortableColumn="valor" style="width: 15%">
                     Valor
@@ -118,8 +118,8 @@
                 </td>
                 <td>
                     <p-tag 
-                        [value]="(patrimonio.status | titlecase)"
-                        [severity]="patrimonio.status === 'critico' ? 'danger' : patrimonio.status === 'danificado' ? 'warning' : 'success'"
+                        [value]="(patrimonio.estado | titlecase)"
+                        [severity]="patrimonio.estado === 'critico' ? 'danger' : patrimonio.estado === 'danificado' ? 'warning' : 'success'"
                         styleClass="whitespace-nowrap">
                     </p-tag>
                 </td>
@@ -236,21 +236,21 @@
             </div>
 
             <div class="flex flex-col gap-2">
-                <label for="status" class="font-semibold">
-                    Status @if (!isEditMode) {<span class="text-red-500">*</span>}
+                <label for="estado" class="font-semibold">
+                    Estado <span class="text-red-500">*</span>
                 </label>
                 <p-select
-                    id="status"
-                    [(ngModel)]="patrimonio.status"
+                    id="estado"
+                    [(ngModel)]="patrimonio.estado"
                     [options]="statusOptions"
                     optionLabel="label"
                     optionValue="value"
-                    placeholder="Selecione o status"
+                    placeholder="Selecione o estado"
                     styleClass="w-full"
-                    [class.ng-invalid]="submitted && !isEditMode && !patrimonio.status">
+                    [class.ng-invalid]="submitted && !isEditMode && !patrimonio.estado">
                 </p-select>
-                @if (submitted && !isEditMode && !patrimonio.status) {
-                    <small class="text-red-500">O status é obrigatório.</small>
+                @if (submitted && !isEditMode && !patrimonio.estado) {
+                    <small class="text-red-500">O estado é obrigatório.</small>
                 }
             </div>
 

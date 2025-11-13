@@ -82,9 +82,9 @@
                     Data Devolução
                     <p-sortIcon field="dataDevolucao" />
                 </th>
-                <th pSortableColumn="status" style="width: 12%">
-                    Status
-                    <p-sortIcon field="status" />
+                <th pSortableColumn="estado" style="width: 12%">
+                    Estado
+                    <p-sortIcon field="estado" />
                 </th>
                 @if (isAdmin) {
                     <th pSortableColumn="user.username" style="width: 12%">
@@ -121,8 +121,8 @@
                 </td>
                 <td>
                     <p-tag 
-                        [value]="(reserva.status | titlecase)"
-                        [severity]="reserva.status === 'ativa' ? 'success' : reserva.status === 'devolvido' ? 'info' : 'warning'"
+                        [value]="(reserva.estado | titlecase)"
+                        [severity]="reserva.estado === 'ativa' ? 'success' : reserva.estado === 'devolvido' ? 'info' : 'warning'"
                         styleClass="whitespace-nowrap">
                     </p-tag>
                 </td>
@@ -243,16 +243,16 @@
 
             @if (isEditMode) {
                 <div class="flex flex-col gap-2">
-                    <label for="status" class="font-semibold">
-                        Status
+                    <label for="estado" class="font-semibold">
+                        Estado
                     </label>
                     <p-select
-                        id="status"
-                        [(ngModel)]="reserva.status"
+                        id="estado"
+                        [(ngModel)]="reserva.estado"
                         [options]="statusOptions"
                         optionLabel="label"
                         optionValue="value"
-                        placeholder="Selecione o status"
+                        placeholder="Selecione o estado"
                         styleClass="w-full">
                     </p-select>
                 </div>

@@ -164,7 +164,7 @@ export class ReservasComponent implements OnInit {
             // Update
             this.reservaService.updateReserva(this.reserva.id!, {
                 dataDevolucao: this.reserva.dataDevolucao,
-                status: this.reserva.status,
+                estado: this.reserva.estado,
                 userId: this.reserva.userId
             }).subscribe({
                 next: () => {

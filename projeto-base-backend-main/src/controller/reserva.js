@@ -18,7 +18,7 @@ const reservaController = {
                             id: true,
                             nome: true,
                             codigo: true,
-                            status: true,
+                            estado: true,
                             valor: true
                         }
                     },
@@ -51,7 +51,7 @@ const reservaController = {
                     userId,
                     reservas: {
                         none: {
-                            status: 'ativa'
+                            estado: 'ativa'
                         }
                     }
                 },
@@ -59,7 +59,7 @@ const reservaController = {
                     id: true,
                     nome: true,
                     codigo: true,
-                    status: true,
+                    estado: true,
                     valor: true
                 },
                 orderBy: {
@@ -118,7 +118,7 @@ const reservaController = {
             const reservaExistente = await prisma.reserva.findFirst({
                 where: {
                     patrimonioId,
-                    status: 'ativa'
+                    estado: 'ativa'
                 }
             });
 
@@ -139,7 +139,7 @@ const reservaController = {
                     patrimonioId,
                     userId: finalUserId,
                     dataDevolucao: dataDev,
-                    status: 'ativa'
+                    estado: 'ativa'
                 },
                 include: {
                     patrimonio: {
@@ -147,7 +147,7 @@ const reservaController = {
                             id: true,
                             nome: true,
                             codigo: true,
-                            status: true,
+                            estado: true,
                             valor: true
                         }
                     },
@@ -173,7 +173,7 @@ const reservaController = {
     async updateReserva(req, res) {
         try {
             const reservaId = parseInt(req.params.id);
-            const { dataDevolucao, status, userId: specifiedUserId } = req.body;
+            const { dataDevolucao, estado, userId: specifiedUserId } = req.body;
             const currentUserId = req.user.id;
             const isAdmin = req.user.isAdmin;
 
@@ -202,12 +202,12 @@ const reservaController = {
                 updateData.dataDevolucao = dataDev;
             }
 
-            if (status) {
-                const statusValidos = ['ativa', 'devolvido', 'cancelado'];
-                if (!statusValidos.includes(status)) {
-                    return res.status(400).json({ error: 'Status inválido' });
+            if (estado) {
+                const estadosValidos = ['ativa', 'devolvido', 'cancelado'];
+                if (!estadosValidos.includes(estado)) {
+                    return res.status(400).json({ error: 'Estado inválido' });
                 }
-                updateData.status = status;
+                updateData.estado = estado;
             }
 
             if (isAdmin && specifiedUserId) {
@@ -231,7 +231,7 @@ const reservaController = {
                             id: true,
                             nome: true,
                             codigo: true,
-                            status: true,
+                            estado: true,
                             valor: true
                         }
                     },
