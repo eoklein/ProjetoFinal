@@ -19,8 +19,8 @@ import { AuthService } from '@/services/auth.service';
             </button>
             <a class="layout-topbar-logo" routerLink="/">
                 <svg viewBox="0 0 200 200" width="40" height="40" xmlns="http://www.w3.org/2000/svg">
-                    <!-- Fundo círculo azul -->
-                    <circle cx="100" cy="100" r="95" fill="#2c3e8f"/>
+                    <!-- Fundo círculo magenta -->
+                    <circle cx="100" cy="100" r="95" fill="#D239DE"/>
                     <!-- Caixa branca -->
                     <rect x="50" y="70" width="100" height="60" rx="8" fill="white"/>
                     <!-- Linhas verticais -->

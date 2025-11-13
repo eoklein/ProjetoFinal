@@ -48,6 +48,7 @@ export class LancamentosList implements OnInit {
     estoqueDialog: boolean = false;
     patrimonioDialog: boolean = false;
     estoque: Estoque = {} as Estoque;
+    estoqueOriginal: Estoque = {} as Estoque;
     novoPatrimonio: any = {};
     patrimonioOriginal: any = {};
     submitted: boolean = false;
@@ -199,11 +200,28 @@ export class LancamentosList implements OnInit {
     hideDialog() {
         this.estoqueDialog = false;
         this.submitted = false;
+        this.isEditMode = false;
     }
 
     saveEstoque() {
         this.submitted = true;
         console.log('Dados do estoque antes de salvar:', JSON.stringify(this.estoque, null, 2));
+
+        // Restaurar campos vazios com valores originais durante edição
+        if (this.isEditMode) {
+            if (!this.estoque.descricao?.trim()) {
+                this.estoque.descricao = this.estoqueOriginal.descricao;
+            }
+            if (this.estoque.valor === undefined || this.estoque.valor === null) {
+                this.estoque.valor = this.estoqueOriginal.valor;
+            }
+            if (!this.estoque.data) {
+                this.estoque.data = this.estoqueOriginal.data;
+            }
+            if (!this.estoque.tipo) {
+                this.estoque.tipo = this.estoqueOriginal.tipo;
+            }
+        }
 
         // Validação diferenciada: criar requer todos os campos, editar é opcional
         const isValid = this.isEditMode 

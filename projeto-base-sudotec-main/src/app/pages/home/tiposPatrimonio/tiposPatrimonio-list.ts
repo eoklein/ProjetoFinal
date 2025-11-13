@@ -90,6 +90,7 @@ export class TiposPatrimonioList implements OnInit {
             });
             return;
         }
+        this.tipoPatrimonioOriginal = { ...tipoPatrimonio };
         this.tipoPatrimonio = { ...tipoPatrimonio };
         this.isEditMode = true;
         this.tipoPatrimonioDialog = true;
@@ -98,10 +99,16 @@ export class TiposPatrimonioList implements OnInit {
     hideDialog() {
         this.tipoPatrimonioDialog = false;
         this.submitted = false;
+        this.isEditMode = false;
     }
 
     saveContact() {
         this.submitted = true;
+
+        // Restaurar campos vazios com valores originais durante edição
+        if (this.isEditMode && !this.tipoPatrimonio.nome?.trim()) {
+            this.tipoPatrimonio.nome = this.tipoPatrimonioOriginal.nome;
+        }
 
         if (this.tipoPatrimonio.nome?.trim()) {
             if (this.tipoPatrimonio.id) {

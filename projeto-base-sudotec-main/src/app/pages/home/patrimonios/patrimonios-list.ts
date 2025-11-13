@@ -112,6 +112,7 @@ export class PatrimoniosList implements OnInit {
     hideDialog() {
         this.patrimonioDialog = false;
         this.submitted = false;
+        this.isEditMode = false;
     }
 
     saveContact() {
