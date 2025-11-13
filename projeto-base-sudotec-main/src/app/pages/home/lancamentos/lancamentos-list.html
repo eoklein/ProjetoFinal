@@ -25,69 +25,27 @@
                     [loading]="loading">
                 </p-button>
                 <p-button
+                    icon="pi pi-plus"
+                    label="Criar Patrimonio"
+                    severity="success"
+                    (onClick)="openPatrimonioDialog()">
+                </p-button>
+                <p-button
                     icon="pi pi-trash"
-                    label="Retirar Patrimonio"
+                    label="Deletar Patrimonio"
                     severity="danger"
-                    (onClick)="openNew()">
+                    (onClick)="confirmDeletePatrimonio()">
                 </p-button>
             </div>
         </ng-template>
     </p-toolbar>
 
     <!-- Toolbar de Navegação por Mês/Ano -->
-    <div class="mb-4 p-3 bg-surface-50 dark:bg-surface-800 rounded-lg border border-surface-200 dark:border-surface-700">
-        <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <p-button
-                    icon="pi pi-chevron-left"
-                    [outlined]="true"
-                    severity="secondary"
-                    size="small"
-                    (onClick)="mesAnterior()"
-                    pTooltip="Mês anterior"
-                    tooltipPosition="top">
-                </p-button>
-
-                <div class="flex items-center justify-center min-w-[180px] mt-3">
-                    <h3 class="text-xl font-semibold text-surface-900 dark:text-surface-0 m-0">
-                        {{ mesAnoSelecionado }}
-                    </h3>
-                </div>
-
-                <p-button
-                    icon="pi pi-chevron-right"
-                    [outlined]="true"
-                    severity="secondary"
-                    size="small"
-                    (onClick)="proximoMes()"
-                    pTooltip="Próximo mês"
-                    tooltipPosition="top">
-                </p-button>
-            </div>
-
-            <div class="flex items-center gap-2">
-                @if (!isNoPeriodoAtual) {
-                    <p-button
-                        label="Mês Atual"
-                        icon="pi pi-calendar"
-                        severity="info"
-                        [outlined]="true"
-                        size="small"
-                        (onClick)="voltarMesAtual()"
-                        pTooltip="Voltar para o mês atual"
-                        tooltipPosition="top">
-                    </p-button>
-                }
-                <span class="text-muted-color text-sm">
-                    {{ estoquesFiltrados.length }} estoque(s)
-                </span>
-            </div>
-        </div>
-    </div>
+    <!-- REMOVIDO - Calendário já não é mais necessário -->
 
     <p-table
         #dt
-        [value]="estoquesFiltrados"
+        [value]="estoques"
         [loading]="loading"
         [paginator]="true"
         [rows]="10"
@@ -210,12 +168,6 @@
                     <div class="flex flex-col items-center gap-3">
                         <i class="pi pi-inbox text-4xl text-muted-color"></i>
                         <p class="text-muted-color text-lg">Nenhum lançamento encontrado</p>
-                        <p-button
-                            label="Criar Primeiro Lançamento"
-                            icon="pi pi-plus"
-                            size="small"
-                            (onClick)="openNew()">
-                        </p-button>
                     </div>
                 </td>
             </tr>
@@ -439,3 +391,69 @@
         </div>
     </ng-template>
 </p-dialog>
+
+<!-- Dialog para criar patrimonio -->
+<p-dialog
+    [(visible)]="patrimonioDialog"
+    header="Criar Novo Patrimonio"
+    [modal]="true"
+    [closable]="true"
+    [style]="{ width: '500px' }"
+    [breakpoints]="{ '960px': '75vw', '640px': '90vw' }">
+
+    <ng-template #content>
+        <div class="flex flex-col gap-4 p-4">
+            <div class="flex flex-col gap-2">
+                <label for="patrimonioDescricao" class="font-semibold">
+                    Descrição <span class="text-red-500">*</span>
+                </label>
+                <input
+                    pInputText
+                    id="patrimonioDescricao"
+                    [(ngModel)]="novoPatrimonio.descricao"
+                    placeholder="Digite a descrição do patrimonio"
+                    class="w-full"
+                    [class.ng-invalid]="patrimonioSubmitted && !novoPatrimonio.descricao" />
+                @if (patrimonioSubmitted && !novoPatrimonio.descricao) {
+                    <small class="text-red-500">A descrição é obrigatória.</small>
+                }
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label for="patrimonioStatus" class="font-semibold">
+                    Status <span class="text-red-500">*</span>
+                </label>
+                <p-select
+                    id="patrimonioStatus"
+                    [(ngModel)]="novoPatrimonio.status"
+                    [options]="statusOptions"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Selecione um status"
+                    appendTo="body"
+                    styleClass="w-full">
+                </p-select>
+                @if (patrimonioSubmitted && !novoPatrimonio.status) {
+                    <small class="text-red-500">O status é obrigatório.</small>
+                }
+            </div>
+        </div>
+    </ng-template>
+
+    <ng-template #footer>
+        <div class="flex gap-2 justify-end">
+            <p-button
+                label="Cancelar"
+                icon="pi pi-times"
+                severity="secondary"
+                [outlined]="true"
+                (onClick)="hidePatrimonioDialog()">
+            </p-button>
+            <p-button
+                label="Criar Patrimonio"
+                icon="pi pi-check"
+                severity="success"
+                (onClick)="savePatrimonio()">
+            </p-button>
+        </div>
+    </ng-template>

@@ -43,12 +43,21 @@ export class LancamentosList implements OnInit {
     tiposPatrimonio: TipoPatrimonio[] = [];
     patrimonios: Patrimonio[] = [];
     estoqueDialog: boolean = false;
+    patrimonioDialog: boolean = false;
     estoque: Estoque = {} as Estoque;
+    novoPatrimonio: any = {};
     submitted: boolean = false;
+    patrimonioSubmitted: boolean = false;
     loading: boolean = false;
     isEditMode: boolean = false;
     temRetirada: boolean = false;
     numeroRetiradas: number = 1;
+
+    statusOptions = [
+        { label: 'Crítico', value: 'critico' },
+        { label: 'Normal', value: 'normal' },
+        { label: 'Bom', value: 'bom' }
+    ];
 
     // Controle de navegação por mês/ano
     mesAtual: number = new Date().getMonth();
@@ -422,6 +431,88 @@ export class LancamentosList implements OnInit {
                     severity: 'error',
                     summary: 'Erro',
                     detail: 'Erro ao atualizar status do estoque'
+                });
+            }
+        });
+    }
+
+    openPatrimonioDialog() {
+        this.novoPatrimonio = {};
+        this.patrimonioSubmitted = false;
+        this.patrimonioDialog = true;
+    }
+
+    hidePatrimonioDialog() {
+        this.patrimonioDialog = false;
+        this.novoPatrimonio = {};
+        this.patrimonioSubmitted = false;
+    }
+
+    confirmDeletePatrimonio() {
+        this.messageService.add({
+            severity: 'info',
+            summary: 'Info',
+            detail: 'Selecione um patrimonio na tabela para deletá-lo'
+        });
+    }
+
+    savePatrimonio() {
+        this.patrimonioSubmitted = true;
+
+        if (!this.novoPatrimonio.descricao || !this.novoPatrimonio.status) {
+            this.messageService.add({
+                severity: 'warn',
+                summary: 'Validação',
+                detail: 'Preencha todos os campos obrigatórios'
+            });
+            return;
+        }
+
+        this.patrimonioService.createPatrimonio(this.novoPatrimonio).subscribe({
+            next: (novoPatrimonio) => {
+                this.messageService.add({
+                    severity: 'success',
+                    summary: 'Sucesso',
+                    detail: 'Patrimonio criado com sucesso'
+                });
+                this.hidePatrimonioDialog();
+                this.loadPatrimonios();
+                
+                // Aguardar um pouco para garantir que o patrimonio foi criado no banco
+                setTimeout(() => {
+                    // Criar um estoque para exibir o patrimonio na tabela
+                    const estoqueDoPatrimonio: Estoque = {
+                        descricao: this.novoPatrimonio.descricao,
+                        valor: 0,
+                        data: new Date(),
+                        tipo: 'RECEITA',
+                        patrimonioId: novoPatrimonio.id,
+                        tipoPatrimonioId: undefined,
+                        efetivado: false
+                    } as Estoque;
+
+                    this.lancamentoService.createLancamento(estoqueDoPatrimonio).subscribe({
+                        next: () => {
+                            this.loadEstoques();
+                            this.messageService.add({
+                                severity: 'success',
+                                summary: 'Sucesso',
+                                detail: 'Estoque criado com sucesso'
+                            });
+                        },
+                        error: (erro) => {
+                            console.error('Erro ao criar estoque do patrimonio:', erro);
+                            this.loadEstoques();
+                        }
+                    });
+                }, 500);
+            },
+            error: (erro) => {
+                console.error('Erro ao criar patrimonio:', erro);
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Erro',
+                    detail: 'Erro ao criar patrimonio'
                 });
             }
         });
