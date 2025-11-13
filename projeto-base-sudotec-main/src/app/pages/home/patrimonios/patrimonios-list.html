@@ -70,6 +70,10 @@
                     Nome
                     <p-sortIcon field="nome" />
                 </th>
+                <th pSortableColumn="codigo" style="width: 10%">
+                    Código
+                    <p-sortIcon field="codigo" />
+                </th>
                 <th pSortableColumn="tipoPatrimonioId" style="width: 15%">
                     Tipo
                     <p-sortIcon field="tipoPatrimonioId" />
@@ -99,6 +103,11 @@
                     <div class="flex items-center gap-2">
                         <span class="font-medium">{{ patrimonio.nome }}</span>
                     </div>
+                </td>
+                <td>
+                    <span class="font-mono text-sm bg-surface-100 dark:bg-surface-800 px-2 py-1 rounded">
+                        {{ patrimonio.codigo || '-' }}
+                    </span>
                 </td>
                 <td>
                     <p-tag 
@@ -191,6 +200,20 @@
                 @if (submitted && !isEditMode && !patrimonio.nome) {
                     <small class="text-red-500">O nome é obrigatório.</small>
                 }
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label for="codigo" class="font-semibold">
+                    Código (máx 10 caracteres)
+                </label>
+                <input
+                    pInputText
+                    id="codigo"
+                    [(ngModel)]="patrimonio.codigo"
+                    maxlength="10"
+                    placeholder="Digite o código"
+                    class="w-full" />
+                <small class="text-muted-color">{{ patrimonio.codigo?.length || 0 }}/10 caracteres</small>
             </div>
 
             <div class="flex flex-col gap-2">
