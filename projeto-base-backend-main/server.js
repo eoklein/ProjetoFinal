@@ -1,7 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 const authRoutes = require('./src/routes/auth');
-const bookRoutes = require('./src/routes/books');
 const userRoutes = require('./src/routes/users');
 const tipoPatrimonioRoutes = require('./src/routes/tiposPatrimonio');
 const patrimonioRoutes = require('./src/routes/patrimonios');
@@ -21,7 +20,6 @@ app.use(cors({
 app.use(express.json());
 
 app.use('/auth', authRoutes);
-app.use('/books', bookRoutes);
 app.use('/users', userRoutes);
 app.use('/tiposPatrimonio', tipoPatrimonioRoutes);
 app.use('/patrimonios', patrimonioRoutes);
@@ -41,15 +39,6 @@ app.get('/', (req, res) => {
         'GET /users/:id': 'Buscar usuário por ID (admin only)',
         'DELETE /users/:id': 'Deletar usuário (admin only)',
         'PATCH /users/:id/admin': 'Atualizar status de admin (admin only)'
-      },
-      books: {
-        'GET /books': 'Listar todos os livros (auth required)',
-        'GET /books/:id': 'Buscar livro por ID (auth required)',
-        'POST /books': 'Criar livro (admin only)',
-        'PATCH /books/:id': 'Atualizar livro (admin only)',
-        'DELETE /books/:id': 'Deletar livro (admin only)',
-        'POST /books/:id/borrow': 'Pegar livro emprestado (auth required)',
-        'POST /books/:id/return': 'Devolver livro (auth required)'
       },
       tiposPatrimonio: {
         'GET /tiposPatrimonio': 'Listar todos os tipos de patrimonio (auth required)',

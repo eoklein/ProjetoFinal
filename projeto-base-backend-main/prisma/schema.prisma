@@ -17,13 +17,6 @@ model User {
   lancamentos      Lancamento[]
 }
 
-model Book {
-  id        Int     @id @default(autoincrement())
-  title     String
-  author    String
-  available Boolean @default(true)
-}
-
 model TipoPatrimonio {
   id          Int          @id @default(autoincrement())
   nome        String
