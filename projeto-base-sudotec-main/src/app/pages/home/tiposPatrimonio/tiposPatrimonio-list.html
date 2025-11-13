@@ -6,10 +6,10 @@
         <ng-template #start>
             <div>
                 <h2 class="text-3xl font-semibold text-surface-900 dark:text-surface-0 mb-2">
-                    Gerenciar Contas
+                    Gerenciar Tipos de Patrimonio
                 </h2>
                 <p class="text-muted-color">
-                    Crie, edite e gerencie as contas do sistema
+                    Crie, edite e gerencie os tipos de patrimonio do sistema
                 </p>
             </div>
         </ng-template>
@@ -21,12 +21,12 @@
                     label="Atualizar"
                     severity="secondary"
                     [outlined]="true"
-                    (onClick)="loadContas()"
+                    (onClick)="loadTiposPatrimonio()"
                     [loading]="loading">
                 </p-button>
                 <p-button
                     icon="pi pi-plus"
-                    label="Nova Conta"
+                    label="Novo Tipo"
                     severity="success"
                     (onClick)="openNew()">
                 </p-button>
@@ -36,14 +36,14 @@
 
     <p-table
         #dt
-        [value]="contas"
+        [value]="tiposPatrimonio"
         [loading]="loading"
         [paginator]="true"
         [rows]="10"
         [rowsPerPageOptions]="[5, 10, 20, 50]"
         [showCurrentPageReport]="true"
-        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} contas"
-        [globalFilterFields]="['descricao']"
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} tipos de patrimonio"
+        [globalFilterFields]="['nome']"
         styleClass="p-datatable-gridlines"
         [tableStyle]="{ 'min-width': '50rem' }">
 
@@ -53,51 +53,33 @@
                     <p-inputicon>
                         <i class="pi pi-search"></i>
                     </p-inputicon>
-                    <input pInputText type="text" (input)="dt.filterGlobal($any($event.target).value, 'contains')" placeholder="Buscar contas..." />
+                    <input pInputText type="text" (input)="dt.filterGlobal($any($event.target).value, 'contains')" placeholder="Buscar tipos de patrimonio..." />
                 </p-iconfield>
             </div>
         </ng-template>
 
         <ng-template #header>
             <tr>
-                <th pSortableColumn="id" style="width: 10%">
+                <th pSortableColumn="id" style="width: 15%">
                     ID
                     <p-sortIcon field="id" />
                 </th>
-                <th pSortableColumn="descricao" style="width: 35%">
-                    Descrição
-                    <p-sortIcon field="descricao" />
-                </th>
-                <th pSortableColumn="saldo" style="width: 20%">
-                    Saldo
-                    <p-sortIcon field="saldo" />
-                </th>
-                <th pSortableColumn="limite" style="width: 20%">
-                    Limite
-                    <p-sortIcon field="limite" />
+                <th pSortableColumn="nome" style="width: 85%">
+                    Nome
+                    <p-sortIcon field="nome" />
                 </th>
                 <th style="width: 15%" class="text-center">Ações</th>
             </tr>
         </ng-template>
 
-        <ng-template #body let-conta>
+        <ng-template #body let-tipoPatrimonio>
             <tr>
-                <td>{{ conta.id }}</td>
+                <td>{{ tipoPatrimonio.id }}</td>
                 <td>
                     <div class="flex items-center gap-2">
-                        <i class="pi pi-wallet text-lg"></i>
-                        <span class="font-medium">{{ conta.descricao }}</span>
+                        <i class="pi pi-tag text-lg"></i>
+                        <span class="font-medium">{{ tipoPatrimonio.nome }}</span>
                     </div>
-                </td>
-                <td>
-                    <span [class]="conta.saldo >= 0 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'">
-                        {{ formatCurrency(conta.saldo) }}
-                    </span>
-                </td>
-                <td>
-                    <span class="font-semibold">
-                        {{ formatCurrency(conta.limite) }}
-                    </span>
                 </td>
                 <td>
                     <div class="flex justify-center gap-2">
@@ -106,7 +88,7 @@
                             severity="info"
                             size="small"
                             [outlined]="true"
-                            (onClick)="editConta(conta)"
+                            (onClick)="editTipoPatrimonio(tipoPatrimonio)"
                             pTooltip="Editar"
                             tooltipPosition="top">
                         </p-button>
@@ -116,7 +98,7 @@
                             severity="danger"
                             size="small"
                             [outlined]="true"
-                            (onClick)="confirmDelete(conta)"
+                            (onClick)="confirmDelete(tipoPatrimonio)"
                             pTooltip="Deletar"
                             tooltipPosition="top">
                         </p-button>
@@ -127,12 +109,12 @@
 
         <ng-template #emptymessage>
             <tr>
-                <td colspan="5" class="text-center py-8">
+                <td colspan="3" class="text-center py-8">
                     <div class="flex flex-col items-center gap-3">
                         <i class="pi pi-inbox text-4xl text-muted-color"></i>
-                        <p class="text-muted-color text-lg">Nenhuma conta encontrada</p>
+                        <p class="text-muted-color text-lg">Nenhum tipo de patrimonio encontrado</p>
                         <p-button
-                            label="Criar Primeira Conta"
+                            label="Criar Primeiro Tipo"
                             icon="pi pi-plus"
                             size="small"
                             (onClick)="openNew()">
@@ -144,10 +126,10 @@
     </p-table>
 </div>
 
-<!-- Dialog para criar/editar conta -->
+<!-- Dialog para criar/editar tipo de patrimonio -->
 <p-dialog
-    [(visible)]="contaDialog"
-    [header]="isEditMode ? 'Editar Conta' : 'Nova Conta'"
+    [(visible)]="tipoPatrimonioDialog"
+    [header]="isEditMode ? 'Editar Tipo de Patrimonio' : 'Novo Tipo de Patrimonio'"
     [modal]="true"
     [closable]="true"
     [style]="{ width: '500px' }"
@@ -156,58 +138,20 @@
     <ng-template #content>
         <div class="flex flex-col gap-6 p-4">
             <div class="flex flex-col gap-2">
-                <label for="descricao" class="font-semibold">
-                    Descrição <span class="text-red-500">*</span>
+                <label for="nome" class="font-semibold">
+                    Nome <span class="text-red-500">*</span>
                 </label>
                 <input
                     pInputText
-                    id="descricao"
-                    [(ngModel)]="conta.descricao"
+                    id="nome"
+                    [(ngModel)]="tipoPatrimonio.nome"
                     required
                     autofocus
-                    placeholder="Digite a descrição da conta"
+                    placeholder="Digite o nome do tipo de patrimonio"
                     class="w-full"
-                    [class.ng-invalid]="submitted && !conta.descricao" />
-                @if (submitted && !conta.descricao) {
-                    <small class="text-red-500">A descrição é obrigatória.</small>
-                }
-            </div>
-
-            <div class="flex flex-col gap-2">
-                <label for="saldo" class="font-semibold">
-                    Saldo <span class="text-red-500">*</span>
-                </label>
-                <p-inputNumber
-                    id="saldo"
-                    [(ngModel)]="conta.saldo"
-                    mode="currency"
-                    currency="BRL"
-                    locale="pt-BR"
-                    placeholder="Digite o saldo"
-                    styleClass="w-full"
-                    [class.ng-invalid]="submitted && conta.saldo === undefined">
-                </p-inputNumber>
-                @if (submitted && conta.saldo === undefined) {
-                    <small class="text-red-500">O saldo é obrigatório.</small>
-                }
-            </div>
-
-            <div class="flex flex-col gap-2">
-                <label for="limite" class="font-semibold">
-                    Limite <span class="text-red-500">*</span>
-                </label>
-                <p-inputNumber
-                    id="limite"
-                    [(ngModel)]="conta.limite"
-                    mode="currency"
-                    currency="BRL"
-                    locale="pt-BR"
-                    placeholder="Digite o limite"
-                    styleClass="w-full"
-                    [class.ng-invalid]="submitted && conta.limite === undefined">
-                </p-inputNumber>
-                @if (submitted && conta.limite === undefined) {
-                    <small class="text-red-500">O limite é obrigatório.</small>
+                    [class.ng-invalid]="submitted && !tipoPatrimonio.nome" />
+                @if (submitted && !tipoPatrimonio.nome) {
+                    <small class="text-red-500">O nome é obrigatório.</small>
                 }
             </div>
         </div>
@@ -231,4 +175,3 @@
         </div>
     </ng-template>
 </p-dialog>
-

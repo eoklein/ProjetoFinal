@@ -16,11 +16,11 @@ import { Toolbar } from 'primeng/toolbar';
 import { TooltipModule } from 'primeng/tooltip';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { LancamentoService } from '@/services/lancamento.service';
-import { CategoryService } from '@/services/category.service';
-import { ContaService } from '@/services/conta.service';
+import { TipoPatrimonioService } from '@/services/tipoPatrimonio.service';
+import { PatrimonioService } from '@/services/patrimonio.service';
 import { Lancamento } from '@/models/lancamento.model';
-import { Category } from '@/models/category.model';
-import { Conta } from '@/models/conta.model';
+import { TipoPatrimonio } from '@/models/tipoPatrimonio.model';
+import { Patrimonio } from '@/models/patrimonio.model';
 import { IconField } from 'primeng/iconfield';
 import { InputIcon } from 'primeng/inputicon';
 
@@ -33,15 +33,15 @@ import { InputIcon } from 'primeng/inputicon';
 })
 export class LancamentosList implements OnInit {
     lancamentoService = inject(LancamentoService);
-    categoryService = inject(CategoryService);
-    contaService = inject(ContaService);
+    tipoPatrimonioService = inject(TipoPatrimonioService);
+    patrimonioService = inject(PatrimonioService);
     messageService = inject(MessageService);
     confirmationService = inject(ConfirmationService);
 
     lancamentos: Lancamento[] = [];
     lancamentosFiltrados: Lancamento[] = [];
-    categorias: Category[] = [];
-    contas: Conta[] = [];
+    tiposPatrimonio: TipoPatrimonio[] = [];
+    patrimonios: Patrimonio[] = [];
     lancamentoDialog: boolean = false;
     lancamento: Lancamento = {} as Lancamento;
     submitted: boolean = false;
@@ -61,11 +61,11 @@ export class LancamentosList implements OnInit {
     ngOnInit() {
         this.loadLancamentos();
         this.loadCategorias();
-        this.loadContas();
+        this.loadPatrimonios();
     }
 
     loadCategorias() {
-        this.categoryService.getCategories().subscribe({
+        this.tipoPatrimonioService.getTiposPatrimonio().subscribe({
             next: (categorias) => {
                 this.categorias = categorias;
             },
@@ -79,16 +79,16 @@ export class LancamentosList implements OnInit {
         });
     }
 
-    loadContas() {
-        this.contaService.getContas().subscribe({
-            next: (contas) => {
-                this.contas = contas;
+    loadPatrimonios() {
+        this.patrimonioService.getPatrimonios().subscribe({
+            next: (patrimonios) => {
+                this.patrimonios = patrimonios;
             },
             error: () => {
                 this.messageService.add({
                     severity: 'error',
                     summary: 'Erro',
-                    detail: 'Erro ao carregar contas'
+                    detail: 'Erro ao carregar patrimonios'
                 });
             }
         });
@@ -203,10 +203,10 @@ export class LancamentosList implements OnInit {
                             next: () => {
                                 // Atualiza o saldo se necessário
                                 if (
-                                    this.lancamento.contaId &&
+                                    this.lancamento.patrimonioId &&
                                     (lancamentoOriginal.efetivado !== this.lancamento.efetivado ||
                                         lancamentoOriginal.valor !== this.lancamento.valor ||
-                                        lancamentoOriginal.contaId !== this.lancamento.contaId ||
+                                        lancamentoOriginal.patrimonioId !== this.lancamento.patrimonioId ||
                                         lancamentoOriginal.tipo !== this.lancamento.tipo)
                                 ) {
                                     this.atualizarSaldoContaAoSalvar(lancamentoOriginal);
@@ -242,10 +242,10 @@ export class LancamentosList implements OnInit {
 
                     this.lancamentoService.createLancamento(lancamentoParaSalvar).subscribe({
                         next: () => {
-                            // Atualiza o saldo se o lançamento está efetivado e tem conta
+                            // Atualiza o saldo se o lançamento está efetivado e tem Patrimonio
                             // Usa a cópia guardada ao invés de this.lancamento
-                            if (lancamentoParaSalvar.contaId && lancamentoParaSalvar.efetivado) {
-                                console.log('Atualizando saldo da conta após criar lançamento efetivado');
+                            if (lancamentoParaSalvar.patrimonioId && lancamentoParaSalvar.efetivado) {
+                                console.log('Atualizando saldo da Patrimonio após criar lançamento efetivado');
                                 this.atualizarSaldoContaParaLancamento(lancamentoParaSalvar);
                             }
 
@@ -316,16 +316,16 @@ export class LancamentosList implements OnInit {
         return new Intl.DateTimeFormat('pt-BR').format(date);
     }
 
-    getCategoriaNome(categoriaId?: number): string {
-        if (!categoriaId) return '-';
-        const categoria = this.categorias.find((c) => c.id === categoriaId);
-        return categoria?.nome || '-';
+    getTipoPatrimonioNome(tipoPatrimonioId?: number): string {
+        if (!tipoPatrimonioId) return '-';
+        const tipoPatrimonio = this.tiposPatrimonio.find((tp) => tp.id === tipoPatrimonioId);
+        return tipoPatrimonio?.nome || '-';
     }
 
-    getContaNome(contaId?: number): string {
-        if (!contaId) return '-';
-        const conta = this.contas.find((c) => c.id === contaId);
-        return conta?.descricao || '-';
+    getPatrimonioNome(patrimonioId?: number): string {
+        if (!patrimonioId) return '-';
+        const patrimonio = this.patrimonios.find((c) => c.id === patrimonioId);
+        return patrimonio?.descricao || '-';
     }
 
     criarLancamentosParcelados() {
@@ -404,11 +404,11 @@ export class LancamentosList implements OnInit {
         console.log('Toggling efetivado for lancamento:', lancamento.id);
         console.log('Novo status efetivado:', novoStatus);
 
-        // Se tem conta associada, atualiza o saldo
-        if (lancamento.contaId) {
-            this.contaService.getContaById(lancamento.contaId).subscribe({
-                next: (conta) => {
-                    let novoSaldo = conta.saldo;
+        // Se tem Patrimonio associada, atualiza o saldo
+        if (lancamento.patrimonioId) {
+            this.patrimonioService.getPatrimonioById(lancamento.patrimonioId).subscribe({
+                next: (patrimonio) => {
+                    let novoSaldo = patrimonio.saldo;
 
                     if (novoStatus) {
                         // Está efetivando o lançamento
@@ -426,10 +426,10 @@ export class LancamentosList implements OnInit {
                         }
                     }
 
-                    const contaAtualizada = { ...conta, saldo: novoSaldo };
+                    const patrimonioAtualizado = { ...patrimonio, saldo: novoSaldo };
 
-                    // Atualiza a conta
-                    this.contaService.updateConta(conta.id!, contaAtualizada).subscribe({
+                    // Atualiza a Patrimonio
+                    this.patrimonioService.updatePatrimonio(patrimonio.id!, patrimonioAtualizado).subscribe({
                         next: () => {
                             // Atualiza o lançamento
                             this.lancamentoService.updateLancamento(lancamento.id!, lancamentoAtualizado).subscribe({
@@ -440,7 +440,7 @@ export class LancamentosList implements OnInit {
                                         detail: novoStatus ? 'Lançamento efetivado com sucesso' : 'Lançamento desefetivado com sucesso'
                                     });
                                     this.loadLancamentos();
-                                    this.loadContas(); // Atualiza a lista de contas
+                                    this.loadPatrimonios(); // Atualiza a lista de patrimonios
                                 },
                                 error: () => {
                                     // Reverte em caso de erro
@@ -459,7 +459,7 @@ export class LancamentosList implements OnInit {
                             this.messageService.add({
                                 severity: 'error',
                                 summary: 'Erro',
-                                detail: 'Erro ao atualizar saldo da conta'
+                                detail: 'Erro ao atualizar saldo da Patrimonio'
                             });
                         }
                     });
@@ -468,12 +468,12 @@ export class LancamentosList implements OnInit {
                     this.messageService.add({
                         severity: 'error',
                         summary: 'Erro',
-                        detail: 'Erro ao buscar informações da conta'
+                        detail: 'Erro ao buscar informações da Patrimonio'
                     });
                 }
             });
         } else {
-            // Se não tem conta, apenas atualiza o status do lançamento
+            // Se não tem Patrimonio, apenas atualiza o status do lançamento
             this.lancamentoService.updateLancamento(lancamento.id!, lancamentoAtualizado).subscribe({
                 next: () => {
                     this.messageService.add({
@@ -500,27 +500,27 @@ export class LancamentosList implements OnInit {
         console.log('Lançamento original:', lancamentoOriginal ? JSON.stringify(lancamentoOriginal, null, 2) : 'null');
         console.log('Campo efetivado:', this.lancamento.efetivado, 'Tipo:', typeof this.lancamento.efetivado);
 
-        // Se não tem conta, não faz nada
-        if (!this.lancamento.contaId) {
-            console.log('Sem conta associada, pulando atualização');
+        // Se não tem Patrimonio, não faz nada
+        if (!this.lancamento.patrimonioId) {
+            console.log('Sem Patrimonio associada, pulando atualização');
             return;
         }
 
-        this.contaService.getContaById(this.lancamento.contaId).subscribe({
-            next: (conta) => {
-                console.log('Conta atual:', JSON.stringify(conta, null, 2));
-                let novoSaldo = conta.saldo;
+        this.patrimonioService.getPatrimonioById(this.lancamento.patrimonioId).subscribe({
+            next: (patrimonio) => {
+                console.log('Patrimonio atual:', JSON.stringify(patrimonio, null, 2));
+                let novoSaldo = patrimonio.saldo;
                 console.log('Saldo inicial:', novoSaldo);
 
                 // Se está editando, primeiro reverte o valor anterior
-                if (lancamentoOriginal && lancamentoOriginal.efetivado && lancamentoOriginal.contaId === this.lancamento.contaId) {
+                if (lancamentoOriginal && lancamentoOriginal.efetivado && lancamentoOriginal.patrimonioId === this.lancamento.patrimonioId) {
                     console.log('Revertendo lançamento original efetivado');
                     if (lancamentoOriginal.tipo === 'RECEITA') {
                         novoSaldo -= lancamentoOriginal.valor;
-                        console.log(`Removendo RECEITA: ${novoSaldo} = ${conta.saldo} - ${lancamentoOriginal.valor}`);
+                        console.log(`Removendo RECEITA: ${novoSaldo} = ${patrimonio.saldo} - ${lancamentoOriginal.valor}`);
                     } else {
                         novoSaldo += lancamentoOriginal.valor;
-                        console.log(`Devolvendo DESPESA: ${novoSaldo} = ${conta.saldo} + ${lancamentoOriginal.valor}`);
+                        console.log(`Devolvendo DESPESA: ${novoSaldo} = ${patrimonio.saldo} + ${lancamentoOriginal.valor}`);
                     }
                 }
 
@@ -539,25 +539,25 @@ export class LancamentosList implements OnInit {
                 }
 
                 console.log('Saldo final calculado:', novoSaldo);
-                const contaAtualizada = { ...conta, saldo: novoSaldo };
+                const patrimonioAtualizado = { ...patrimonio, saldo: novoSaldo };
 
-                this.contaService.updateConta(conta.id!, contaAtualizada).subscribe({
+                this.patrimonioService.updatePatrimonio(patrimonio.id!, patrimonioAtualizado).subscribe({
                     next: () => {
-                        console.log('Saldo da conta atualizado com sucesso!');
-                        this.loadContas();
+                        console.log('Saldo do Patrimonio atualizado com sucesso');
+                        this.loadPatrimonios();
                     },
                     error: () => {
-                        console.error('Erro ao atualizar saldo da conta');
+                        console.error('Erro ao atualizar saldo da Patrimonio');
                         this.messageService.add({
                             severity: 'error',
                             summary: 'Erro',
-                            detail: 'Erro ao atualizar saldo da conta'
+                            detail: 'Erro ao atualizar saldo da Patrimonio'
                         });
                     }
                 });
             },
             error: (err) => {
-                console.error('Erro ao buscar conta:', err);
+                console.error('Erro ao buscar Patrimonio:', err);
             }
         });
     }
@@ -568,27 +568,27 @@ export class LancamentosList implements OnInit {
         console.log('Lançamento original:', lancamentoOriginal ? JSON.stringify(lancamentoOriginal, null, 2) : 'null');
         console.log('Campo efetivado:', lancamento.efetivado, 'Tipo:', typeof lancamento.efetivado);
 
-        // Se não tem conta, não faz nada
-        if (!lancamento.contaId) {
-            console.log('Sem conta associada, pulando atualização');
+        // Se não tem Patrimonio, não faz nada
+        if (!lancamento.patrimonioId) {
+            console.log('Sem Patrimonio associada, pulando atualização');
             return;
         }
 
-        this.contaService.getContaById(lancamento.contaId).subscribe({
-            next: (conta) => {
-                console.log('Conta atual:', JSON.stringify(conta, null, 2));
-                let novoSaldo = conta.saldo;
+        this.patrimonioService.getPatrimonioById(lancamento.patrimonioId).subscribe({
+            next: (patrimonio) => {
+                console.log('Patrimonio atual:', JSON.stringify(patrimonio, null, 2));
+                let novoSaldo = patrimonio.saldo;
                 console.log('Saldo inicial:', novoSaldo);
 
                 // Se está editando, primeiro reverte o valor anterior
-                if (lancamentoOriginal && lancamentoOriginal.efetivado && lancamentoOriginal.contaId === lancamento.contaId) {
+                if (lancamentoOriginal && lancamentoOriginal.efetivado && lancamentoOriginal.patrimonioId === lancamento.patrimonioId) {
                     console.log('Revertendo lançamento original efetivado');
                     if (lancamentoOriginal.tipo === 'RECEITA') {
                         novoSaldo -= lancamentoOriginal.valor;
-                        console.log(`Removendo RECEITA: ${novoSaldo} = ${conta.saldo} - ${lancamentoOriginal.valor}`);
+                        console.log(`Removendo RECEITA: ${novoSaldo} = ${patrimonio.saldo} - ${lancamentoOriginal.valor}`);
                     } else {
                         novoSaldo += lancamentoOriginal.valor;
-                        console.log(`Devolvendo DESPESA: ${novoSaldo} = ${conta.saldo} + ${lancamentoOriginal.valor}`);
+                        console.log(`Devolvendo DESPESA: ${novoSaldo} = ${patrimonio.saldo} + ${lancamentoOriginal.valor}`);
                     }
                 }
 
@@ -607,26 +607,27 @@ export class LancamentosList implements OnInit {
                 }
 
                 console.log('Saldo final calculado:', novoSaldo);
-                const contaAtualizada = { ...conta, saldo: novoSaldo };
+                const patrimonioAtualizado = { ...patrimonio, saldo: novoSaldo };
 
-                this.contaService.updateConta(conta.id!, contaAtualizada).subscribe({
+                this.patrimonioService.updatePatrimonio(patrimonio.id!, patrimonioAtualizado).subscribe({
                     next: () => {
-                        console.log('Saldo da conta atualizado com sucesso!');
-                        this.loadContas();
+                        console.log('Saldo da Patrimonio atualizado com sucesso!');
+                        this.loadPatrimonios();
                     },
                     error: () => {
-                        console.error('Erro ao atualizar saldo da conta');
+                        console.error('Erro ao atualizar saldo da Patrimonio');
                         this.messageService.add({
                             severity: 'error',
                             summary: 'Erro',
-                            detail: 'Erro ao atualizar saldo da conta'
+                            detail: 'Erro ao atualizar saldo da Patrimonio'
                         });
                     }
                 });
             },
             error: (err) => {
-                console.error('Erro ao buscar conta:', err);
+                console.error('Erro ao buscar Patrimonio:', err);
             }
         });
     }
 }
+

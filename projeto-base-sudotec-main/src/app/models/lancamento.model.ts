@@ -4,8 +4,8 @@ export interface Lancamento {
     valor: number;
     data: Date | string;
     tipo: 'RECEITA' | 'DESPESA';
-    categoriaId?: number;
-    contaId?: number;
+    tipoPatrimonioId?: number;
+    patrimonioId?: number;
     numeroParcelas?: number;
     parcelaAtual?: number;
     lancamentoPaiId?: number;

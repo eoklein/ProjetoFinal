@@ -115,13 +115,11 @@
                     Data
                     <p-sortIcon field="data" />
                 </th>
-                <th pSortableColumn="contaId" style="width: 17%">
-                    Conta
-                    <p-sortIcon field="contaId" />
+                                <th pSortableColumn="patrimonioId" style="width: 17%">\n                    Patrimonio\n                    <p-sortIcon field="patrimonioId" />
                 </th>
-                <th pSortableColumn="categoriaId" style="width: 17%">
-                    Categoria
-                    <p-sortIcon field="categoriaId" />
+                <th pSortableColumn="tipoPatrimonioId" style="width: 17%">
+                    Tipo de Patrimonio
+                    <p-sortIcon field="tipoPatrimonioId" />
                 </th>
                 <th pSortableColumn="descricao" style="width: 26%">
                     Descrição
@@ -147,13 +145,13 @@
                 <td>
                     <div class="flex items-center gap-2">
                         <i class="pi pi-wallet text-lg"></i>
-                        <span>{{ getContaNome(lancamento.contaId) }}</span>
+                        <span>{{ getPatrimonioNome(lancamento.patrimonioId) }}</span>
                     </div>
                 </td>
                 <td>
                     <div class="flex items-center gap-2">
                         <i class="pi pi-tag text-lg"></i>
-                        <span>{{ getCategoriaNome(lancamento.categoriaId) }}</span>
+                        <span>{{ getTipoPatrimonioNome(lancamento.tipoPatrimonioId) }}</span>
                     </div>
                 </td>
                 <td>
@@ -272,16 +270,16 @@
             </div>
 
             <div class="flex flex-col gap-2">
-                <label for="categoria" class="font-semibold">
-                    Categoria
+                <label for="tipoPatrimonio" class="font-semibold">
+                    Tipo de Patrimonio
                 </label>
                 <p-select
-                    id="categoria"
-                    [(ngModel)]="lancamento.categoriaId"
-                    [options]="categorias"
+                    id="tipoPatrimonio"
+                    [(ngModel)]="lancamento.tipoPatrimonioId"
+                    [options]="tiposPatrimonio"
                     optionLabel="nome"
                     optionValue="id"
-                    placeholder="Selecione uma categoria"
+                    placeholder="Selecione um tipo de patrimonio"
                     [showClear]="true"
                     appendTo="body"
                     styleClass="w-full">
@@ -289,16 +287,16 @@
             </div>
 
             <div class="flex flex-col gap-2">
-                <label for="conta" class="font-semibold">
-                    Conta
+                <label for="patrimonio" class="font-semibold">
+                    Patrimonio
                 </label>
                 <p-select
-                    id="conta"
-                    [(ngModel)]="lancamento.contaId"
-                    [options]="contas"
+                    id="patrimonio"
+                    [(ngModel)]="lancamento.patrimonioId"
+                    [options]="patrimonios"
                     optionLabel="descricao"
                     optionValue="id"
-                    placeholder="Selecione uma conta"
+                    placeholder="Selecione um patrimonio"
                     [showClear]="true"
                     appendTo="body"
                     styleClass="w-full">

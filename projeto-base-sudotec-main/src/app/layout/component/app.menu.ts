@@ -36,8 +36,8 @@ export class AppMenu {
                 icon: 'pi pi-fw pi-briefcase',
                 routerLink: ['/pages'],
                 items: [
-                    { label: 'Categorias', icon: 'pi pi-fw pi-tags', routerLink: ['/home/categories'] },
-                    { label: 'Contas', icon: 'pi pi-fw pi-wallet', routerLink: ['/home/contas'] },
+                    { label: 'Tipos de Patrimonio', icon: 'pi pi-fw pi-tag', routerLink: ['/home/tiposPatrimonio'] },
+                    { label: 'Patrimonios', icon: 'pi pi-fw pi-wallet', routerLink: ['/home/patrimonios'] },
                     ...(isAdmin ? [{ label: 'Usuários', icon: 'pi pi-fw pi-users', routerLink: ['/home/users'] }] : [])
                 ]
             }

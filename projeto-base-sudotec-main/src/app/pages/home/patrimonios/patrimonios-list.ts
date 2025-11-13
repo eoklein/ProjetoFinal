@@ -11,46 +11,46 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { Toolbar } from 'primeng/toolbar';
 import { TooltipModule } from 'primeng/tooltip';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { ContaService } from '@/services/conta.service';
-import { Conta } from '@/models/conta.model';
+import { PatrimonioService } from '@/services/patrimonio.service';
+import { Patrimonio } from '@/models/patrimonio.model';
 import { IconField } from 'primeng/iconfield';
 import { InputIcon } from 'primeng/inputicon';
 
 @Component({
-    selector: 'app-contas-list',
+    selector: 'app-patrimonios-list',
     standalone: true,
     imports: [CommonModule, FormsModule, TableModule, ButtonModule, Dialog, Toast, ConfirmDialog, InputTextModule, InputNumberModule, Toolbar, TooltipModule, IconField, InputIcon],
-    templateUrl: './contas-list.html',
+    templateUrl: './patrimonios-list.html',
     providers: [MessageService, ConfirmationService]
 })
-export class ContasList implements OnInit {
-    contaService = inject(ContaService);
+export class PatrimoniosList implements OnInit {
+    patrimonioService = inject(PatrimonioService);
     messageService = inject(MessageService);
     confirmationService = inject(ConfirmationService);
 
-    contas: Conta[] = [];
-    contaDialog: boolean = false;
-    conta: Conta = {} as Conta;
+    patrimonios: Patrimonio[] = [];
+    patrimonioDialog: boolean = false;
+    patrimonio: Patrimonio = {} as Patrimonio;
     submitted: boolean = false;
     loading: boolean = false;
     isEditMode: boolean = false;
 
     ngOnInit() {
-        this.loadContas();
+        this.loadPatrimonios();
     }
 
-    loadContas() {
+    loadPatrimonios() {
         this.loading = true;
-        this.contaService.getContas().subscribe({
-            next: (contas) => {
-                this.contas = contas;
+        this.patrimonioService.getPatrimonios().subscribe({
+            next: (patrimonios) => {
+                this.patrimonios = patrimonios;
                 this.loading = false;
             },
             error: () => {
                 this.messageService.add({
                     severity: 'error',
                     summary: 'Erro',
-                    detail: 'Erro ao carregar contas'
+                    detail: 'Erro ao carregar patrimonios'
                 });
                 this.loading = false;
             }
@@ -58,66 +58,66 @@ export class ContasList implements OnInit {
     }
 
     openNew() {
-        this.conta = { saldo: 0, limite: 0 } as Conta;
+        this.patrimonio = { saldo: 0, limite: 0 } as Patrimonio;
         this.submitted = false;
         this.isEditMode = false;
-        this.contaDialog = true;
+        this.patrimonioDialog = true;
     }
 
-    editConta(conta: Conta) {
-        this.conta = { ...conta };
+    editPatrimonio(patrimonio: Patrimonio) {
+        this.patrimonio = { ...patrimonio };
         this.isEditMode = true;
-        this.contaDialog = true;
+        this.patrimonioDialog = true;
     }
 
     hideDialog() {
-        this.contaDialog = false;
+        this.patrimonioDialog = false;
         this.submitted = false;
     }
 
     saveContact() {
         this.submitted = true;
 
-        if (this.conta.descricao?.trim() && this.conta.saldo !== undefined && this.conta.limite !== undefined) {
-            if (this.conta.id) {
+        if (this.patrimonio.descricao?.trim() && this.patrimonio.saldo !== undefined && this.patrimonio.limite !== undefined) {
+            if (this.patrimonio.id) {
                 // Update
-                this.contaService.updateConta(this.conta.id, this.conta).subscribe({
+                this.patrimonioService.updatePatrimonio(this.patrimonio.id, this.patrimonio).subscribe({
                     next: () => {
                         this.messageService.add({
                             severity: 'success',
                             summary: 'Sucesso',
-                            detail: 'Conta atualizada com sucesso'
+                            detail: 'Patrimonio atualizado com sucesso'
                         });
-                        this.loadContas();
-                        this.contaDialog = false;
-                        this.conta = {} as Conta;
+                        this.loadPatrimonios();
+                        this.patrimonioDialog = false;
+                        this.patrimonio = {} as Patrimonio;
                     },
                     error: () => {
                         this.messageService.add({
                             severity: 'error',
                             summary: 'Erro',
-                            detail: 'Erro ao atualizar conta'
+                            detail: 'Erro ao atualizar patrimonio'
                         });
                     }
                 });
             } else {
                 // Create
-                this.contaService.createConta(this.conta).subscribe({
+                this.patrimonioService.createPatrimonio(this.patrimonio).subscribe({
                     next: () => {
                         this.messageService.add({
                             severity: 'success',
                             summary: 'Sucesso',
-                            detail: 'Conta criada com sucesso'
+                            detail: 'Patrimonio criado com sucesso'
                         });
-                        this.loadContas();
-                        this.contaDialog = false;
-                        this.conta = {} as Conta;
+                        this.loadPatrimonios();
+                        this.patrimonioDialog = false;
+                        this.patrimonio = {} as Patrimonio;
                     },
                     error: () => {
                         this.messageService.add({
                             severity: 'error',
                             summary: 'Erro',
-                            detail: 'Erro ao criar conta'
+                            detail: 'Erro ao criar patrimonio'
                         });
                     }
                 });
@@ -125,34 +125,34 @@ export class ContasList implements OnInit {
         }
     }
 
-    confirmDelete(conta: Conta) {
+    confirmDelete(patrimonio: Patrimonio) {
         this.confirmationService.confirm({
-            message: `Tem certeza que deseja deletar a conta "${conta.descricao}"?`,
+            message: `Tem certeza que deseja deletar o patrimonio "${patrimonio.descricao}"?`,
             header: 'Confirmar Exclusão',
             icon: 'pi pi-exclamation-triangle',
             acceptLabel: 'Sim',
             rejectLabel: 'Não',
             accept: () => {
-                this.deleteConta(conta.id!);
+                this.deletePatrimonio(patrimonio.id!);
             }
         });
     }
 
-    deleteConta(id: number) {
-        this.contaService.deleteConta(id).subscribe({
+    deletePatrimonio(id: number) {
+        this.patrimonioService.deletePatrimonio(id).subscribe({
             next: () => {
                 this.messageService.add({
                     severity: 'success',
                     summary: 'Sucesso',
-                    detail: 'Conta deletada com sucesso'
+                    detail: 'Patrimonio deletado com sucesso'
                 });
-                this.loadContas();
+                this.loadPatrimonios();
             },
             error: () => {
                 this.messageService.add({
                     severity: 'error',
                     summary: 'Erro',
-                    detail: 'Erro ao deletar conta'
+                    detail: 'Erro ao deletar patrimonio'
                 });
             }
         });
@@ -165,4 +165,3 @@ export class ContasList implements OnInit {
         }).format(value);
     }
 }
-
