@@ -1,0 +1,443 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<div class="card">
+    <p-toolbar styleClass="mb-4">
+        <ng-template #start>
+            <div>
+                <h2 class="text-3xl font-semibold text-surface-900 dark:text-surface-0 mb-2">
+                    Gerenciar Lançamentos
+                </h2>
+                <p class="text-muted-color">
+                    Crie, edite e gerencie os lançamentos do sistema
+                </p>
+            </div>
+        </ng-template>
+
+        <ng-template #end>
+            <div class="flex gap-2">
+                <p-button
+                    icon="pi pi-refresh"
+                    label="Atualizar"
+                    severity="secondary"
+                    [outlined]="true"
+                    (onClick)="loadLancamentos()"
+                    [loading]="loading">
+                </p-button>
+                <p-button
+                    icon="pi pi-plus"
+                    label="Novo Lançamento"
+                    severity="success"
+                    (onClick)="openNew()">
+                </p-button>
+            </div>
+        </ng-template>
+    </p-toolbar>
+
+    <!-- Toolbar de Navegação por Mês/Ano -->
+    <div class="mb-4 p-3 bg-surface-50 dark:bg-surface-800 rounded-lg border border-surface-200 dark:border-surface-700">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <p-button
+                    icon="pi pi-chevron-left"
+                    [outlined]="true"
+                    severity="secondary"
+                    size="small"
+                    (onClick)="mesAnterior()"
+                    pTooltip="Mês anterior"
+                    tooltipPosition="top">
+                </p-button>
+
+                <div class="flex items-center justify-center min-w-[180px] mt-3">
+                    <h3 class="text-xl font-semibold text-surface-900 dark:text-surface-0 m-0">
+                        {{ mesAnoSelecionado }}
+                    </h3>
+                </div>
+
+                <p-button
+                    icon="pi pi-chevron-right"
+                    [outlined]="true"
+                    severity="secondary"
+                    size="small"
+                    (onClick)="proximoMes()"
+                    pTooltip="Próximo mês"
+                    tooltipPosition="top">
+                </p-button>
+            </div>
+
+            <div class="flex items-center gap-2">
+                @if (!isNoPeriodoAtual) {
+                    <p-button
+                        label="Mês Atual"
+                        icon="pi pi-calendar"
+                        severity="info"
+                        [outlined]="true"
+                        size="small"
+                        (onClick)="voltarMesAtual()"
+                        pTooltip="Voltar para o mês atual"
+                        tooltipPosition="top">
+                    </p-button>
+                }
+                <span class="text-muted-color text-sm">
+                    {{ lancamentosFiltrados.length }} lançamento(s)
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <p-table
+        #dt
+        [value]="lancamentosFiltrados"
+        [loading]="loading"
+        [paginator]="true"
+        [rows]="10"
+        [rowsPerPageOptions]="[5, 10, 20, 50]"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} lançamentos"
+        [globalFilterFields]="['descricao']"
+        styleClass="p-datatable-gridlines"
+        [tableStyle]="{ 'min-width': '50rem' }">
+
+        <ng-template #caption>
+            <div class="flex">
+                <p-iconfield iconPosition="left" class="ml-auto">
+                    <p-inputicon>
+                        <i class="pi pi-search"></i>
+                    </p-inputicon>
+                    <input pInputText type="text" (input)="dt.filterGlobal($any($event.target).value, 'contains')" placeholder="Buscar lançamentos..." />
+                </p-iconfield>
+            </div>
+        </ng-template>
+
+        <ng-template #header>
+            <tr>
+                <th pSortableColumn="data" style="width: 8%">
+                    Data
+                    <p-sortIcon field="data" />
+                </th>
+                <th pSortableColumn="contaId" style="width: 17%">
+                    Conta
+                    <p-sortIcon field="contaId" />
+                </th>
+                <th pSortableColumn="categoriaId" style="width: 17%">
+                    Categoria
+                    <p-sortIcon field="categoriaId" />
+                </th>
+                <th pSortableColumn="descricao" style="width: 26%">
+                    Descrição
+                    <p-sortIcon field="descricao" />
+                </th>
+                <th pSortableColumn="valor" style="width: 10%">
+                    Valor
+                    <p-sortIcon field="valor" />
+                </th>
+                <th style="width: 11%" class="text-center">Status</th>
+                <th style="width: 11%" class="text-center">Ações</th>
+            </tr>
+        </ng-template>
+
+        <ng-template #body let-lancamento>
+            <tr>
+                <td>
+                    <div class="flex items-center gap-2">
+                        <i class="pi pi-calendar text-lg"></i>
+                        <span>{{ formatDate(lancamento.data) }}</span>
+                    </div>
+                </td>
+                <td>
+                    <div class="flex items-center gap-2">
+                        <i class="pi pi-wallet text-lg"></i>
+                        <span>{{ getContaNome(lancamento.contaId) }}</span>
+                    </div>
+                </td>
+                <td>
+                    <div class="flex items-center gap-2">
+                        <i class="pi pi-tag text-lg"></i>
+                        <span>{{ getCategoriaNome(lancamento.categoriaId) }}</span>
+                    </div>
+                </td>
+                <td>
+                    <div class="flex items-center gap-2">
+                        <i class="pi pi-file-edit text-lg"></i>
+                        <span class="font-medium">{{ lancamento.descricao }}</span>
+                    </div>
+                </td>
+                <td>
+                    <span [class]="lancamento.tipo === 'RECEITA' ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'">
+                        {{ formatCurrency(lancamento.valor) }}
+                    </span>
+                </td>
+                <td>
+                    <div class="flex justify-center">
+                        <p-button
+                            [label]="lancamento.efetivado ? 'Efetivado' : 'Pendente'"
+                            [icon]="lancamento.efetivado ? 'pi pi-check-circle' : 'pi pi-clock'"
+                            [severity]="lancamento.efetivado ? 'success' : 'info'"
+                            size="small"
+                            (onClick)="toggleEfetivado(lancamento)"
+                            pTooltip="Clique para alternar o status"
+                            tooltipPosition="top">
+                        </p-button>
+                    </div>
+                </td>
+                <td>
+                    <div class="flex justify-center gap-2">
+                        <p-button
+                            icon="pi pi-pencil"
+                            severity="info"
+                            size="small"
+                            [outlined]="true"
+                            (onClick)="editLancamento(lancamento)"
+                            pTooltip="Editar"
+                            tooltipPosition="top">
+                        </p-button>
+
+                        <p-button
+                            icon="pi pi-trash"
+                            severity="danger"
+                            size="small"
+                            [outlined]="true"
+                            (onClick)="confirmDelete(lancamento)"
+                            pTooltip="Deletar"
+                            tooltipPosition="top">
+                        </p-button>
+                    </div>
+                </td>
+            </tr>
+        </ng-template>
+
+        <ng-template #emptymessage>
+            <tr>
+                <td colspan="8" class="text-center py-8">
+                    <div class="flex flex-col items-center gap-3">
+                        <i class="pi pi-inbox text-4xl text-muted-color"></i>
+                        <p class="text-muted-color text-lg">Nenhum lançamento encontrado</p>
+                        <p-button
+                            label="Criar Primeiro Lançamento"
+                            icon="pi pi-plus"
+                            size="small"
+                            (onClick)="openNew()">
+                        </p-button>
+                    </div>
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+</div>
+
+<!-- Dialog para criar/editar lançamento -->
+<p-dialog
+    [(visible)]="lancamentoDialog"
+    [header]="isEditMode ? 'Editar Lançamento' : 'Novo Lançamento'"
+    [modal]="true"
+    [closable]="true"
+    [style]="{ width: '500px' }"
+    [breakpoints]="{ '960px': '75vw', '640px': '90vw' }">
+
+    <ng-template #content>
+        <div class="flex flex-col gap-4 p-4">
+            <div class="flex flex-col gap-2">
+                <label class="font-semibold">
+                    Tipo <span class="text-red-500">*</span>
+                </label>
+                <div class="flex gap-6">
+                    <div class="flex items-center gap-2">
+                        <p-radio-button
+                            name="tipo"
+                            value="DESPESA"
+                            [(ngModel)]="lancamento.tipo"
+                            inputId="tipo-despesa">
+                        </p-radio-button>
+                        <label for="tipo-despesa" class="cursor-pointer flex items-center gap-2">
+                            <i class="pi pi-arrow-down text-red-600"></i>
+                            <span>Despesa</span>
+                        </label>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <p-radio-button
+                            name="tipo"
+                            value="RECEITA"
+                            [(ngModel)]="lancamento.tipo"
+                            inputId="tipo-receita">
+                        </p-radio-button>
+                        <label for="tipo-receita" class="cursor-pointer flex items-center gap-2">
+                            <i class="pi pi-arrow-up text-green-600"></i>
+                            <span>Receita</span>
+                        </label>
+                    </div>
+                </div>
+                @if (submitted && !lancamento.tipo) {
+                    <small class="text-red-500">O tipo é obrigatório.</small>
+                }
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label for="categoria" class="font-semibold">
+                    Categoria
+                </label>
+                <p-select
+                    id="categoria"
+                    [(ngModel)]="lancamento.categoriaId"
+                    [options]="categorias"
+                    optionLabel="nome"
+                    optionValue="id"
+                    placeholder="Selecione uma categoria"
+                    [showClear]="true"
+                    appendTo="body"
+                    styleClass="w-full">
+                </p-select>
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label for="conta" class="font-semibold">
+                    Conta
+                </label>
+                <p-select
+                    id="conta"
+                    [(ngModel)]="lancamento.contaId"
+                    [options]="contas"
+                    optionLabel="descricao"
+                    optionValue="id"
+                    placeholder="Selecione uma conta"
+                    [showClear]="true"
+                    appendTo="body"
+                    styleClass="w-full">
+                </p-select>
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label for="data" class="font-semibold">
+                    Data <span class="text-red-500">*</span>
+                </label>
+                <p-date-picker
+                    id="data"
+                    [(ngModel)]="lancamento.data"
+                    dateFormat="dd/mm/yy"
+                    [showIcon]="true"
+                    appendTo="body"
+                    placeholder="Selecione a data"
+                    styleClass="w-full"
+                    [class.ng-invalid]="submitted && !lancamento.data">
+                </p-date-picker>
+                @if (submitted && !lancamento.data) {
+                    <small class="text-red-500">A data é obrigatória.</small>
+                }
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label for="descricao" class="font-semibold">
+                    Descrição <span class="text-red-500">*</span>
+                </label>
+                <input
+                    pInputText
+                    id="descricao"
+                    [(ngModel)]="lancamento.descricao"
+                    required
+                    placeholder="Digite a descrição do lançamento"
+                    class="w-full"
+                    [class.ng-invalid]="submitted && !lancamento.descricao" />
+                @if (submitted && !lancamento.descricao) {
+                    <small class="text-red-500">A descrição é obrigatória.</small>
+                }
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label for="valor" class="font-semibold">
+                    Valor <span class="text-red-500">*</span>
+                </label>
+                <p-inputNumber
+                    id="valor"
+                    [(ngModel)]="lancamento.valor"
+                    mode="currency"
+                    currency="BRL"
+                    locale="pt-BR"
+                    placeholder="Digite o valor"
+                    styleClass="w-full"
+                    [class.ng-invalid]="submitted && lancamento.valor === undefined">
+                </p-inputNumber>
+                @if (submitted && lancamento.valor === undefined) {
+                    <small class="text-red-500">O valor é obrigatório.</small>
+                }
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label for="efetivado" class="font-semibold">
+                    Status do Lançamento
+                </label>
+                <p-button
+                    [label]="lancamento.efetivado ? 'Efetivado' : 'Pendente'"
+                    [icon]="lancamento.efetivado ? 'pi pi-check-circle' : 'pi pi-clock'"
+                    [severity]="lancamento.efetivado ? 'success' : 'info'"
+                    styleClass="w-full"
+                    (onClick)="lancamento.efetivado = !lancamento.efetivado">
+                </p-button>
+                <small class="text-muted-color">
+                    @if (lancamento.efetivado) {
+                        <i class="pi pi-info-circle"></i> O saldo da conta será atualizado ao salvar
+                    } @else {
+                        <i class="pi pi-info-circle"></i> Marque como efetivado para atualizar o saldo da conta
+                    }
+                </small>
+            </div>
+
+            @if (!isEditMode) {
+                <div class="flex flex-col gap-3 p-3 bg-surface-50 dark:bg-surface-800 rounded-lg border border-surface-200 dark:border-surface-700">
+                    <div class="flex items-center gap-2">
+                        <p-checkbox
+                            [(ngModel)]="isParcelado"
+                            [binary]="true"
+                            inputId="parcelado">
+                        </p-checkbox>
+                        <label for="parcelado" class="cursor-pointer font-semibold">
+                            Parcelar lançamento
+                        </label>
+                    </div>
+
+                    @if (isParcelado) {
+                        <div class="flex flex-col gap-2">
+                            <label for="numeroParcelas" class="font-semibold text-sm">
+                                Número de Parcelas
+                            </label>
+                            <p-inputNumber
+                                id="numeroParcelas"
+                                [(ngModel)]="numeroParcelas"
+                                [min]="2"
+                                [max]="60"
+                                [showButtons]="true"
+                                buttonLayout="horizontal"
+                                incrementButtonIcon="pi pi-plus"
+                                decrementButtonIcon="pi pi-minus"
+                                placeholder="Quantidade de parcelas"
+                                styleClass="w-full">
+                            </p-inputNumber>
+                            <small class="text-muted-color">
+                                Valor de cada parcela: <strong>{{ formatCurrency(valorParcela) }}</strong>
+                            </small>
+                            <small class="text-muted-color">
+                                Serão criados {{ numeroParcelas }} lançamentos com intervalo de 30 dias
+                            </small>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </ng-template>
+
+    <ng-template #footer>
+        <div class="flex gap-2 justify-end">
+            <p-button
+                label="Cancelar"
+                icon="pi pi-times"
+                severity="secondary"
+                [outlined]="true"
+                (onClick)="hideDialog()">
+            </p-button>
+            <p-button
+                label="Salvar"
+                icon="pi pi-check"
+                severity="success"
+                (onClick)="saveLancamento()">
+            </p-button>
+        </div>
+    </ng-template>
+</p-dialog>

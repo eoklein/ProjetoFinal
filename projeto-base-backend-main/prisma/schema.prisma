@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          Int          @id @default(autoincrement())
+  username    String       @unique
+  password    String
+  isAdmin     Boolean      @default(false)
+  categories  Category[]
+  contas      Conta[]
+  lancamentos Lancamento[]
+}
+
+model Book {
+  id        Int     @id @default(autoincrement())
+  title     String
+  author    String
+  available Boolean @default(true)
+}
+
+model Category {
+  id          Int          @id @default(autoincrement())
+  nome        String
+  userId      Int
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lancamentos Lancamento[]
+}
+
+model Conta {
+  id          Int          @id @default(autoincrement())
+  descricao   String
+  saldo       Float
+  limite      Float
+  userId      Int
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lancamentos Lancamento[]
+}
+
+model Lancamento {
+  id              Int          @id @default(autoincrement())
+  descricao       String
+  valor           Float
+  data            DateTime
+  tipo            String // 'RECEITA' ou 'DESPESA'
+  userId          Int
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoriaId     Int?
+  categoria       Category?    @relation(fields: [categoriaId], references: [id])
+  contaId         Int?
+  conta           Conta?       @relation(fields: [contaId], references: [id])
+  numeroParcelas  Int? // Número total de parcelas
+  parcelaAtual    Int? // Número da parcela atual
+  lancamentoPaiId Int? // ID do lançamento pai (se for uma parcela)
+  lancamentoPai   Lancamento?  @relation("ParcelasLancamento", fields: [lancamentoPaiId], references: [id], onDelete: Cascade)
+  parcelas        Lancamento[] @relation("ParcelasLancamento")
+  efetivado       Boolean      @default(false)
+}

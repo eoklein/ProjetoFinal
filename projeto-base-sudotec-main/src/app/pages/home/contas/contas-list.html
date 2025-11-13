@@ -1,0 +1,234 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<div class="card">
+    <p-toolbar styleClass="mb-6">
+        <ng-template #start>
+            <div>
+                <h2 class="text-3xl font-semibold text-surface-900 dark:text-surface-0 mb-2">
+                    Gerenciar Contas
+                </h2>
+                <p class="text-muted-color">
+                    Crie, edite e gerencie as contas do sistema
+                </p>
+            </div>
+        </ng-template>
+
+        <ng-template #end>
+            <div class="flex gap-2">
+                <p-button
+                    icon="pi pi-refresh"
+                    label="Atualizar"
+                    severity="secondary"
+                    [outlined]="true"
+                    (onClick)="loadContas()"
+                    [loading]="loading">
+                </p-button>
+                <p-button
+                    icon="pi pi-plus"
+                    label="Nova Conta"
+                    severity="success"
+                    (onClick)="openNew()">
+                </p-button>
+            </div>
+        </ng-template>
+    </p-toolbar>
+
+    <p-table
+        #dt
+        [value]="contas"
+        [loading]="loading"
+        [paginator]="true"
+        [rows]="10"
+        [rowsPerPageOptions]="[5, 10, 20, 50]"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} contas"
+        [globalFilterFields]="['descricao']"
+        styleClass="p-datatable-gridlines"
+        [tableStyle]="{ 'min-width': '50rem' }">
+
+        <ng-template #caption>
+            <div class="flex">
+                <p-iconfield iconPosition="left" class="ml-auto">
+                    <p-inputicon>
+                        <i class="pi pi-search"></i>
+                    </p-inputicon>
+                    <input pInputText type="text" (input)="dt.filterGlobal($any($event.target).value, 'contains')" placeholder="Buscar contas..." />
+                </p-iconfield>
+            </div>
+        </ng-template>
+
+        <ng-template #header>
+            <tr>
+                <th pSortableColumn="id" style="width: 10%">
+                    ID
+                    <p-sortIcon field="id" />
+                </th>
+                <th pSortableColumn="descricao" style="width: 35%">
+                    Descrição
+                    <p-sortIcon field="descricao" />
+                </th>
+                <th pSortableColumn="saldo" style="width: 20%">
+                    Saldo
+                    <p-sortIcon field="saldo" />
+                </th>
+                <th pSortableColumn="limite" style="width: 20%">
+                    Limite
+                    <p-sortIcon field="limite" />
+                </th>
+                <th style="width: 15%" class="text-center">Ações</th>
+            </tr>
+        </ng-template>
+
+        <ng-template #body let-conta>
+            <tr>
+                <td>{{ conta.id }}</td>
+                <td>
+                    <div class="flex items-center gap-2">
+                        <i class="pi pi-wallet text-lg"></i>
+                        <span class="font-medium">{{ conta.descricao }}</span>
+                    </div>
+                </td>
+                <td>
+                    <span [class]="conta.saldo >= 0 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'">
+                        {{ formatCurrency(conta.saldo) }}
+                    </span>
+                </td>
+                <td>
+                    <span class="font-semibold">
+                        {{ formatCurrency(conta.limite) }}
+                    </span>
+                </td>
+                <td>
+                    <div class="flex justify-center gap-2">
+                        <p-button
+                            icon="pi pi-pencil"
+                            severity="info"
+                            size="small"
+                            [outlined]="true"
+                            (onClick)="editConta(conta)"
+                            pTooltip="Editar"
+                            tooltipPosition="top">
+                        </p-button>
+
+                        <p-button
+                            icon="pi pi-trash"
+                            severity="danger"
+                            size="small"
+                            [outlined]="true"
+                            (onClick)="confirmDelete(conta)"
+                            pTooltip="Deletar"
+                            tooltipPosition="top">
+                        </p-button>
+                    </div>
+                </td>
+            </tr>
+        </ng-template>
+
+        <ng-template #emptymessage>
+            <tr>
+                <td colspan="5" class="text-center py-8">
+                    <div class="flex flex-col items-center gap-3">
+                        <i class="pi pi-inbox text-4xl text-muted-color"></i>
+                        <p class="text-muted-color text-lg">Nenhuma conta encontrada</p>
+                        <p-button
+                            label="Criar Primeira Conta"
+                            icon="pi pi-plus"
+                            size="small"
+                            (onClick)="openNew()">
+                        </p-button>
+                    </div>
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+</div>
+
+<!-- Dialog para criar/editar conta -->
+<p-dialog
+    [(visible)]="contaDialog"
+    [header]="isEditMode ? 'Editar Conta' : 'Nova Conta'"
+    [modal]="true"
+    [closable]="true"
+    [style]="{ width: '500px' }"
+    [breakpoints]="{ '960px': '75vw', '640px': '90vw' }">
+
+    <ng-template #content>
+        <div class="flex flex-col gap-6 p-4">
+            <div class="flex flex-col gap-2">
+                <label for="descricao" class="font-semibold">
+                    Descrição <span class="text-red-500">*</span>
+                </label>
+                <input
+                    pInputText
+                    id="descricao"
+                    [(ngModel)]="conta.descricao"
+                    required
+                    autofocus
+                    placeholder="Digite a descrição da conta"
+                    class="w-full"
+                    [class.ng-invalid]="submitted && !conta.descricao" />
+                @if (submitted && !conta.descricao) {
+                    <small class="text-red-500">A descrição é obrigatória.</small>
+                }
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label for="saldo" class="font-semibold">
+                    Saldo <span class="text-red-500">*</span>
+                </label>
+                <p-inputNumber
+                    id="saldo"
+                    [(ngModel)]="conta.saldo"
+                    mode="currency"
+                    currency="BRL"
+                    locale="pt-BR"
+                    placeholder="Digite o saldo"
+                    styleClass="w-full"
+                    [class.ng-invalid]="submitted && conta.saldo === undefined">
+                </p-inputNumber>
+                @if (submitted && conta.saldo === undefined) {
+                    <small class="text-red-500">O saldo é obrigatório.</small>
+                }
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label for="limite" class="font-semibold">
+                    Limite <span class="text-red-500">*</span>
+                </label>
+                <p-inputNumber
+                    id="limite"
+                    [(ngModel)]="conta.limite"
+                    mode="currency"
+                    currency="BRL"
+                    locale="pt-BR"
+                    placeholder="Digite o limite"
+                    styleClass="w-full"
+                    [class.ng-invalid]="submitted && conta.limite === undefined">
+                </p-inputNumber>
+                @if (submitted && conta.limite === undefined) {
+                    <small class="text-red-500">O limite é obrigatório.</small>
+                }
+            </div>
+        </div>
+    </ng-template>
+
+    <ng-template #footer>
+        <div class="flex gap-2 justify-end">
+            <p-button
+                label="Cancelar"
+                icon="pi pi-times"
+                severity="secondary"
+                [outlined]="true"
+                (onClick)="hideDialog()">
+            </p-button>
+            <p-button
+                label="Salvar"
+                icon="pi pi-check"
+                severity="success"
+                (onClick)="saveContact()">
+            </p-button>
+        </div>
+    </ng-template>
+</p-dialog>
+
