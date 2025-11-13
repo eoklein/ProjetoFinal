@@ -3,14 +3,50 @@ const prisma = new PrismaClient();
 
 const userController = {
     async login(req, res) {
-        res.status(200).json({
-            message: 'OK',
-            user: {
-                id: req.user.id,
-                username: req.user.username,
-                isAdmin: req.user.isAdmin
+        try {
+            const authHeader = req.headers.authorization;
+            console.log('🔑 Header Authorization:', authHeader);
+
+            if (!authHeader || !authHeader.startsWith('Basic ')) {
+                console.log('❌ Sem header de autenticação ou formato inválido');
+                return res.status(401).json({ error: 'Token de autenticação necessário' });
             }
-        });
+
+            const token = authHeader.substring(6);
+            const decoded = Buffer.from(token, 'base64').toString('utf-8');
+            const [username, password] = decoded.split(':');
+
+            console.log('📝 Username:', username, 'Password:', password);
+
+            if (!username || !password) {
+                console.log('❌ Username ou password vazios');
+                return res.status(401).json({ error: 'Token inválido' });
+            }
+
+            const user = await prisma.user.findUnique({
+                where: { username }
+            });
+
+            console.log('👤 Usuário encontrado:', user?.username, 'Senha do BD:', user?.password);
+
+            if (!user || user.password !== password) {
+                console.log('❌ Usuário não encontrado ou senha incorreta');
+                return res.status(401).json({ error: 'Credenciais inválidas' });
+            }
+
+            console.log('✅ Login bem-sucedido para:', username);
+            res.status(200).json({
+                message: 'OK',
+                user: {
+                    id: user.id,
+                    username: user.username,
+                    isAdmin: user.isAdmin
+                }
+            });
+        } catch (error) {
+            console.error('❌ Erro ao fazer login:', error);
+            res.status(500).json({ error: 'Erro interno do servidor' });
+        }
     },
 
     async register(req, res) {

@@ -209,7 +209,7 @@ export class LancamentosList implements OnInit {
                                         lancamentoOriginal.patrimonioId !== this.lancamento.patrimonioId ||
                                         lancamentoOriginal.tipo !== this.lancamento.tipo)
                                 ) {
-                                    this.atualizarSaldoContaAoSalvar(lancamentoOriginal);
+                                    // Lógica de saldo removida
                                 }
 
                                 this.messageService.add({
@@ -242,12 +242,7 @@ export class LancamentosList implements OnInit {
 
                     this.lancamentoService.createLancamento(lancamentoParaSalvar).subscribe({
                         next: () => {
-                            // Atualiza o saldo se o lançamento está efetivado e tem Patrimonio
-                            // Usa a cópia guardada ao invés de this.lancamento
-                            if (lancamentoParaSalvar.patrimonioId && lancamentoParaSalvar.efetivado) {
-                                console.log('Atualizando saldo da Patrimonio após criar lançamento efetivado');
-                                this.atualizarSaldoContaParaLancamento(lancamentoParaSalvar);
-                            }
+                            // Lógica de saldo removida
 
                             this.messageService.add({
                                 severity: 'success',
@@ -404,228 +399,27 @@ export class LancamentosList implements OnInit {
         console.log('Toggling efetivado for lancamento:', lancamento.id);
         console.log('Novo status efetivado:', novoStatus);
 
-        // Se tem Patrimonio associada, atualiza o saldo
-        if (lancamento.patrimonioId) {
-            this.patrimonioService.getPatrimonioById(lancamento.patrimonioId).subscribe({
-                next: (patrimonio) => {
-                    let novoSaldo = patrimonio.saldo;
+        // Nota: A lógica de saldo de patrimônio foi removida pois patrimônio agora não possui saldo
+        // Se precisar de lógica de saldo, implementar em outro contexto
 
-                    if (novoStatus) {
-                        // Está efetivando o lançamento
-                        if (lancamento.tipo === 'RECEITA') {
-                            novoSaldo += lancamento.valor;
-                        } else {
-                            novoSaldo -= lancamento.valor;
-                        }
-                    } else {
-                        // Está desefetivando o lançamento
-                        if (lancamento.tipo === 'RECEITA') {
-                            novoSaldo -= lancamento.valor;
-                        } else {
-                            novoSaldo += lancamento.valor;
-                        }
-                    }
-
-                    const patrimonioAtualizado = { ...patrimonio, saldo: novoSaldo };
-
-                    // Atualiza a Patrimonio
-                    this.patrimonioService.updatePatrimonio(patrimonio.id!, patrimonioAtualizado).subscribe({
-                        next: () => {
-                            // Atualiza o lançamento
-                            this.lancamentoService.updateLancamento(lancamento.id!, lancamentoAtualizado).subscribe({
-                                next: () => {
-                                    this.messageService.add({
-                                        severity: 'success',
-                                        summary: 'Sucesso',
-                                        detail: novoStatus ? 'Lançamento efetivado com sucesso' : 'Lançamento desefetivado com sucesso'
-                                    });
-                                    this.loadLancamentos();
-                                    this.loadPatrimonios(); // Atualiza a lista de patrimonios
-                                },
-                                error: () => {
-                                    // Reverte em caso de erro
-                                    lancamento.efetivado = !lancamento.efetivado;
-                                    this.messageService.add({
-                                        severity: 'error',
-                                        summary: 'Erro',
-                                        detail: 'Erro ao atualizar status do lançamento'
-                                    });
-                                }
-                            });
-                        },
-                        error: () => {
-                            // Reverte em caso de erro
-                            lancamento.efetivado = !lancamento.efetivado;
-                            this.messageService.add({
-                                severity: 'error',
-                                summary: 'Erro',
-                                detail: 'Erro ao atualizar saldo da Patrimonio'
-                            });
-                        }
-                    });
-                },
-                error: () => {
-                    this.messageService.add({
-                        severity: 'error',
-                        summary: 'Erro',
-                        detail: 'Erro ao buscar informações da Patrimonio'
-                    });
-                }
-            });
-        } else {
-            // Se não tem Patrimonio, apenas atualiza o status do lançamento
-            this.lancamentoService.updateLancamento(lancamento.id!, lancamentoAtualizado).subscribe({
-                next: () => {
-                    this.messageService.add({
-                        severity: 'success',
-                        summary: 'Sucesso',
-                        detail: novoStatus ? 'Lançamento efetivado com sucesso' : 'Lançamento desefetivado com sucesso'
-                    });
-                    this.loadLancamentos();
-                },
-                error: () => {
-                    this.messageService.add({
-                        severity: 'error',
-                        summary: 'Erro',
-                        detail: 'Erro ao atualizar status do lançamento'
-                    });
-                }
-            });
-        }
-    }
-
-    atualizarSaldoContaAoSalvar(lancamentoOriginal?: Lancamento) {
-        console.log('=== atualizarSaldoContaAoSalvar ===');
-        console.log('Lançamento atual:', JSON.stringify(this.lancamento, null, 2));
-        console.log('Lançamento original:', lancamentoOriginal ? JSON.stringify(lancamentoOriginal, null, 2) : 'null');
-        console.log('Campo efetivado:', this.lancamento.efetivado, 'Tipo:', typeof this.lancamento.efetivado);
-
-        // Se não tem Patrimonio, não faz nada
-        if (!this.lancamento.patrimonioId) {
-            console.log('Sem Patrimonio associada, pulando atualização');
-            return;
-        }
-
-        this.patrimonioService.getPatrimonioById(this.lancamento.patrimonioId).subscribe({
-            next: (patrimonio) => {
-                console.log('Patrimonio atual:', JSON.stringify(patrimonio, null, 2));
-                let novoSaldo = patrimonio.saldo;
-                console.log('Saldo inicial:', novoSaldo);
-
-                // Se está editando, primeiro reverte o valor anterior
-                if (lancamentoOriginal && lancamentoOriginal.efetivado && lancamentoOriginal.patrimonioId === this.lancamento.patrimonioId) {
-                    console.log('Revertendo lançamento original efetivado');
-                    if (lancamentoOriginal.tipo === 'RECEITA') {
-                        novoSaldo -= lancamentoOriginal.valor;
-                        console.log(`Removendo RECEITA: ${novoSaldo} = ${patrimonio.saldo} - ${lancamentoOriginal.valor}`);
-                    } else {
-                        novoSaldo += lancamentoOriginal.valor;
-                        console.log(`Devolvendo DESPESA: ${novoSaldo} = ${patrimonio.saldo} + ${lancamentoOriginal.valor}`);
-                    }
-                }
-
-                // Aplica o novo valor se estiver efetivado
-                if (this.lancamento.efetivado) {
-                    console.log('Aplicando novo lançamento efetivado');
-                    if (this.lancamento.tipo === 'RECEITA') {
-                        novoSaldo += this.lancamento.valor;
-                        console.log(`Adicionando RECEITA: ${novoSaldo} = saldo anterior + ${this.lancamento.valor}`);
-                    } else {
-                        novoSaldo -= this.lancamento.valor;
-                        console.log(`Subtraindo DESPESA: ${novoSaldo} = saldo anterior - ${this.lancamento.valor}`);
-                    }
-                } else {
-                    console.log('Lançamento NÃO está efetivado, não aplicando ao saldo');
-                }
-
-                console.log('Saldo final calculado:', novoSaldo);
-                const patrimonioAtualizado = { ...patrimonio, saldo: novoSaldo };
-
-                this.patrimonioService.updatePatrimonio(patrimonio.id!, patrimonioAtualizado).subscribe({
-                    next: () => {
-                        console.log('Saldo do Patrimonio atualizado com sucesso');
-                        this.loadPatrimonios();
-                    },
-                    error: () => {
-                        console.error('Erro ao atualizar saldo da Patrimonio');
-                        this.messageService.add({
-                            severity: 'error',
-                            summary: 'Erro',
-                            detail: 'Erro ao atualizar saldo da Patrimonio'
-                        });
-                    }
+        // Atualiza o lançamento
+        this.lancamentoService.updateLancamento(lancamento.id!, lancamentoAtualizado).subscribe({
+            next: () => {
+                this.messageService.add({
+                    severity: 'success',
+                    summary: 'Sucesso',
+                    detail: novoStatus ? 'Lançamento efetivado com sucesso' : 'Lançamento desefetivado com sucesso'
                 });
+                this.loadLancamentos();
             },
-            error: (err) => {
-                console.error('Erro ao buscar Patrimonio:', err);
-            }
-        });
-    }
-
-    atualizarSaldoContaParaLancamento(lancamento: Lancamento, lancamentoOriginal?: Lancamento) {
-        console.log('=== atualizarSaldoContaParaLancamento ===');
-        console.log('Lançamento:', JSON.stringify(lancamento, null, 2));
-        console.log('Lançamento original:', lancamentoOriginal ? JSON.stringify(lancamentoOriginal, null, 2) : 'null');
-        console.log('Campo efetivado:', lancamento.efetivado, 'Tipo:', typeof lancamento.efetivado);
-
-        // Se não tem Patrimonio, não faz nada
-        if (!lancamento.patrimonioId) {
-            console.log('Sem Patrimonio associada, pulando atualização');
-            return;
-        }
-
-        this.patrimonioService.getPatrimonioById(lancamento.patrimonioId).subscribe({
-            next: (patrimonio) => {
-                console.log('Patrimonio atual:', JSON.stringify(patrimonio, null, 2));
-                let novoSaldo = patrimonio.saldo;
-                console.log('Saldo inicial:', novoSaldo);
-
-                // Se está editando, primeiro reverte o valor anterior
-                if (lancamentoOriginal && lancamentoOriginal.efetivado && lancamentoOriginal.patrimonioId === lancamento.patrimonioId) {
-                    console.log('Revertendo lançamento original efetivado');
-                    if (lancamentoOriginal.tipo === 'RECEITA') {
-                        novoSaldo -= lancamentoOriginal.valor;
-                        console.log(`Removendo RECEITA: ${novoSaldo} = ${patrimonio.saldo} - ${lancamentoOriginal.valor}`);
-                    } else {
-                        novoSaldo += lancamentoOriginal.valor;
-                        console.log(`Devolvendo DESPESA: ${novoSaldo} = ${patrimonio.saldo} + ${lancamentoOriginal.valor}`);
-                    }
-                }
-
-                // Aplica o novo valor se estiver efetivado
-                if (lancamento.efetivado) {
-                    console.log('Aplicando novo lançamento efetivado');
-                    if (lancamento.tipo === 'RECEITA') {
-                        novoSaldo += lancamento.valor;
-                        console.log(`Adicionando RECEITA: ${novoSaldo} = saldo anterior + ${lancamento.valor}`);
-                    } else {
-                        novoSaldo -= lancamento.valor;
-                        console.log(`Subtraindo DESPESA: ${novoSaldo} = saldo anterior - ${lancamento.valor}`);
-                    }
-                } else {
-                    console.log('Lançamento NÃO está efetivado, não aplicando ao saldo');
-                }
-
-                console.log('Saldo final calculado:', novoSaldo);
-                const patrimonioAtualizado = { ...patrimonio, saldo: novoSaldo };
-
-                this.patrimonioService.updatePatrimonio(patrimonio.id!, patrimonioAtualizado).subscribe({
-                    next: () => {
-                        console.log('Saldo da Patrimonio atualizado com sucesso!');
-                        this.loadPatrimonios();
-                    },
-                    error: () => {
-                        console.error('Erro ao atualizar saldo da Patrimonio');
-                        this.messageService.add({
-                            severity: 'error',
-                            summary: 'Erro',
-                            detail: 'Erro ao atualizar saldo da Patrimonio'
-                        });
-                    }
+            error: () => {
+                // Reverte em caso de erro
+                lancamento.efetivado = !lancamento.efetivado;
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Erro',
+                    detail: 'Erro ao atualizar status do lançamento'
                 });
-            },
-            error: (err) => {
-                console.error('Erro ao buscar Patrimonio:', err);
             }
         });
     }

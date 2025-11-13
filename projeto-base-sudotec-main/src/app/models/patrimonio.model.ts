@@ -1,6 +1,6 @@
 export interface Patrimonio {
     id?: number;
     descricao: string;
-    saldo: number;
-    limite: number;
+    status: string;
+    data?: Date;
 }

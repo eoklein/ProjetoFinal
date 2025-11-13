@@ -68,13 +68,13 @@
                     Descrição
                     <p-sortIcon field="descricao" />
                 </th>
-                <th pSortableColumn="saldo" style="width: 20%">
-                    Saldo
-                    <p-sortIcon field="saldo" />
+                <th pSortableColumn="status" style="width: 20%">
+                    Status
+                    <p-sortIcon field="status" />
                 </th>
-                <th pSortableColumn="limite" style="width: 20%">
-                    Limite
-                    <p-sortIcon field="limite" />
+                <th pSortableColumn="data" style="width: 20%">
+                    Data
+                    <p-sortIcon field="data" />
                 </th>
                 <th style="width: 15%" class="text-center">Ações</th>
             </tr>
@@ -90,13 +90,17 @@
                     </div>
                 </td>
                 <td>
-                    <span [class]="patrimonio.saldo >= 0 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'">
-                        {{ formatCurrency(patrimonio.saldo) }}
+                    <span [ngClass]="{
+                        'bg-red-100 text-red-800 px-3 py-1 rounded-full': patrimonio.status === 'critico',
+                        'bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full': patrimonio.status === 'normal',
+                        'bg-green-100 text-green-800 px-3 py-1 rounded-full': patrimonio.status === 'bom'
+                    }" class="font-semibold">
+                        {{ patrimonio.status | uppercase }}
                     </span>
                 </td>
                 <td>
                     <span class="font-semibold">
-                        {{ formatCurrency(patrimonio.limite) }}
+                        {{ patrimonio.data | date: 'dd/MM/yyyy' }}
                     </span>
                 </td>
                 <td>
@@ -174,40 +178,21 @@
             </div>
 
             <div class="flex flex-col gap-2">
-                <label for="saldo" class="font-semibold">
-                    Saldo <span class="text-red-500">*</span>
+                <label for="status" class="font-semibold">
+                    Status <span class="text-red-500">*</span>
                 </label>
-                <p-inputNumber
-                    id="saldo"
-                    [(ngModel)]="patrimonio.saldo"
-                    mode="currency"
-                    currency="BRL"
-                    locale="pt-BR"
-                    placeholder="Digite o saldo"
+                <p-select
+                    id="status"
+                    [(ngModel)]="patrimonio.status"
+                    [options]="statusOptions"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Selecione o status"
                     styleClass="w-full"
-                    [class.ng-invalid]="submitted && patrimonio.saldo === undefined">
-                </p-inputNumber>
-                @if (submitted && patrimonio.saldo === undefined) {
-                    <small class="text-red-500">O saldo é obrigatório.</small>
-                }
-            </div>
-
-            <div class="flex flex-col gap-2">
-                <label for="limite" class="font-semibold">
-                    Limite <span class="text-red-500">*</span>
-                </label>
-                <p-inputNumber
-                    id="limite"
-                    [(ngModel)]="patrimonio.limite"
-                    mode="currency"
-                    currency="BRL"
-                    locale="pt-BR"
-                    placeholder="Digite o limite"
-                    styleClass="w-full"
-                    [class.ng-invalid]="submitted && patrimonio.limite === undefined">
-                </p-inputNumber>
-                @if (submitted && patrimonio.limite === undefined) {
-                    <small class="text-red-500">O limite é obrigatório.</small>
+                    [class.ng-invalid]="submitted && !patrimonio.status">
+                </p-select>
+                @if (submitted && !patrimonio.status) {
+                    <small class="text-red-500">O status é obrigatório.</small>
                 }
             </div>
         </div>

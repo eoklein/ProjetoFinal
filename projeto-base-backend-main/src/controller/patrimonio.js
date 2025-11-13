@@ -11,8 +11,8 @@ const patrimonioController = {
                 select: {
                     id: true,
                     descricao: true,
-                    saldo: true,
-                    limite: true,
+                    status: true,
+                    data: true,
                     userId: true
                 }
             });
@@ -37,8 +37,8 @@ const patrimonioController = {
                 select: {
                     id: true,
                     descricao: true,
-                    saldo: true,
-                    limite: true,
+                    status: true,
+                    data: true,
                     userId: true
                 }
             });
@@ -56,26 +56,26 @@ const patrimonioController = {
 
     async createPatrimonio(req, res) {
         try {
-            const {descricao, saldo, limite} = req.body;
+            const {descricao, status} = req.body;
             const userId = req.user.id;
 
             if (!descricao) {
                 return res.status(400).json({error: 'Descrição é obrigatória'});
             }
 
-            if (saldo === undefined || saldo === null) {
-                return res.status(400).json({error: 'Saldo é obrigatório'});
+            if (!status) {
+                return res.status(400).json({error: 'Status é obrigatório'});
             }
 
-            if (limite === undefined || limite === null) {
-                return res.status(400).json({error: 'Limite é obrigatório'});
+            const validStatuses = ['critico', 'normal', 'bom'];
+            if (!validStatuses.includes(status)) {
+                return res.status(400).json({error: 'Status deve ser: critico, normal ou bom'});
             }
 
             const patrimonio = await prisma.patrimonio.create({
                 data: {
                     descricao,
-                    saldo: parseFloat(saldo),
-                    limite: parseFloat(limite),
+                    status,
                     userId
                 }
             });
@@ -85,8 +85,8 @@ const patrimonioController = {
                 patrimonio: {
                     id: patrimonio.id,
                     descricao: patrimonio.descricao,
-                    saldo: patrimonio.saldo,
-                    limite: patrimonio.limite,
+                    status: patrimonio.status,
+                    data: patrimonio.data,
                     userId: patrimonio.userId
                 }
             });
@@ -100,7 +100,7 @@ const patrimonioController = {
         try {
             console.log('Requisição de atualização de patrimonio recebida:', req.params.id, req.body);
             const patrimonioId = parseInt(req.params.id);
-            const {descricao, saldo, limite} = req.body;
+            const {descricao, status} = req.body;
             const userId = req.user.id;
 
             const existingPatrimonio = await prisma.patrimonio.findFirst({
@@ -118,11 +118,12 @@ const patrimonioController = {
             if (descricao !== undefined) {
                 updateData.descricao = descricao;
             }
-            if (saldo !== undefined) {
-                updateData.saldo = parseFloat(saldo);
-            }
-            if (limite !== undefined) {
-                updateData.limite = parseFloat(limite);
+            if (status !== undefined) {
+                const validStatuses = ['critico', 'normal', 'bom'];
+                if (!validStatuses.includes(status)) {
+                    return res.status(400).json({error: 'Status deve ser: critico, normal ou bom'});
+                }
+                updateData.status = status;
             }
 
             const patrimonio = await prisma.patrimonio.update({
@@ -135,8 +136,8 @@ const patrimonioController = {
                 patrimonio: {
                     id: patrimonio.id,
                     descricao: patrimonio.descricao,
-                    saldo: patrimonio.saldo,
-                    limite: patrimonio.limite,
+                    status: patrimonio.status,
+                    data: patrimonio.data,
                     userId: patrimonio.userId
                 }
             });

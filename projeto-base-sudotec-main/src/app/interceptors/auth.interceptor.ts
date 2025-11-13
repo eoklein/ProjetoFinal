@@ -11,6 +11,19 @@ import { AuthService } from '@/services/auth.service';
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
     const authService = inject(AuthService);
     const router = inject(Router);
+    
+    // Se a requisição já tem Authorization header, não modifica
+    if (req.headers.has('Authorization')) {
+        return next(req).pipe(
+            catchError((error) => {
+                if (error.status >= 404) {
+                    router.navigate(['/error']);
+                }
+                return throwError(() => error);
+            })
+        );
+    }
+    
     const token = authService.getToken();
 
     // Se existe token, adiciona o header Authorization
@@ -23,7 +36,6 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
         return next(clonedRequest).pipe(
             catchError((error) => {
-                // Se for erro 404+ (não encontrado ou erro do servidor), redireciona para página de erro
                 if (error.status >= 404) {
                     router.navigate(['/error']);
                 }
@@ -32,10 +44,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         );
     }
 
-    // Se não existe token, continua com a requisição original mas ainda trata erros 404+
+    // Se não existe token, continua com a requisição original
     return next(req).pipe(
         catchError((error) => {
-            // Se for erro 404+ (não encontrado ou erro do servidor), redireciona para página de erro
             if (error.status >= 404) {
                 router.navigate(['/error']);
             }

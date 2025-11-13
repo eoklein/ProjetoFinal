@@ -7,7 +7,7 @@ import { Dialog } from 'primeng/dialog';
 import { Toast } from 'primeng/toast';
 import { ConfirmDialog } from 'primeng/confirmdialog';
 import { InputTextModule } from 'primeng/inputtext';
-import { InputNumberModule } from 'primeng/inputnumber';
+import { SelectModule } from 'primeng/select';
 import { Toolbar } from 'primeng/toolbar';
 import { TooltipModule } from 'primeng/tooltip';
 import { ConfirmationService, MessageService } from 'primeng/api';
@@ -19,7 +19,7 @@ import { InputIcon } from 'primeng/inputicon';
 @Component({
     selector: 'app-patrimonios-list',
     standalone: true,
-    imports: [CommonModule, FormsModule, TableModule, ButtonModule, Dialog, Toast, ConfirmDialog, InputTextModule, InputNumberModule, Toolbar, TooltipModule, IconField, InputIcon],
+    imports: [CommonModule, FormsModule, TableModule, ButtonModule, Dialog, Toast, ConfirmDialog, InputTextModule, SelectModule, Toolbar, TooltipModule, IconField, InputIcon],
     templateUrl: './patrimonios-list.html',
     providers: [MessageService, ConfirmationService]
 })
@@ -34,6 +34,12 @@ export class PatrimoniosList implements OnInit {
     submitted: boolean = false;
     loading: boolean = false;
     isEditMode: boolean = false;
+    
+    statusOptions = [
+        { label: 'Crítico', value: 'critico' },
+        { label: 'Normal', value: 'normal' },
+        { label: 'Bom', value: 'bom' }
+    ];
 
     ngOnInit() {
         this.loadPatrimonios();
@@ -58,7 +64,7 @@ export class PatrimoniosList implements OnInit {
     }
 
     openNew() {
-        this.patrimonio = { saldo: 0, limite: 0 } as Patrimonio;
+        this.patrimonio = { status: 'normal' } as Patrimonio;
         this.submitted = false;
         this.isEditMode = false;
         this.patrimonioDialog = true;
@@ -78,7 +84,7 @@ export class PatrimoniosList implements OnInit {
     saveContact() {
         this.submitted = true;
 
-        if (this.patrimonio.descricao?.trim() && this.patrimonio.saldo !== undefined && this.patrimonio.limite !== undefined) {
+        if (this.patrimonio.descricao?.trim() && this.patrimonio.status) {
             if (this.patrimonio.id) {
                 // Update
                 this.patrimonioService.updatePatrimonio(this.patrimonio.id, this.patrimonio).subscribe({
@@ -156,12 +162,5 @@ export class PatrimoniosList implements OnInit {
                 });
             }
         });
-    }
-
-    formatCurrency(value: number): string {
-        return new Intl.NumberFormat('pt-BR', {
-            style: 'currency',
-            currency: 'BRL'
-        }).format(value);
     }
 }
