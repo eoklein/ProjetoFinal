@@ -1,20 +1,248 @@
-<div class="p-8">
-    <h1 class="text-3xl font-bold mb-6">Reservas</h1>
-    <div class="bg-surface-0 dark:bg-surface-900 p-6 rounded-lg border border-surface-200 dark:border-surface-700">
-        <div class="mb-6">
-            <label for="codigo" class="block text-surface-900 dark:text-surface-0 font-medium mb-2">
-                Código do Patrimônio
-            </label>
-            <input
-                pInputText
-                id="codigo"
-                type="text"
-                placeholder="Digite o código (máx 10 caracteres)"
-                maxlength="10"
-                class="w-full"
-                [(ngModel)]="codigoPatrimonio" />
-            <small class="text-muted-color block mt-1">{{ codigoPatrimonio.length || 0 }}/10 caracteres</small>
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<!-- Toolbar: Gerenciar Reservas -->
+<p-toolbar styleClass="mb-6">
+    <ng-template #start>
+        <div>
+            <h2 class="text-3xl font-semibold text-surface-900 dark:text-surface-0 mb-2">
+                Gerenciar Reservas
+            </h2>
+            <p class="text-muted-color">
+                Crie, edite e gerencie suas reservas de patrimônios
+            </p>
         </div>
-        <p class="text-muted-color">Página em construção...</p>
-    </div>
+    </ng-template>
+
+    <ng-template #end>
+        <div class="flex gap-2">
+            <p-button
+                icon="pi pi-refresh"
+                label="Atualizar"
+                severity="secondary"
+                [outlined]="true"
+                (onClick)="loadReservas()"
+                [loading]="loading">
+            </p-button>
+            <p-button
+                icon="pi pi-plus"
+                label="Nova Reserva"
+                severity="success"
+                (onClick)="openNew()">
+            </p-button>
+        </div>
+    </ng-template>
+</p-toolbar>
+
+<!-- Card: Tabela de Reservas -->
+<div class="card">
+    <p-table
+        #dt
+        [value]="reservas"
+        [loading]="loading"
+        [paginator]="true"
+        [rows]="10"
+        [rowsPerPageOptions]="[5, 10, 20, 50]"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} reservas"
+        [globalFilterFields]="['patrimonio.nome']"
+        styleClass="p-datatable-gridlines"
+        [tableStyle]="{ 'min-width': '50rem' }">
+
+        <ng-template #caption>
+            <div class="flex">
+                <p-iconfield iconPosition="left" class="ml-auto">
+                    <p-inputicon>
+                        <i class="pi pi-search"></i>
+                    </p-inputicon>
+                    <input pInputText type="text" (input)="dt.filterGlobal($any($event.target).value, 'contains')" placeholder="Buscar reservas..." />
+                </p-iconfield>
+            </div>
+        </ng-template>
+
+        <ng-template #header>
+            <tr>
+                <th pSortableColumn="id" style="width: 8%">
+                    ID
+                    <p-sortIcon field="id" />
+                </th>
+                <th pSortableColumn="patrimonio.nome" style="width: 20%">
+                    Patrimônio
+                    <p-sortIcon field="patrimonio.nome" />
+                </th>
+                <th pSortableColumn="patrimonio.codigo" style="width: 10%">
+                    Código
+                    <p-sortIcon field="patrimonio.codigo" />
+                </th>
+                <th pSortableColumn="dataReserva" style="width: 15%">
+                    Data Reserva
+                    <p-sortIcon field="dataReserva" />
+                </th>
+                <th pSortableColumn="dataDevolucao" style="width: 15%">
+                    Data Devolução
+                    <p-sortIcon field="dataDevolucao" />
+                </th>
+                <th pSortableColumn="status" style="width: 12%">
+                    Status
+                    <p-sortIcon field="status" />
+                </th>
+                <th style="width: 20%" class="text-center">Ações</th>
+            </tr>
+        </ng-template>
+
+        <ng-template #body let-reserva>
+            <tr>
+                <td>{{ reserva.id }}</td>
+                <td>
+                    <div class="flex items-center gap-2">
+                        <span class="font-medium">{{ reserva.patrimonio?.nome }}</span>
+                    </div>
+                </td>
+                <td>
+                    <span class="font-mono text-sm bg-surface-100 dark:bg-surface-800 px-2 py-1 rounded">
+                        {{ reserva.patrimonio?.codigo || '-' }}
+                    </span>
+                </td>
+                <td>
+                    <span class="font-semibold">
+                        {{ reserva.dataReserva | date: 'dd/MM/yyyy HH:mm' }}
+                    </span>
+                </td>
+                <td>
+                    <span class="font-semibold">
+                        {{ reserva.dataDevolucao | date: 'dd/MM/yyyy' }}
+                    </span>
+                </td>
+                <td>
+                    <p-tag 
+                        [value]="(reserva.status | titlecase)"
+                        [severity]="reserva.status === 'ativa' ? 'success' : reserva.status === 'devolvido' ? 'info' : 'warning'"
+                        styleClass="whitespace-nowrap">
+                    </p-tag>
+                </td>
+                <td>
+                    <div class="flex justify-center gap-2">
+                        <p-button
+                            icon="pi pi-pencil"
+                            severity="info"
+                            size="small"
+                            [outlined]="true"
+                            (onClick)="editReserva(reserva)"
+                            pTooltip="Editar"
+                            tooltipPosition="top">
+                        </p-button>
+
+                        <p-button
+                            icon="pi pi-trash"
+                            severity="danger"
+                            size="small"
+                            [outlined]="true"
+                            (onClick)="confirmDelete(reserva)"
+                            pTooltip="Deletar"
+                            tooltipPosition="top">
+                        </p-button>
+                    </div>
+                </td>
+            </tr>
+        </ng-template>
+
+        <ng-template #emptymessage>
+            <tr>
+                <td colspan="7" class="text-center py-8">
+                    <div class="flex flex-col items-center gap-3">
+                        <i class="pi pi-inbox text-4xl text-muted-color"></i>
+                        <p class="text-muted-color text-lg">Nenhuma reserva encontrada</p>
+                    </div>
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
 </div>
+
+<!-- Dialog para criar/editar reserva -->
+<p-dialog
+    [(visible)]="reservaDialog"
+    [header]="isEditMode ? 'Editar Reserva' : 'Nova Reserva'"
+    [modal]="true"
+    [closable]="true"
+    [style]="{ width: '500px' }"
+    [breakpoints]="{ '960px': '75vw', '640px': '90vw' }">
+
+    <ng-template #content>
+        <div class="flex flex-col gap-6 p-4">
+            <div class="flex flex-col gap-2">
+                <label for="patrimonio" class="font-semibold">
+                    Patrimônio @if (!isEditMode) {<span class="text-red-500">*</span>}
+                </label>
+                <p-select
+                    id="patrimonio"
+                    [(ngModel)]="reserva.patrimonioId"
+                    [options]="patrimoniosDisponiveis"
+                    optionLabel="nome"
+                    optionValue="id"
+                    placeholder="Selecione um patrimônio"
+                    styleClass="w-full"
+                    [disabled]="isEditMode"
+                    [class.ng-invalid]="submitted && !isEditMode && !reserva.patrimonioId">
+                </p-select>
+                @if (submitted && !isEditMode && !reserva.patrimonioId) {
+                    <small class="text-red-500">Patrimônio é obrigatório.</small>
+                }
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label for="dataDevolucao" class="font-semibold">
+                    Data de Devolução @if (!isEditMode) {<span class="text-red-500">*</span>}
+                </label>
+                <p-date-picker
+                    id="dataDevolucao"
+                    [(ngModel)]="reserva.dataDevolucao"
+                    dateFormat="dd/mm/yy"
+                    [showIcon]="true"
+                    placeholder="Selecione a data"
+                    styleClass="w-full"
+                    [class.ng-invalid]="submitted && !isEditMode && !reserva.dataDevolucao">
+                </p-date-picker>
+                @if (submitted && !isEditMode && !reserva.dataDevolucao) {
+                    <small class="text-red-500">Data de devolução é obrigatória.</small>
+                }
+            </div>
+
+            @if (isEditMode) {
+                <div class="flex flex-col gap-2">
+                    <label for="status" class="font-semibold">
+                        Status
+                    </label>
+                    <p-select
+                        id="status"
+                        [(ngModel)]="reserva.status"
+                        [options]="statusOptions"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Selecione o status"
+                        styleClass="w-full">
+                    </p-select>
+                </div>
+            }
+        </div>
+    </ng-template>
+
+    <ng-template #footer>
+        <div class="flex gap-3 justify-end">
+            <p-button
+                label="Cancelar"
+                icon="pi pi-times"
+                severity="secondary"
+                [outlined]="true"
+                (onClick)="hideDialog()">
+            </p-button>
+            <p-button
+                label="Salvar"
+                icon="pi pi-check"
+                severity="success"
+                (onClick)="saveReserva()">
+            </p-button>
+        </div>
+    </ng-template>
+</p-dialog>
+

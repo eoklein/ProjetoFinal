@@ -15,6 +15,7 @@ model User {
   tiposPatrimonio  TipoPatrimonio[]
   patrimonios      Patrimonio[]
   estoques         Estoque[]
+  reservas         Reserva[]
 }
 
 model TipoPatrimonio {
@@ -35,6 +36,7 @@ model Patrimonio {
   userId      Int
   user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   estoques    Estoque[]
+  reservas    Reserva[]
 }
 
 model Estoque {
@@ -55,4 +57,16 @@ model Estoque {
   estoquePai          Estoque?        @relation("RetiradosEstoque", fields: [estoquePaiId], references: [id], onDelete: Cascade)
   retirados           Estoque[]       @relation("RetiradosEstoque")
   efetivado           Boolean         @default(false)
+}
+
+model Reserva {
+  id              Int         @id @default(autoincrement())
+  patrimonioId    Int
+  patrimonio      Patrimonio  @relation(fields: [patrimonioId], references: [id], onDelete: Restrict)
+  userId          Int
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dataReserva     DateTime    @default(now())
+  dataDevolucao   DateTime
+  status          String      @default("ativa") // ativa / devolvido / cancelado
+  criadoEm        DateTime    @default(now())
 }
