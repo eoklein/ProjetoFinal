@@ -17,13 +17,6 @@ model User {
   estoques         Estoque[]
 }
 
-model Book {
-  id        Int     @id @default(autoincrement())
-  title     String
-  author    String
-  available Boolean @default(true)
-}
-
 model TipoPatrimonio {
   id          Int          @id @default(autoincrement())
   nome        String
@@ -35,8 +28,8 @@ model TipoPatrimonio {
 model Patrimonio {
   id          Int          @id @default(autoincrement())
   descricao   String
-  saldo       Float
-  limite      Float
+  status      String //critico / normal / bom
+  data       DateTime @default(now()) // de quando foi requisitado
   userId      Int
   user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   estoques    Estoque[]

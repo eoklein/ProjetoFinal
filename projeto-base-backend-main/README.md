@@ -23,20 +23,6 @@ Rotas
 
 POST /auth/register
 
-GET /books
-
-GET /books/:id
-
-POST /books/:id/borrow
-
-POST /books/:id/return
-
-POST /books (admin)
-
-PATCH /books/:id (admin)
-
-DELETE /books/:id (admin)
-
 GET /users (admin)
 
 GET /users/:id (admin)
