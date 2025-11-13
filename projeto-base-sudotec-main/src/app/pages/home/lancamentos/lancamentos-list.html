@@ -109,7 +109,7 @@
                 <td>
                     <p-tag 
                         [value]="(patrimonio.status | titlecase)"
-                        [severity]="patrimonio.status === 'critico' ? 'danger' : patrimonio.status === 'normal' ? 'warning' : 'success'"
+                        [severity]="patrimonio.status === 'critico' ? 'danger' : patrimonio.status === 'danificado' ? 'warning' : 'success'"
                         styleClass="whitespace-nowrap">
                     </p-tag>
                 </td>

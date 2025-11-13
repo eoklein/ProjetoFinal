@@ -47,7 +47,7 @@ export class PatrimoniosList implements OnInit {
     
     statusOptions = [
         { label: 'Crítico', value: 'critico' },
-        { label: 'Normal', value: 'normal' },
+        { label: 'Danificado', value: 'danificado' },
         { label: 'Bom', value: 'bom' }
     ];
 
@@ -96,7 +96,7 @@ export class PatrimoniosList implements OnInit {
     }
 
     openNew() {
-        this.patrimonio = { status: 'normal' } as Patrimonio;
+        this.patrimonio = { status: 'danificado' } as Patrimonio;
         this.submitted = false;
         this.isEditMode = false;
         this.patrimonioDialog = true;

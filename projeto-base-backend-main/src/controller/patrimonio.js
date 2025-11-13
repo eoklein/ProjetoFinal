@@ -187,9 +187,9 @@ const patrimonioController = {
                 return res.status(400).json({error: 'Tipo de patrimonio é obrigatório'});
             }
 
-            const validStatuses = ['critico', 'normal', 'bom'];
+            const validStatuses = ['critico', 'danificado', 'bom'];
             if (!validStatuses.includes(status)) {
-                return res.status(400).json({error: 'Status deve ser: critico, normal ou bom'});
+                return res.status(400).json({error: 'Status deve ser: critico, danificado ou bom'});
             }
 
             const patrimonio = await prisma.patrimonio.create({
@@ -260,9 +260,9 @@ const patrimonioController = {
                 updateData.codigo = codigo;
             }
             if (status !== undefined) {
-                const validStatuses = ['critico', 'normal', 'bom'];
+                const validStatuses = ['critico', 'danificado', 'bom'];
                 if (!validStatuses.includes(status)) {
-                    return res.status(400).json({error: 'Status deve ser: critico, normal ou bom'});
+                    return res.status(400).json({error: 'Status deve ser: critico, danificado ou bom'});
                 }
                 updateData.status = status;
             }
