@@ -4,7 +4,7 @@ const authRoutes = require('./src/routes/auth');
 const userRoutes = require('./src/routes/users');
 const tipoPatrimonioRoutes = require('./src/routes/tiposPatrimonio');
 const patrimonioRoutes = require('./src/routes/patrimonios');
-const lancamentoRoutes = require('./src/routes/estoque');
+const estoqueRoutes = require('./src/routes/estoque');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -23,7 +23,7 @@ app.use('/auth', authRoutes);
 app.use('/users', userRoutes);
 app.use('/tiposPatrimonio', tipoPatrimonioRoutes);
 app.use('/patrimonios', patrimonioRoutes);
-app.use('/lancamentos', lancamentoRoutes);
+app.use('/lancamentos', estoqueRoutes);
 
 app.get('/', (req, res) => {
   res.json({
