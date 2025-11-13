@@ -10,7 +10,7 @@ const patrimonioController = {
                 where: {userId},
                 select: {
                     id: true,
-                    nome: true,
+                    descricao: true,
                     status: true,
                     data: true,
                     userId: true
@@ -36,7 +36,7 @@ const patrimonioController = {
                 },
                 select: {
                     id: true,
-                    nome: true,
+                    descricao: true,
                     status: true,
                     data: true,
                     userId: true
@@ -56,11 +56,11 @@ const patrimonioController = {
 
     async createPatrimonio(req, res) {
         try {
-            const {nome, status} = req.body;
+            const {descricao, status} = req.body;
             const userId = req.user.id;
 
-            if (!nome) {
-                return res.status(400).json({error: 'Nome é obrigatório'});
+            if (!descricao) {
+                return res.status(400).json({error: 'Descrição é obrigatória'});
             }
 
             if (!status) {
@@ -74,7 +74,7 @@ const patrimonioController = {
 
             const patrimonio = await prisma.patrimonio.create({
                 data: {
-                    nome,
+                    descricao,
                     status,
                     userId
                 }
@@ -84,7 +84,7 @@ const patrimonioController = {
                 message: 'Patrimonio criado com sucesso',
                 patrimonio: {
                     id: patrimonio.id,
-                    nome: patrimonio.nome,
+                    descricao: patrimonio.descricao,
                     status: patrimonio.status,
                     data: patrimonio.data,
                     userId: patrimonio.userId
@@ -100,7 +100,7 @@ const patrimonioController = {
         try {
             console.log('Requisição de atualização de patrimonio recebida:', req.params.id, req.body);
             const patrimonioId = parseInt(req.params.id);
-            const {nome, status} = req.body;
+            const {descricao, status} = req.body;
             const userId = req.user.id;
 
             const existingPatrimonio = await prisma.patrimonio.findFirst({
@@ -115,8 +115,8 @@ const patrimonioController = {
             }
 
             const updateData = {};
-            if (nome !== undefined) {
-                updateData.nome = nome;
+            if (descricao !== undefined) {
+                updateData.descricao = descricao;
             }
             if (status !== undefined) {
                 const validStatuses = ['critico', 'normal', 'bom'];
@@ -135,7 +135,7 @@ const patrimonioController = {
                 message: 'Patrimonio atualizado com sucesso',
                 patrimonio: {
                     id: patrimonio.id,
-                    nome: patrimonio.nome,
+                    descricao: patrimonio.descricao,
                     status: patrimonio.status,
                     data: patrimonio.data,
                     userId: patrimonio.userId

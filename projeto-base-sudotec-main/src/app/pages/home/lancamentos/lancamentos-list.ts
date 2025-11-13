@@ -108,7 +108,6 @@ export class LancamentosList implements OnInit {
         this.lancamentoService.getLancamentos().subscribe({
             next: (estoques) => {
                 this.estoques = estoques;
-                this.filtrarEstoquesPorMesAno();
                 this.loading = false;
             },
             error: () => {
@@ -123,36 +122,19 @@ export class LancamentosList implements OnInit {
     }
 
     filtrarEstoquesPorMesAno() {
-        this.estoquesFiltrados = this.estoques.filter((estoque) => {
-            const dataEstoque = new Date(estoque.data);
-            return dataEstoque.getMonth() === this.mesSelecionado && dataEstoque.getFullYear() === this.anoSelecionado;
-        });
+        // Método mantido para compatibilidade, mas não faz mais nada
     }
 
     mesAnterior() {
-        if (this.mesSelecionado === 0) {
-            this.mesSelecionado = 11;
-            this.anoSelecionado--;
-        } else {
-            this.mesSelecionado--;
-        }
-        this.filtrarEstoquesPorMesAno();
+        // Método mantido para compatibilidade, mas não faz mais nada
     }
 
     proximoMes() {
-        if (this.mesSelecionado === 11) {
-            this.mesSelecionado = 0;
-            this.anoSelecionado++;
-        } else {
-            this.mesSelecionado++;
-        }
-        this.filtrarEstoquesPorMesAno();
+        // Método mantido para compatibilidade, mas não faz mais nada
     }
 
     voltarMesAtual() {
-        this.mesSelecionado = this.mesAtual;
-        this.anoSelecionado = this.anoAtual;
-        this.filtrarEstoquesPorMesAno();
+        // Método mantido para compatibilidade, mas não faz mais nada
     }
 
     get mesAnoSelecionado(): string {
