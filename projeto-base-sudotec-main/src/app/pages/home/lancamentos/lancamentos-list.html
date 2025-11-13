@@ -25,12 +25,6 @@
                     [loading]="loading">
                 </p-button>
                 <p-button
-                    icon="pi pi-plus"
-                    label="Criar Patrimonio"
-                    severity="success"
-                    (onClick)="openPatrimonioDialog()">
-                </p-button>
-                <p-button
                     icon="pi pi-trash"
                     label="Deletar Patrimonio"
                     severity="danger"
@@ -45,14 +39,14 @@
 
     <p-table
         #dt
-        [value]="estoques"
+        [value]="patrimonios"
         [loading]="loading"
         [paginator]="true"
         [rows]="10"
         [rowsPerPageOptions]="[5, 10, 20, 50]"
         [showCurrentPageReport]="true"
-        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} estoques"
-        [globalFilterFields]="['descricao']"
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} patrimonios"
+        [globalFilterFields]="['nome']"
         styleClass="p-datatable-gridlines"
         [tableStyle]="{ 'min-width': '50rem' }">
 
@@ -62,78 +56,58 @@
                     <p-inputicon>
                         <i class="pi pi-search"></i>
                     </p-inputicon>
-                    <input pInputText type="text" (input)="dt.filterGlobal($any($event.target).value, 'contains')" placeholder="Buscar lançamentos..." />
+                    <input pInputText type="text" (input)="dt.filterGlobal($any($event.target).value, 'contains')" placeholder="Buscar patrimonios..." />
                 </p-iconfield>
             </div>
         </ng-template>
 
         <ng-template #header>
             <tr>
-                <th pSortableColumn="data" style="width: 8%">
+                <th pSortableColumn="id" style="width: 8%">
+                    ID
+                    <p-sortIcon field="id" />
+                </th>
+                <th pSortableColumn="nome" style="width: 26%">
+                    Nome
+                    <p-sortIcon field="nome" />
+                </th>
+                <th pSortableColumn="status" style="width: 26%">
+                    Status
+                    <p-sortIcon field="status" />
+                </th>
+                <th pSortableColumn="data" style="width: 17%">
                     Data
                     <p-sortIcon field="data" />
                 </th>
-                                <th pSortableColumn="patrimonioId" style="width: 17%">\n                    Patrimonio\n                    <p-sortIcon field="patrimonioId" />
-                </th>
-                <th pSortableColumn="tipoPatrimonioId" style="width: 17%">
-                    Tipo de Patrimonio
-                    <p-sortIcon field="tipoPatrimonioId" />
-                </th>
-                <th pSortableColumn="descricao" style="width: 26%">
-                    Descrição
-                    <p-sortIcon field="descricao" />
-                </th>
-                <th pSortableColumn="valor" style="width: 10%">
-                    Valor
-                    <p-sortIcon field="valor" />
-                </th>
-                <th style="width: 11%" class="text-center">Status</th>
-                <th style="width: 11%" class="text-center">Ações</th>
+                <th style="width: 23%" class="text-center">Ações</th>
             </tr>
         </ng-template>
 
-        <ng-template #body let-estoque>
+        <ng-template #body let-patrimonio>
             <tr>
                 <td>
                     <div class="flex items-center gap-2">
-                        <i class="pi pi-calendar text-lg"></i>
-                        <span>{{ formatDate(estoque.data) }}</span>
+                        <i class="pi pi-hashtag text-lg"></i>
+                        <span>{{ patrimonio.id }}</span>
                     </div>
                 </td>
                 <td>
                     <div class="flex items-center gap-2">
                         <i class="pi pi-wallet text-lg"></i>
-                        <span>{{ getPatrimonioNome(estoque.patrimonioId) }}</span>
+                        <span class="font-medium">{{ patrimonio.nome }}</span>
                     </div>
+                </td>
+                <td>
+                    <p-tag 
+                        [value]="patrimonio.status | uppercase"
+                        [severity]="patrimonio.status === 'critico' ? 'danger' : patrimonio.status === 'normal' ? 'warning' : 'success'"
+                        styleClass="whitespace-nowrap">
+                    </p-tag>
                 </td>
                 <td>
                     <div class="flex items-center gap-2">
-                        <i class="pi pi-tag text-lg"></i>
-                        <span>{{ getTipoPatrimonioNome(estoque.tipoPatrimonioId) }}</span>
-                    </div>
-                </td>
-                <td>
-                    <div class="flex items-center gap-2">
-                        <i class="pi pi-file-edit text-lg"></i>
-                        <span class="font-medium">{{ estoque.descricao }}</span>
-                    </div>
-                </td>
-                <td>
-                    <span [class]="estoque.tipo === 'RECEITA' ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'">
-                        {{ formatCurrency(estoque.valor) }}
-                    </span>
-                </td>
-                <td>
-                    <div class="flex justify-center">
-                        <p-button
-                            [label]="estoque.efetivado ? 'Efetivado' : 'Pendente'"
-                            [icon]="estoque.efetivado ? 'pi pi-check-circle' : 'pi pi-clock'"
-                            [severity]="estoque.efetivado ? 'success' : 'info'"
-                            size="small"
-                            (onClick)="toggleEfetivado(estoque)"
-                            pTooltip="Clique para alternar o status"
-                            tooltipPosition="top">
-                        </p-button>
+                        <i class="pi pi-calendar text-lg"></i>
+                        <span>{{ formatDate(patrimonio.data) }}</span>
                     </div>
                 </td>
                 <td>
@@ -143,7 +117,7 @@
                             severity="info"
                             size="small"
                             [outlined]="true"
-                            (onClick)="editEstoque(estoque)"
+                            (onClick)="editEstoque(patrimonio)"
                             pTooltip="Editar"
                             tooltipPosition="top">
                         </p-button>
@@ -153,7 +127,7 @@
                             severity="danger"
                             size="small"
                             [outlined]="true"
-                            (onClick)="confirmDelete(estoque)"
+                            (onClick)="confirmDelete(patrimonio)"
                             pTooltip="Deletar"
                             tooltipPosition="top">
                         </p-button>
@@ -164,10 +138,10 @@
 
         <ng-template #emptymessage>
             <tr>
-                <td colspan="8" class="text-center py-8">
+                <td colspan="5" class="text-center py-8">
                     <div class="flex flex-col items-center gap-3">
                         <i class="pi pi-inbox text-4xl text-muted-color"></i>
-                        <p class="text-muted-color text-lg">Nenhum lançamento encontrado</p>
+                        <p class="text-muted-color text-lg">Nenhum patrimonio encontrado</p>
                     </div>
                 </td>
             </tr>
@@ -246,7 +220,7 @@
                     id="patrimonio"
                     [(ngModel)]="estoque.patrimonioId"
                     [options]="patrimonios"
-                    optionLabel="descricao"
+                    optionLabel="nome"
                     optionValue="id"
                     placeholder="Selecione um patrimonio"
                     [showClear]="true"

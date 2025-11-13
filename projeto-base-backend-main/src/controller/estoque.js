@@ -30,7 +30,7 @@ const estoqueController = {
                     patrimonio: {
                         select: {
                             id: true,
-                            descricao: true
+                            nome: true
                         }
                     }
                 },
@@ -78,7 +78,7 @@ const estoqueController = {
                     patrimonio: {
                         select: {
                             id: true,
-                            descricao: true,
+                            nome: true,
                             saldo: true
                         }
                     },
@@ -210,7 +210,7 @@ const estoqueController = {
                     patrimonio: {
                         select: {
                             id: true,
-                            descricao: true
+                            nome: true
                         }
                     }
                 }
@@ -356,7 +356,7 @@ const estoqueController = {
                     patrimonio: {
                         select: {
                             id: true,
-                            descricao: true
+                            nome: true
                         }
                     }
                 }
@@ -519,7 +519,7 @@ const estoqueController = {
                         patrimonio: {
                             select: {
                                 id: true,
-                                descricao: true
+                                nome: true
                             }
                         }
                     }

@@ -24,6 +24,34 @@ const patrimonioController = {
         }
     },
 
+    async getAllPatrimoniosCompartilhados(req, res) {
+        try {
+            // Retorna todos os patrimônios sem filtro de userId
+            const patrimonios = await prisma.patrimonio.findMany({
+                select: {
+                    id: true,
+                    nome: true,
+                    status: true,
+                    data: true,
+                    userId: true,
+                    user: {
+                        select: {
+                            username: true
+                        }
+                    }
+                },
+                orderBy: {
+                    data: 'desc'
+                }
+            });
+
+            res.json(patrimonios);
+        } catch (error) {
+            console.error('Erro ao buscar patrimônios compartilhados:', error);
+            res.status(500).json({error: 'Erro interno do servidor'});
+        }
+    },
+
     async getPatrimonioById(req, res) {
         try {
             const patrimonioId = parseInt(req.params.id);
