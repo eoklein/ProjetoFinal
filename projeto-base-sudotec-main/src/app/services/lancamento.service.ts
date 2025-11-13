@@ -18,6 +18,15 @@ export class LancamentoService {
     }
 
     /**
+     * Lista todos os lançamentos/estoques compartilhados (sem filtro de usuário)
+     */
+    getLancamentosCompartilhados(): Observable<Lancamento[]> {
+        // Adicionar timestamp para evitar cache
+        const timestamp = new Date().getTime();
+        return this.http.get<Lancamento[]>(`${this.apiUrl}/compartilhados/todos?t=${timestamp}`);
+    }
+
+    /**
      * Busca um lançamento por ID
      */
     getLancamentoById(id: number): Observable<Lancamento> {

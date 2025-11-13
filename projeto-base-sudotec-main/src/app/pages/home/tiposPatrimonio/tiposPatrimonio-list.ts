@@ -11,6 +11,7 @@ import { Toolbar } from 'primeng/toolbar';
 import { TooltipModule } from 'primeng/tooltip';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { TipoPatrimonioService } from '@/services/tipoPatrimonio.service';
+import { AuthService } from '@/services/auth.service';
 import { TipoPatrimonio } from '@/models/tipoPatrimonio.model';
 import { IconField } from 'primeng/iconfield';
 import { InputIcon } from 'primeng/inputicon';
@@ -24,6 +25,7 @@ import { InputIcon } from 'primeng/inputicon';
 })
 export class TiposPatrimonioList implements OnInit {
     tipoPatrimonioService = inject(TipoPatrimonioService);
+    authService = inject(AuthService);
     messageService = inject(MessageService);
     confirmationService = inject(ConfirmationService);
 
@@ -33,9 +35,16 @@ export class TiposPatrimonioList implements OnInit {
     submitted: boolean = false;
     loading: boolean = false;
     isEditMode: boolean = false;
+    isAdmin: boolean = false;
 
     ngOnInit() {
+        this.checkAdmin();
         this.loadTiposPatrimonio();
+    }
+
+    checkAdmin() {
+        // Usar AuthService para verificar se é admin
+        this.isAdmin = this.authService.isAdmin();
     }
 
     loadTiposPatrimonio() {
@@ -57,6 +66,14 @@ export class TiposPatrimonioList implements OnInit {
     }
 
     openNew() {
+        if (!this.isAdmin) {
+            this.messageService.add({
+                severity: 'error',
+                summary: 'Acesso Negado',
+                detail: 'Apenas administradores podem criar novos tipos'
+            });
+            return;
+        }
         this.tipoPatrimonio = {} as TipoPatrimonio;
         this.submitted = false;
         this.isEditMode = false;
@@ -64,6 +81,14 @@ export class TiposPatrimonioList implements OnInit {
     }
 
     editTipoPatrimonio(tipoPatrimonio: TipoPatrimonio) {
+        if (!this.isAdmin) {
+            this.messageService.add({
+                severity: 'error',
+                summary: 'Acesso Negado',
+                detail: 'Apenas administradores podem editar tipos'
+            });
+            return;
+        }
         this.tipoPatrimonio = { ...tipoPatrimonio };
         this.isEditMode = true;
         this.tipoPatrimonioDialog = true;
@@ -91,14 +116,23 @@ export class TiposPatrimonioList implements OnInit {
                         this.tipoPatrimonioDialog = false;
                         this.tipoPatrimonio = {} as TipoPatrimonio;
                     },
-                    error: () => {
-                        this.messageService.add({
-                            severity: 'error',
-                            summary: 'Erro',
-                            detail: 'Erro ao atualizar tipo de patrimonio'
-                        });
+                    error: (err) => {
+                        if (err.status === 403) {
+                            this.messageService.add({
+                                severity: 'error',
+                                summary: 'Erro',
+                                detail: 'Apenas administradores podem editar tipos'
+                            });
+                        } else {
+                            this.messageService.add({
+                                severity: 'error',
+                                summary: 'Erro',
+                                detail: 'Erro ao atualizar tipo de patrimonio'
+                            });
+                        }
                     }
                 });
+
             } else {
                 // Create
                 this.tipoPatrimonioService.createTipoPatrimonio(this.tipoPatrimonio).subscribe({

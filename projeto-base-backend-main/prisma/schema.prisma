@@ -30,7 +30,7 @@ model Patrimonio {
   nome        String
   status      String //critico / normal / bom
   valor       Float?
-  data       DateTime @default(now()) // de quando foi requisitado
+  data        DateTime @default(now()) // de quando foi requisitado
   userId      Int
   user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   estoques    Estoque[]

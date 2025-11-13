@@ -4,10 +4,7 @@ const prisma = new PrismaClient();
 const tipoPatrimonioController = {
   async getAllTiposPatrimonio(req, res) {
     try {
-      const userId = req.user.id;
-
       const tiposPatrimonio = await prisma.tipoPatrimonio.findMany({
-        where: { userId },
         select: {
           id: true,
           nome: true,
@@ -25,12 +22,10 @@ const tipoPatrimonioController = {
   async getTipoPatrimonioById(req, res) {
     try {
       const tipoPatrimonioId = parseInt(req.params.id);
-      const userId = req.user.id;
 
-      const tipoPatrimonio = await prisma.tipoPatrimonio.findFirst({
+      const tipoPatrimonio = await prisma.tipoPatrimonio.findUnique({
         where: {
-          id: tipoPatrimonioId,
-          userId
+          id: tipoPatrimonioId
         },
         select: {
           id: true,
@@ -84,12 +79,10 @@ const tipoPatrimonioController = {
     try {
       const tipoPatrimonioId = parseInt(req.params.id);
       const { nome } = req.body;
-      const userId = req.user.id;
 
-      const existingTipoPatrimonio = await prisma.tipoPatrimonio.findFirst({
+      const existingTipoPatrimonio = await prisma.tipoPatrimonio.findUnique({
         where: {
-          id: tipoPatrimonioId,
-          userId
+          id: tipoPatrimonioId
         }
       });
 
@@ -125,12 +118,10 @@ const tipoPatrimonioController = {
   async deleteTipoPatrimonio(req, res) {
     try {
       const tipoPatrimonioId = parseInt(req.params.id);
-      const userId = req.user.id;
 
-      const existingTipoPatrimonio = await prisma.tipoPatrimonio.findFirst({
+      const existingTipoPatrimonio = await prisma.tipoPatrimonio.findUnique({
         where: {
-          id: tipoPatrimonioId,
-          userId
+          id: tipoPatrimonioId
         }
       });
 

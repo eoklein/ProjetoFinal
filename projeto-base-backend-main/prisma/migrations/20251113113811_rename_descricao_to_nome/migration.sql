@@ -16,7 +16,7 @@ CREATE TABLE "new_Patrimonio" (
     "userId" INTEGER NOT NULL,
     CONSTRAINT "Patrimonio_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
-INSERT INTO "new_Patrimonio" ("data", "id", "status", "userId") SELECT "data", "id", "status", "userId" FROM "Patrimonio";
+INSERT INTO "new_Patrimonio" ("id", "nome", "status", "data", "userId") SELECT "id", "descricao", "status", "data", "userId" FROM "Patrimonio";
 DROP TABLE "Patrimonio";
 ALTER TABLE "new_Patrimonio" RENAME TO "Patrimonio";
 PRAGMA foreign_keys=ON;

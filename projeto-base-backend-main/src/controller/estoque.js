@@ -46,6 +46,53 @@ const estoqueController = {
         }
     },
 
+    async getAllEstoquesCompartilhados(req, res) {
+        try {
+            // Retorna TODOS os estoques sem filtro de usuário
+            const estoques = await prisma.estoque.findMany({
+                select: {
+                    id: true,
+                    descricao: true,
+                    valor: true,
+                    data: true,
+                    tipo: true,
+                    userId: true,
+                    tipoPatrimonioId: true,
+                    patrimonioId: true,
+                    numeroRetiradas: true,
+                    retiradaAtual: true,
+                    estoquePaiId: true,
+                    efetivado: true,
+                    tipoPatrimonio: {
+                        select: {
+                            id: true,
+                            nome: true
+                        }
+                    },
+                    patrimonio: {
+                        select: {
+                            id: true,
+                            nome: true
+                        }
+                    },
+                    user: {
+                        select: {
+                            username: true
+                        }
+                    }
+                },
+                orderBy: {
+                    data: 'desc'
+                }
+            });
+
+            res.json(estoques);
+        } catch (error) {
+            console.error('Erro ao buscar estoques compartilhados:', error);
+            res.status(500).json({error: 'Erro interno do servidor'});
+        }
+    },
+
     async getEstoqueById(req, res) {
         try {
             const estoqueId = parseInt(req.params.id);

@@ -21,7 +21,9 @@ export class PatrimonioService {
      * Lista todos os patrimonios compartilhados (estoque geral)
      */
     getPatrimoniosCompartilhados(): Observable<any[]> {
-        return this.http.get<any[]>(`${this.apiUrl}/compartilhados/todos`);
+        // Adicionar timestamp para evitar cache
+        const timestamp = new Date().getTime();
+        return this.http.get<any[]>(`${this.apiUrl}/compartilhados/todos?t=${timestamp}`);
     }
 
     /**

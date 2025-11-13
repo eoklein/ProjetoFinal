@@ -13,7 +13,10 @@ import { Toolbar } from 'primeng/toolbar';
 import { TooltipModule } from 'primeng/tooltip';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { PatrimonioService } from '@/services/patrimonio.service';
+import { TipoPatrimonioService } from '@/services/tipoPatrimonio.service';
+import { AuthService } from '@/services/auth.service';
 import { Patrimonio } from '@/models/patrimonio.model';
+import { TipoPatrimonio } from '@/models/tipoPatrimonio.model';
 import { IconField } from 'primeng/iconfield';
 import { InputIcon } from 'primeng/inputicon';
 
@@ -26,15 +29,19 @@ import { InputIcon } from 'primeng/inputicon';
 })
 export class PatrimoniosList implements OnInit {
     patrimonioService = inject(PatrimonioService);
+    tipoPatrimonioService = inject(TipoPatrimonioService);
+    authService = inject(AuthService);
     messageService = inject(MessageService);
     confirmationService = inject(ConfirmationService);
 
     patrimonios: Patrimonio[] = [];
+    tiposPatrimonio: TipoPatrimonio[] = [];
     patrimonioDialog: boolean = false;
     patrimonio: Patrimonio = {} as Patrimonio;
     submitted: boolean = false;
     loading: boolean = false;
     isEditMode: boolean = false;
+    isAdmin: boolean = false;
     
     statusOptions = [
         { label: 'Crítico', value: 'critico' },
@@ -43,13 +50,35 @@ export class PatrimoniosList implements OnInit {
     ];
 
     ngOnInit() {
+        this.checkAdmin();
+        this.loadTiposPatrimonio();
         this.loadPatrimonios();
+    }
+
+    checkAdmin() {
+        this.isAdmin = this.authService.isAdmin();
+    }
+
+    loadTiposPatrimonio() {
+        this.tipoPatrimonioService.getTiposPatrimonio().subscribe({
+            next: (tipos) => {
+                this.tiposPatrimonio = tipos;
+            },
+            error: () => {
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Erro',
+                    detail: 'Erro ao carregar tipos de patrimonio'
+                });
+            }
+        });
     }
 
     loadPatrimonios() {
         this.loading = true;
         this.patrimonioService.getPatrimonios().subscribe({
             next: (patrimonios) => {
+                // Backend agora retorna tipoPatrimonioId diretamente
                 this.patrimonios = patrimonios;
                 this.loading = false;
             },
@@ -85,7 +114,7 @@ export class PatrimoniosList implements OnInit {
     saveContact() {
         this.submitted = true;
 
-        if (this.patrimonio.nome?.trim() && this.patrimonio.status) {
+        if (this.patrimonio.nome?.trim() && this.patrimonio.status && this.patrimonio.tipoPatrimonioId) {
             if (this.patrimonio.id) {
                 // Update
                 this.patrimonioService.updatePatrimonio(this.patrimonio.id, this.patrimonio).subscribe({
@@ -163,5 +192,11 @@ export class PatrimoniosList implements OnInit {
                 });
             }
         });
+    }
+
+    getTipoNome(tipoId?: number): string {
+        if (!tipoId) return 'N/A';
+        const tipo = this.tiposPatrimonio.find(t => t.id === tipoId);
+        return tipo ? tipo.nome : 'N/A';
     }
 }

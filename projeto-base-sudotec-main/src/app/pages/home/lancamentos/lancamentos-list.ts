@@ -19,6 +19,7 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { LancamentoService } from '@/services/lancamento.service';
 import { TipoPatrimonioService } from '@/services/tipoPatrimonio.service';
 import { PatrimonioService } from '@/services/patrimonio.service';
+import { AuthService } from '@/services/auth.service';
 import { Estoque } from '@/models/estoque.model';
 import { TipoPatrimonio } from '@/models/tipoPatrimonio.model';
 import { Patrimonio } from '@/models/patrimonio.model';
@@ -36,6 +37,7 @@ export class LancamentosList implements OnInit {
     lancamentoService = inject(LancamentoService);
     tipoPatrimonioService = inject(TipoPatrimonioService);
     patrimonioService = inject(PatrimonioService);
+    authService = inject(AuthService);
     messageService = inject(MessageService);
     confirmationService = inject(ConfirmationService);
 
@@ -53,6 +55,7 @@ export class LancamentosList implements OnInit {
     isEditMode: boolean = false;
     temRetirada: boolean = false;
     numeroRetiradas: number = 1;
+    isAdmin: boolean = false;
 
     statusOptions = [
         { label: 'Crítico', value: 'critico' },
@@ -69,8 +72,13 @@ export class LancamentosList implements OnInit {
     mesesNomes: string[] = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
     ngOnInit() {
+        this.checkAdmin();
         this.loadCategorias();
         this.loadPatrimonios();
+    }
+
+    checkAdmin() {
+        this.isAdmin = this.authService.isAdmin();
     }
 
     loadCategorias() {
@@ -89,7 +97,7 @@ export class LancamentosList implements OnInit {
     }
 
     loadPatrimonios() {
-        this.patrimonioService.getPatrimonios().subscribe({
+        this.patrimonioService.getPatrimoniosCompartilhados().subscribe({
             next: (patrimonios) => {
                 this.patrimonios = patrimonios;
             },
@@ -105,12 +113,24 @@ export class LancamentosList implements OnInit {
 
     loadEstoques() {
         this.loading = true;
-        this.lancamentoService.getLancamentos().subscribe({
+        console.log('Recarregando estoques...');
+        this.lancamentoService.getLancamentosCompartilhados().subscribe({
             next: (estoques) => {
-                this.estoques = estoques;
+                // Os dados já vêm do backend com patrimonioId
+                console.log('Estoques carregados:', estoques);
+                // Garantir que cada estoque tenha patrimonioId
+                this.estoques = (estoques as any[]).map(e => {
+                    // Se não tem patrimonioId mas tem patrimonio.id, copiar
+                    if (!e.patrimonioId && e.patrimonio?.id) {
+                        e.patrimonioId = e.patrimonio.id;
+                    }
+                    return e;
+                });
                 this.loading = false;
+                console.log('Estoques atualizados na UI');
             },
-            error: () => {
+            error: (err) => {
+                console.error('Erro ao carregar estoques:', err);
                 this.messageService.add({
                     severity: 'error',
                     summary: 'Erro',
@@ -263,14 +283,28 @@ export class LancamentosList implements OnInit {
     }
 
     confirmDelete(estoque: Estoque) {
+        // Tenta obter o patrimonioId de várias formas
+        const patrimonioId = estoque.patrimonioId || (estoque as any).patrimonio?.id;
+        
+        if (!patrimonioId) {
+            this.messageService.add({
+                severity: 'error',
+                summary: 'Erro',
+                detail: 'Patrimonio não identificado neste estoque'
+            });
+            return;
+        }
+
+        const patrimonioNome = (estoque as any).patrimonio?.nome || 'Patrimonio';
+
         this.confirmationService.confirm({
-            message: `Tem certeza que deseja deletar o patrimonio "${(estoque as any).nome}"?`,
+            message: `Tem certeza que deseja deletar o patrimonio "${patrimonioNome}"?`,
             header: 'Confirmar Exclusão',
             icon: 'pi pi-exclamation-triangle',
             acceptLabel: 'Sim',
             rejectLabel: 'Não',
             accept: () => {
-                this.deletePatrimonio(estoque.id!);
+                this.deletePatrimonio(patrimonioId);
             }
         });
     }
@@ -451,10 +485,11 @@ export class LancamentosList implements OnInit {
     }
 
     confirmDeletePatrimonio() {
+        // Placeholder - o usuário deve selecionar um patrimonio na tabela
         this.messageService.add({
             severity: 'info',
             summary: 'Info',
-            detail: 'Selecione um patrimonio na tabela para deletá-lo'
+            detail: 'Use o botão de deletar da linha do patrimonio'
         });
     }
 
@@ -495,11 +530,14 @@ export class LancamentosList implements OnInit {
 
                     this.lancamentoService.createLancamento(estoqueDoPatrimonio).subscribe({
                         next: () => {
+                            console.log('Estoque criado, recarregando lista...');
+                            // Forçar recarregar os estoques sem cache
+                            this.loading = true;
                             this.loadEstoques();
                             this.messageService.add({
                                 severity: 'success',
                                 summary: 'Sucesso',
-                                detail: 'Estoque criado com sucesso'
+                                detail: 'Patrimonio e estoque criados com sucesso'
                             });
                         },
                         error: (erro) => {
@@ -518,6 +556,12 @@ export class LancamentosList implements OnInit {
                 });
             }
         });
+    }
+
+    getTipoNome(tipoId?: number): string {
+        if (!tipoId) return 'N/A';
+        const tipo = this.tiposPatrimonio.find(t => t.id === tipoId);
+        return tipo ? tipo.nome : 'N/A';
     }
 }
 

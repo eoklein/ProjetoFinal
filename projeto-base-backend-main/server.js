@@ -14,10 +14,20 @@ app.use(cors({
   origin: 'http://localhost:4200',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'Pragma', 'Expires']
 }));
 
 app.use(express.json());
+
+// Desabilitar cache para todas as rotas GET
+app.use((req, res, next) => {
+  res.set({
+    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0'
+  });
+  next();
+});
 
 app.use('/auth', authRoutes);
 app.use('/users', userRoutes);

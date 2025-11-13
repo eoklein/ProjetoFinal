@@ -18,7 +18,21 @@ const patrimonioController = {
                 }
             });
 
-            res.json(patrimonios);
+            // Enriquecer com tipoPatrimonioId do estoque
+            const patrimoniosComTipo = await Promise.all(
+                patrimonios.map(async (p) => {
+                    const estoque = await prisma.estoque.findFirst({
+                        where: {patrimonioId: p.id},
+                        select: {tipoPatrimonioId: true}
+                    });
+                    return {
+                        ...p,
+                        tipoPatrimonioId: estoque?.tipoPatrimonioId || null
+                    };
+                })
+            );
+
+            res.json(patrimoniosComTipo);
         } catch (error) {
             console.error('Erro ao buscar patrimonios:', error);
             res.status(500).json({error: 'Erro interno do servidor'});
@@ -47,9 +61,66 @@ const patrimonioController = {
                 }
             });
 
-            res.json(patrimonios);
+            // Enriquecer com tipoPatrimonioId do estoque
+            const patrimoniosComTipo = await Promise.all(
+                patrimonios.map(async (p) => {
+                    const estoque = await prisma.estoque.findFirst({
+                        where: {patrimonioId: p.id},
+                        select: {tipoPatrimonioId: true}
+                    });
+                    return {
+                        ...p,
+                        tipoPatrimonioId: estoque?.tipoPatrimonioId || null
+                    };
+                })
+            );
+
+            res.json(patrimoniosComTipo);
         } catch (error) {
             console.error('Erro ao buscar patrimônios compartilhados:', error);
+            res.status(500).json({error: 'Erro interno do servidor'});
+        }
+    },
+
+    async getTodosPatrimonios(req, res) {
+        try {
+            // Retorna TODOS os patrimônios sem filtro (para a aba de Estoque)
+            const patrimonios = await prisma.patrimonio.findMany({
+                select: {
+                    id: true,
+                    nome: true,
+                    status: true,
+                    data: true,
+                    userId: true,
+                    valor: true,
+                    user: {
+                        select: {
+                            username: true
+                        }
+                    }
+                },
+                orderBy: {
+                    data: 'desc'
+                }
+            });
+
+            // Enriquecer com tipoPatrimonioId do estoque
+            const patrimoniosComTipo = await Promise.all(
+                patrimonios.map(async (p) => {
+                    const estoque = await prisma.estoque.findFirst({
+                        where: {patrimonioId: p.id},
+                        select: {tipoPatrimonioId: true}
+                    });
+                    return {
+                        ...p,
+                        tipoPatrimonioId: estoque?.tipoPatrimonioId || null
+                    };
+                })
+            );
+
+            res.json(patrimoniosComTipo);
+        } catch (error) {
+            console.error('Erro ao buscar todos os patrimônios:', error);
             res.status(500).json({error: 'Erro interno do servidor'});
         }
     },
@@ -78,7 +149,18 @@ const patrimonioController = {
                 return res.status(404).json({error: 'Patrimonio não encontrado'});
             }
 
-            res.json(patrimonio);
+            // Buscar tipoPatrimonioId do estoque
+            const estoque = await prisma.estoque.findFirst({
+                where: {patrimonioId: patrimonio.id},
+                select: {tipoPatrimonioId: true}
+            });
+
+            const patrimonioComTipo = {
+                ...patrimonio,
+                tipoPatrimonioId: estoque?.tipoPatrimonioId || null
+            };
+
+            res.json(patrimonioComTipo);
         } catch (error) {
             console.error('Erro ao buscar patrimonio:', error);
             res.status(500).json({error: 'Erro interno do servidor'});
@@ -87,7 +169,7 @@ const patrimonioController = {
 
     async createPatrimonio(req, res) {
         try {
-            const {nome, status, valor} = req.body;
+            const {nome, status, valor, tipoPatrimonioId} = req.body;
             const userId = req.user.id;
 
             if (!nome) {
@@ -96,6 +178,10 @@ const patrimonioController = {
 
             if (!status) {
                 return res.status(400).json({error: 'Status é obrigatório'});
+            }
+
+            if (!tipoPatrimonioId) {
+                return res.status(400).json({error: 'Tipo de patrimonio é obrigatório'});
             }
 
             const validStatuses = ['critico', 'normal', 'bom'];
@@ -112,6 +198,19 @@ const patrimonioController = {
                 }
             });
 
+            // Criar estoque associado ao patrimonio com o tipo
+            const estoque = await prisma.estoque.create({
+                data: {
+                    descricao: `Estoque inicial de ${nome}`,
+                    valor: valor || 0,
+                    data: new Date(),
+                    tipo: 'RECEITA',
+                    userId,
+                    patrimonioId: patrimonio.id,
+                    tipoPatrimonioId: tipoPatrimonioId
+                }
+            });
+
             res.status(201).json({
                 message: 'Patrimonio criado com sucesso',
                 patrimonio: {
@@ -120,7 +219,8 @@ const patrimonioController = {
                     status: patrimonio.status,
                     valor: patrimonio.valor,
                     data: patrimonio.data,
-                    userId: patrimonio.userId
+                    userId: patrimonio.userId,
+                    tipoPatrimonioId: tipoPatrimonioId
                 }
             });
         } catch (error) {
@@ -133,7 +233,7 @@ const patrimonioController = {
         try {
             console.log('Requisição de atualização de patrimonio recebida:', req.params.id, req.body);
             const patrimonioId = parseInt(req.params.id);
-            const {nome, status, valor} = req.body;
+            const {nome, status, valor, tipoPatrimonioId} = req.body;
             const userId = req.user.id;
 
             const existingPatrimonio = await prisma.patrimonio.findFirst({
@@ -167,6 +267,20 @@ const patrimonioController = {
                 data: updateData
             });
 
+            // Se tipoPatrimonioId foi alterado, atualizar o estoque associado
+            if (tipoPatrimonioId !== undefined) {
+                await prisma.estoque.updateMany({
+                    where: {patrimonioId: patrimonioId},
+                    data: {tipoPatrimonioId: tipoPatrimonioId}
+                });
+            }
+
+            // Buscar o tipo atualizado
+            const estoqueComTipo = await prisma.estoque.findFirst({
+                where: {patrimonioId: patrimonioId},
+                select: {tipoPatrimonioId: true}
+            });
+
             res.json({
                 message: 'Patrimonio atualizado com sucesso',
                 patrimonio: {
@@ -175,7 +289,8 @@ const patrimonioController = {
                     status: patrimonio.status,
                     valor: patrimonio.valor,
                     data: patrimonio.data,
-                    userId: patrimonio.userId
+                    userId: patrimonio.userId,
+                    tipoPatrimonioId: estoqueComTipo?.tipoPatrimonioId
                 }
             });
         } catch (error) {
@@ -187,12 +302,10 @@ const patrimonioController = {
     async deletePatrimonio(req, res) {
         try {
             const patrimonioId = parseInt(req.params.id);
-            const userId = req.user.id;
 
-            const existingPatrimonio = await prisma.patrimonio.findFirst({
+            const existingPatrimonio = await prisma.patrimonio.findUnique({
                 where: {
-                    id: patrimonioId,
-                    userId
+                    id: patrimonioId
                 }
             });
 
@@ -200,6 +313,12 @@ const patrimonioController = {
                 return res.status(404).json({error: 'Patrimonio não encontrado'});
             }
 
+            // Deletar todos os estoques associados primeiro
+            await prisma.estoque.deleteMany({
+                where: {patrimonioId: patrimonioId}
+            });
+
+            // Depois deletar o patrimonio
             await prisma.patrimonio.delete({
                 where: {id: patrimonioId}
             });

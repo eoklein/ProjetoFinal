@@ -3,6 +3,9 @@ const router = express.Router();
 const estoqueController = require('../controller/estoque');
 const authMiddleware = require('../middlewares/auth');
 
+// Rota para estoques compartilhados (ANTES das rotas dinâmicas)
+router.get('/compartilhados/todos', authMiddleware, estoqueController.getAllEstoquesCompartilhados);
+
 // Listar todos os estoques (requer autenticação)
 router.get('/', authMiddleware, estoqueController.getAllEstoques);
 

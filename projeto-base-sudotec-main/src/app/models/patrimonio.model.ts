@@ -4,4 +4,5 @@ export interface Patrimonio {
     status: string;
     valor?: number;
     data?: Date;
+    tipoPatrimonioId?: number;
 }

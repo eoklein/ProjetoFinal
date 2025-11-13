@@ -1,42 +1,35 @@
 <p-toast position="top-right" />
 <p-confirmDialog />
 
+<!-- Toolbar: Gerenciar Estoque -->
+<p-toolbar styleClass="mb-4">
+    <ng-template #start>
+        <div>
+            <h2 class="text-3xl font-semibold text-surface-900 dark:text-surface-0 mb-2">
+                Gerenciar Estoque
+            </h2>
+            <p class="text-muted-color">
+                Crie, edite e gerencie o estoque do sistema
+            </p>
+        </div>
+    </ng-template>
+
+    <ng-template #end>
+        <div class="flex gap-2">
+            <p-button
+                icon="pi pi-refresh"
+                label="Atualizar"
+                severity="secondary"
+                [outlined]="true"
+                (onClick)="loadEstoques()"
+                [loading]="loading">
+            </p-button>
+        </div>
+    </ng-template>
+</p-toolbar>
+
+<!-- Card: Tabela de Estoque -->
 <div class="card">
-    <p-toolbar styleClass="mb-4">
-        <ng-template #start>
-            <div>
-                <h2 class="text-3xl font-semibold text-surface-900 dark:text-surface-0 mb-2">
-                    Gerenciar Estoque
-                </h2>
-                <p class="text-muted-color">
-                    Crie, edite e gerencie o estoque do sistema
-                </p>
-            </div>
-        </ng-template>
-
-        <ng-template #end>
-            <div class="flex gap-2">
-                <p-button
-                    icon="pi pi-refresh"
-                    label="Atualizar"
-                    severity="secondary"
-                    [outlined]="true"
-                    (onClick)="loadEstoques()"
-                    [loading]="loading">
-                </p-button>
-                <p-button
-                    icon="pi pi-trash"
-                    label="Deletar Patrimonio"
-                    severity="danger"
-                    (onClick)="confirmDeletePatrimonio()">
-                </p-button>
-            </div>
-        </ng-template>
-    </p-toolbar>
-
-    <!-- Toolbar de Navegação por Mês/Ano -->
-    <!-- REMOVIDO - Calendário já não é mais necessário -->
-
     <p-table
         #dt
         [value]="patrimonios"
@@ -67,15 +60,19 @@
                     ID
                     <p-sortIcon field="id" />
                 </th>
-                <th pSortableColumn="nome" style="width: 24%">
+                <th pSortableColumn="nome" style="width: 20%">
                     Nome
                     <p-sortIcon field="nome" />
                 </th>
-                <th pSortableColumn="status" style="width: 20%">
+                <th pSortableColumn="tipoPatrimonioId" style="width: 15%">
+                    Tipo
+                    <p-sortIcon field="tipoPatrimonioId" />
+                </th>
+                <th pSortableColumn="status" style="width: 15%">
                     Status
                     <p-sortIcon field="status" />
                 </th>
-                <th pSortableColumn="valor" style="width: 18%">
+                <th pSortableColumn="valor" style="width: 15%">
                     Valor
                     <p-sortIcon field="valor" />
                 </th>
@@ -83,7 +80,9 @@
                     Data
                     <p-sortIcon field="data" />
                 </th>
-                <th style="width: 18%" class="text-center">Ações</th>
+                @if (isAdmin) {
+                    <th style="width: 15%" class="text-center">Ações</th>
+                }
             </tr>
         </ng-template>
 
@@ -100,6 +99,11 @@
                         <i class="pi pi-wallet text-lg"></i>
                         <span class="font-medium">{{ patrimonio.nome }}</span>
                     </div>
+                </td>
+                <td>
+                    <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full font-semibold">
+                        {{ getTipoNome(patrimonio.tipoPatrimonioId) }}
+                    </span>
                 </td>
                 <td>
                     <p-tag 
@@ -120,35 +124,37 @@
                         <span>{{ formatDate(patrimonio.data) }}</span>
                     </div>
                 </td>
-                <td>
-                    <div class="flex justify-center gap-2">
-                        <p-button
-                            icon="pi pi-pencil"
-                            severity="info"
-                            size="small"
-                            [outlined]="true"
-                            (onClick)="editEstoque(patrimonio)"
-                            pTooltip="Editar"
-                            tooltipPosition="top">
-                        </p-button>
+                @if (isAdmin) {
+                    <td>
+                        <div class="flex justify-center gap-2">
+                            <p-button
+                                icon="pi pi-pencil"
+                                severity="info"
+                                size="small"
+                                [outlined]="true"
+                                (onClick)="editEstoque(patrimonio)"
+                                pTooltip="Editar"
+                                tooltipPosition="top">
+                            </p-button>
 
-                        <p-button
-                            icon="pi pi-trash"
-                            severity="danger"
-                            size="small"
-                            [outlined]="true"
-                            (onClick)="confirmDelete(patrimonio)"
-                            pTooltip="Deletar"
-                            tooltipPosition="top">
-                        </p-button>
-                    </div>
-                </td>
+                            <p-button
+                                icon="pi pi-trash"
+                                severity="danger"
+                                size="small"
+                                [outlined]="true"
+                                (onClick)="confirmDelete(patrimonio)"
+                                pTooltip="Deletar"
+                                tooltipPosition="top">
+                            </p-button>
+                        </div>
+                    </td>
+                }
             </tr>
         </ng-template>
 
         <ng-template #emptymessage>
             <tr>
-                <td colspan="6" class="text-center py-8">
+                <td [attr.colspan]="isAdmin ? 7 : 6" class="text-center py-8">
                     <div class="flex flex-col items-center gap-3">
                         <i class="pi pi-inbox text-4xl text-muted-color"></i>
                         <p class="text-muted-color text-lg">Nenhum patrimonio encontrado</p>
@@ -158,8 +164,6 @@
         </ng-template>
     </p-table>
 </div>
-
-<!-- Dialog para criar/editar estoque -->
 <p-dialog
     [(visible)]="estoqueDialog"
     [header]="isEditMode ? 'Editar Estoque' : 'Novo Estoque'"
