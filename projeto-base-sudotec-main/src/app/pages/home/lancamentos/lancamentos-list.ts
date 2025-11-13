@@ -18,7 +18,7 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { LancamentoService } from '@/services/lancamento.service';
 import { TipoPatrimonioService } from '@/services/tipoPatrimonio.service';
 import { PatrimonioService } from '@/services/patrimonio.service';
-import { Lancamento } from '@/models/lancamento.model';
+import { Estoque } from '@/models/estoque.model';
 import { TipoPatrimonio } from '@/models/tipoPatrimonio.model';
 import { Patrimonio } from '@/models/patrimonio.model';
 import { IconField } from 'primeng/iconfield';
@@ -38,17 +38,17 @@ export class LancamentosList implements OnInit {
     messageService = inject(MessageService);
     confirmationService = inject(ConfirmationService);
 
-    lancamentos: Lancamento[] = [];
-    lancamentosFiltrados: Lancamento[] = [];
+    estoques: Estoque[] = [];
+    estoquesFiltrados: Estoque[] = [];
     tiposPatrimonio: TipoPatrimonio[] = [];
     patrimonios: Patrimonio[] = [];
-    lancamentoDialog: boolean = false;
-    lancamento: Lancamento = {} as Lancamento;
+    estoqueDialog: boolean = false;
+    estoque: Estoque = {} as Estoque;
     submitted: boolean = false;
     loading: boolean = false;
     isEditMode: boolean = false;
-    isParcelado: boolean = false;
-    numeroParcelas: number = 1;
+    temRetirada: boolean = false;
+    numeroRetiradas: number = 1;
 
     // Controle de navegação por mês/ano
     mesAtual: number = new Date().getMonth();
@@ -59,7 +59,7 @@ export class LancamentosList implements OnInit {
     mesesNomes: string[] = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
     ngOnInit() {
-        this.loadLancamentos();
+        this.loadEstoques();
         this.loadCategorias();
         this.loadPatrimonios();
     }
@@ -94,29 +94,29 @@ export class LancamentosList implements OnInit {
         });
     }
 
-    loadLancamentos() {
+    loadEstoques() {
         this.loading = true;
         this.lancamentoService.getLancamentos().subscribe({
-            next: (lancamentos) => {
-                this.lancamentos = lancamentos;
-                this.filtrarLancamentosPorMesAno();
+            next: (estoques) => {
+                this.estoques = estoques;
+                this.filtrarEstoquesPorMesAno();
                 this.loading = false;
             },
             error: () => {
                 this.messageService.add({
                     severity: 'error',
                     summary: 'Erro',
-                    detail: 'Erro ao carregar lançamentos'
+                    detail: 'Erro ao carregar estoques'
                 });
                 this.loading = false;
             }
         });
     }
 
-    filtrarLancamentosPorMesAno() {
-        this.lancamentosFiltrados = this.lancamentos.filter((lancamento) => {
-            const dataLancamento = new Date(lancamento.data);
-            return dataLancamento.getMonth() === this.mesSelecionado && dataLancamento.getFullYear() === this.anoSelecionado;
+    filtrarEstoquesPorMesAno() {
+        this.estoquesFiltrados = this.estoques.filter((estoque) => {
+            const dataEstoque = new Date(estoque.data);
+            return dataEstoque.getMonth() === this.mesSelecionado && dataEstoque.getFullYear() === this.anoSelecionado;
         });
     }
 
@@ -127,7 +127,7 @@ export class LancamentosList implements OnInit {
         } else {
             this.mesSelecionado--;
         }
-        this.filtrarLancamentosPorMesAno();
+        this.filtrarEstoquesPorMesAno();
     }
 
     proximoMes() {
@@ -137,13 +137,13 @@ export class LancamentosList implements OnInit {
         } else {
             this.mesSelecionado++;
         }
-        this.filtrarLancamentosPorMesAno();
+        this.filtrarEstoquesPorMesAno();
     }
 
     voltarMesAtual() {
         this.mesSelecionado = this.mesAtual;
         this.anoSelecionado = this.anoAtual;
-        this.filtrarLancamentosPorMesAno();
+        this.filtrarEstoquesPorMesAno();
     }
 
     get mesAnoSelecionado(): string {
@@ -155,77 +155,77 @@ export class LancamentosList implements OnInit {
     }
 
     openNew() {
-        this.lancamento = { valor: 0, data: new Date(), tipo: 'DESPESA', efetivado: false } as Lancamento;
+        this.estoque = { valor: 0, data: new Date(), tipo: 'DESPESA', efetivado: false } as Estoque;
         this.submitted = false;
         this.isEditMode = false;
-        this.isParcelado = false;
-        this.numeroParcelas = 1;
-        this.lancamentoDialog = true;
+        this.temRetirada = false;
+        this.numeroRetiradas = 1;
+        this.estoqueDialog = true;
     }
 
-    editLancamento(lancamento: Lancamento) {
-        this.lancamento = {
-            ...lancamento,
-            data: lancamento.data ? new Date(lancamento.data) : new Date()
+    editEstoque(estoque: Estoque) {
+        this.estoque = {
+            ...estoque,
+            data: estoque.data ? new Date(estoque.data) : new Date()
         };
         this.isEditMode = true;
-        this.isParcelado = false;
-        this.numeroParcelas = 1;
-        this.lancamentoDialog = true;
+        this.temRetirada = false;
+        this.numeroRetiradas = 1;
+        this.estoqueDialog = true;
     }
 
     hideDialog() {
-        this.lancamentoDialog = false;
+        this.estoqueDialog = false;
         this.submitted = false;
     }
 
-    saveLancamento() {
+    saveEstoque() {
         this.submitted = true;
-        console.log('Dados do lançamento antes de salvar:', JSON.stringify(this.lancamento, null, 2));
+        console.log('Dados do estoque antes de salvar:', JSON.stringify(this.estoque, null, 2));
 
-        if (this.lancamento.descricao?.trim() && this.lancamento.valor !== undefined && this.lancamento.data && this.lancamento.tipo) {
+        if (this.estoque.descricao?.trim() && this.estoque.valor !== undefined && this.estoque.data && this.estoque.tipo) {
             // Garante que efetivado seja sempre um booleano
-            if (this.lancamento.efetivado === undefined || this.lancamento.efetivado === null) {
-                this.lancamento.efetivado = false;
+            if (this.estoque.efetivado === undefined || this.estoque.efetivado === null) {
+                this.estoque.efetivado = false;
             }
 
             // Log para debug
-            console.log('Salvando lançamento:', JSON.stringify(this.lancamento, null, 2));
-            console.log('Campo efetivado:', this.lancamento.efetivado, 'Tipo:', typeof this.lancamento.efetivado);
+            console.log('Salvando estoque:', JSON.stringify(this.estoque, null, 2));
+            console.log('Campo efetivado:', this.estoque.efetivado, 'Tipo:', typeof this.estoque.efetivado);
 
-            if (this.lancamento.id) {
+            if (this.estoque.id) {
                 // Update
-                // Guarda o lançamento original para comparar mudanças no saldo
-                const lancamentoOriginalId = this.lancamento.id;
-                this.lancamentoService.getLancamentoById(lancamentoOriginalId).subscribe({
-                    next: (lancamentoOriginal) => {
-                        this.lancamentoService.updateLancamento(lancamentoOriginalId, this.lancamento).subscribe({
+                // Guarda o estoque original para comparar mudanças no saldo
+                const estoqueOriginalId = this.estoque.id;
+                this.lancamentoService.getLancamentoById(estoqueOriginalId).subscribe({
+                    next: (estoqueOriginal) => {
+                        this.lancamentoService.updateLancamento(estoqueOriginalId, this.estoque).subscribe({
                             next: () => {
                                 // Atualiza o saldo se necessário
                                 if (
-                                    this.lancamento.patrimonioId &&
-                                    (lancamentoOriginal.efetivado !== this.lancamento.efetivado ||
-                                        lancamentoOriginal.valor !== this.lancamento.valor ||
-                                        lancamentoOriginal.patrimonioId !== this.lancamento.patrimonioId ||
-                                        lancamentoOriginal.tipo !== this.lancamento.tipo)
+                                    this.estoque.patrimonioId &&
+                                    (estoqueOriginal.efetivado !== this.estoque.efetivado ||
+                                        estoqueOriginal.valor !== this.estoque.valor ||
+                                        estoqueOriginal.patrimonioId !== this.estoque.patrimonioId ||
+                                        estoqueOriginal.tipo !== this.estoque.tipo)
                                 ) {
-                                    this.atualizarSaldoContaAoSalvar(lancamentoOriginal);
+                                    this.atualizarSaldoContaAoSalvar(estoqueOriginal);
                                 }
 
                                 this.messageService.add({
                                     severity: 'success',
                                     summary: 'Sucesso',
-                                    detail: 'Lançamento atualizado com sucesso'
+                                    detail: 'Estoque atualizado com sucesso'
                                 });
-                                this.loadLancamentos();
-                                this.lancamentoDialog = false;
-                                this.lancamento = {} as Lancamento;
+                                this.loadEstoques();
+                                this.estoqueDialog = false;
+                                this.estoque = {} as Estoque;
                             },
                             error: () => {
                                 this.messageService.add({
                                     severity: 'error',
                                     summary: 'Erro',
-                                    detail: 'Erro ao atualizar lançamento'
+                                    detail: 'Erro ao atualizar estoque'
                                 });
                             }
                         });
@@ -233,36 +233,36 @@ export class LancamentosList implements OnInit {
                 });
             } else {
                 // Create
-                console.log('Criando novo lançamento');
-                if (this.isParcelado && this.numeroParcelas > 1) {
-                    this.criarLancamentosParcelados();
+                console.log('Criando novo estoque');
+                if (this.temRetirada && this.numeroRetiradas > 1) {
+                    this.criarEstoquesComRetiradas();
                 } else {
-                    // Guarda uma cópia do lançamento antes de salvar
-                    const lancamentoParaSalvar = { ...this.lancamento };
+                    // Guarda uma cópia do estoque antes de salvar
+                    const estoqueParaSalvar = { ...this.estoque };
 
-                    this.lancamentoService.createLancamento(lancamentoParaSalvar).subscribe({
+                    this.lancamentoService.createLancamento(estoqueParaSalvar).subscribe({
                         next: () => {
-                            // Atualiza o saldo se o lançamento está efetivado e tem Patrimonio
-                            // Usa a cópia guardada ao invés de this.lancamento
-                            if (lancamentoParaSalvar.patrimonioId && lancamentoParaSalvar.efetivado) {
-                                console.log('Atualizando saldo da Patrimonio após criar lançamento efetivado');
-                                this.atualizarSaldoContaParaLancamento(lancamentoParaSalvar);
+                            // Atualiza o saldo se o estoque está efetivado e tem Patrimonio
+                            // Usa a cópia guardada ao invés de this.estoque
+                            if (estoqueParaSalvar.patrimonioId && estoqueParaSalvar.efetivado) {
+                                console.log('Atualizando saldo da Patrimonio após criar estoque efetivado');
+                                this.atualizarSaldoContaParaEstoque(estoqueParaSalvar);
                             }
 
                             this.messageService.add({
                                 severity: 'success',
                                 summary: 'Sucesso',
-                                detail: 'Lançamento criado com sucesso'
+                                detail: 'Estoque criado com sucesso'
                             });
-                            this.loadLancamentos();
-                            this.lancamentoDialog = false;
-                            this.lancamento = {} as Lancamento;
+                            this.loadEstoques();
+                            this.estoqueDialog = false;
+                            this.estoque = {} as Estoque;
                         },
                         error: () => {
                             this.messageService.add({
                                 severity: 'error',
                                 summary: 'Erro',
-                                detail: 'Erro ao criar lançamento'
+                                detail: 'Erro ao criar estoque'
                             });
                         }
                     });
@@ -271,34 +271,34 @@ export class LancamentosList implements OnInit {
         }
     }
 
-    confirmDelete(lancamento: Lancamento) {
+    confirmDelete(estoque: Estoque) {
         this.confirmationService.confirm({
-            message: `Tem certeza que deseja deletar o lançamento "${lancamento.descricao}"?`,
+            message: `Tem certeza que deseja deletar o estoque "${estoque.descricao}"?`,
             header: 'Confirmar Exclusão',
             icon: 'pi pi-exclamation-triangle',
             acceptLabel: 'Sim',
             rejectLabel: 'Não',
             accept: () => {
-                this.deleteLancamento(lancamento.id!);
+                this.deleteEstoque(estoque.id!);
             }
         });
     }
 
-    deleteLancamento(id: number) {
+    deleteEstoque(id: number) {
         this.lancamentoService.deleteLancamento(id).subscribe({
             next: () => {
                 this.messageService.add({
                     severity: 'success',
                     summary: 'Sucesso',
-                    detail: 'Lançamento deletado com sucesso'
+                    detail: 'Estoque deletado com sucesso'
                 });
-                this.loadLancamentos();
+                this.loadEstoques();
             },
             error: () => {
                 this.messageService.add({
                     severity: 'error',
                     summary: 'Erro',
-                    detail: 'Erro ao deletar lançamento'
+                    detail: 'Erro ao deletar estoque'
                 });
             }
         });
@@ -328,59 +328,59 @@ export class LancamentosList implements OnInit {
         return patrimonio?.descricao || '-';
     }
 
-    criarLancamentosParcelados() {
-        const valorParcela = this.lancamento.valor / this.numeroParcelas;
-        const dataBase = new Date(this.lancamento.data);
-        let parcelasRestantes = this.numeroParcelas;
-        let parcelasErro = 0;
+    criarEstoquesComRetiradas() {
+        const valorRetirada = this.estoque.valor / this.numeroRetiradas;
+        const dataBase = new Date(this.estoque.data);
+        let retirasRestantes = this.numeroRetiradas;
+        let retirasErro = 0;
 
-        for (let i = 0; i < this.numeroParcelas; i++) {
-            const dataParcela = new Date(dataBase);
-            dataParcela.setDate(dataParcela.getDate() + i * 30);
+        for (let i = 0; i < this.numeroRetiradas; i++) {
+            const dataRetirada = new Date(dataBase);
+            dataRetirada.setDate(dataRetirada.getDate() + i * 30);
 
-            const parcela: Lancamento = {
-                ...this.lancamento,
-                valor: valorParcela,
-                data: dataParcela,
-                descricao: `${this.lancamento.descricao} (${i + 1}/${this.numeroParcelas})`,
-                numeroParcelas: this.numeroParcelas,
-                parcelaAtual: i + 1
+            const retirada: Estoque = {
+                ...this.estoque,
+                valor: valorRetirada,
+                data: dataRetirada,
+                descricao: `${this.estoque.descricao} (${i + 1}/${this.numeroRetiradas})`,
+                numeroRetiradas: this.numeroRetiradas,
+                retiradaAtual: i + 1
             };
 
-            this.lancamentoService.createLancamento(parcela).subscribe({
+            this.lancamentoService.createLancamento(retirada).subscribe({
                 next: () => {
-                    parcelasRestantes--;
-                    if (parcelasRestantes === 0 && parcelasErro === 0) {
+                    retirasRestantes--;
+                    if (retirasRestantes === 0 && retirasErro === 0) {
                         this.messageService.add({
                             severity: 'success',
                             summary: 'Sucesso',
-                            detail: `${this.numeroParcelas} parcelas criadas com sucesso`
+                            detail: `${this.numeroRetiradas} retiradas criadas com sucesso`
                         });
-                        this.loadLancamentos();
-                        this.lancamentoDialog = false;
-                        this.lancamento = {} as Lancamento;
-                    } else if (parcelasRestantes === 0 && parcelasErro > 0) {
+                        this.loadEstoques();
+                        this.estoqueDialog = false;
+                        this.estoque = {} as Estoque;
+                    } else if (retirasRestantes === 0 && retirasErro > 0) {
                         this.messageService.add({
                             severity: 'warn',
                             summary: 'Parcialmente Concluído',
-                            detail: `${this.numeroParcelas - parcelasErro} de ${this.numeroParcelas} parcelas criadas`
+                            detail: `${this.numeroRetiradas - retirasErro} de ${this.numeroRetiradas} retiradas criadas`
                         });
-                        this.loadLancamentos();
-                        this.lancamentoDialog = false;
-                        this.lancamento = {} as Lancamento;
+                        this.loadEstoques();
+                        this.estoqueDialog = false;
+                        this.estoque = {} as Estoque;
                     }
                 },
                 error: () => {
-                    parcelasRestantes--;
-                    parcelasErro++;
-                    if (parcelasRestantes === 0) {
+                    retirasRestantes--;
+                    retirasErro++;
+                    if (retirasRestantes === 0) {
                         this.messageService.add({
                             severity: 'error',
                             summary: 'Erro',
-                            detail: `Erro ao criar parcelas. ${parcelasErro} parcela(s) falharam`
+                            detail: `Erro ao criar retiradas. ${retirasErro} retirada(s) falharam`
                         });
-                        if (parcelasErro < this.numeroParcelas) {
-                            this.loadLancamentos();
+                        if (retirasErro < this.numeroRetiradas) {
+                            this.loadEstoques();
                         }
                     }
                 }
@@ -388,41 +388,41 @@ export class LancamentosList implements OnInit {
         }
     }
 
-    get valorParcela(): number {
-        if (!this.isParcelado || this.numeroParcelas <= 1) {
-            return this.lancamento.valor || 0;
+    get valorRetirada(): number {
+        if (!this.temRetirada || this.numeroRetiradas <= 1) {
+            return this.estoque.valor || 0;
         }
-        return (this.lancamento.valor || 0) / this.numeroParcelas;
+        return (this.estoque.valor || 0) / this.numeroRetiradas;
     }
 
-    toggleEfetivado(lancamento: Lancamento) {
+    toggleEfetivado(estoque: Estoque) {
         // Inverte o valor manualmente já que não temos mais ngModel
-        lancamento.efetivado = !lancamento.efetivado;
-        const novoStatus = lancamento.efetivado;
-        const lancamentoAtualizado = { ...lancamento, efetivado: novoStatus };
+        estoque.efetivado = !estoque.efetivado;
+        const novoStatus = estoque.efetivado;
+        const estoqueAtualizado = { ...estoque, efetivado: novoStatus };
 
-        console.log('Toggling efetivado for lancamento:', lancamento.id);
+        console.log('Toggling efetivado for estoque:', estoque.id);
         console.log('Novo status efetivado:', novoStatus);
 
         // Se tem Patrimonio associada, atualiza o saldo
-        if (lancamento.patrimonioId) {
-            this.patrimonioService.getPatrimonioById(lancamento.patrimonioId).subscribe({
+        if (estoque.patrimonioId) {
+            this.patrimonioService.getPatrimonioById(estoque.patrimonioId).subscribe({
                 next: (patrimonio) => {
                     let novoSaldo = patrimonio.saldo;
 
                     if (novoStatus) {
-                        // Está efetivando o lançamento
-                        if (lancamento.tipo === 'RECEITA') {
-                            novoSaldo += lancamento.valor;
+                        // Está efetivando o estoque
+                        if (estoque.tipo === 'RECEITA') {
+                            novoSaldo += estoque.valor;
                         } else {
-                            novoSaldo -= lancamento.valor;
+                            novoSaldo -= estoque.valor;
                         }
                     } else {
-                        // Está desefetivando o lançamento
-                        if (lancamento.tipo === 'RECEITA') {
-                            novoSaldo -= lancamento.valor;
+                        // Está desefetivando o estoque
+                        if (estoque.tipo === 'RECEITA') {
+                            novoSaldo -= estoque.valor;
                         } else {
-                            novoSaldo += lancamento.valor;
+                            novoSaldo += estoque.valor;
                         }
                     }
 
@@ -431,31 +431,31 @@ export class LancamentosList implements OnInit {
                     // Atualiza a Patrimonio
                     this.patrimonioService.updatePatrimonio(patrimonio.id!, patrimonioAtualizado).subscribe({
                         next: () => {
-                            // Atualiza o lançamento
-                            this.lancamentoService.updateLancamento(lancamento.id!, lancamentoAtualizado).subscribe({
+                            // Atualiza o estoque
+                            this.lancamentoService.updateLancamento(estoque.id!, estoqueAtualizado).subscribe({
                                 next: () => {
                                     this.messageService.add({
                                         severity: 'success',
                                         summary: 'Sucesso',
-                                        detail: novoStatus ? 'Lançamento efetivado com sucesso' : 'Lançamento desefetivado com sucesso'
+                                        detail: novoStatus ? 'Estoque efetivado com sucesso' : 'Estoque desefetivado com sucesso'
                                     });
-                                    this.loadLancamentos();
+                                    this.loadEstoques();
                                     this.loadPatrimonios(); // Atualiza a lista de patrimonios
                                 },
                                 error: () => {
                                     // Reverte em caso de erro
-                                    lancamento.efetivado = !lancamento.efetivado;
+                                    estoque.efetivado = !estoque.efetivado;
                                     this.messageService.add({
                                         severity: 'error',
                                         summary: 'Erro',
-                                        detail: 'Erro ao atualizar status do lançamento'
+                                        detail: 'Erro ao atualizar status do estoque'
                                     });
                                 }
                             });
                         },
                         error: () => {
                             // Reverte em caso de erro
-                            lancamento.efetivado = !lancamento.efetivado;
+                            estoque.efetivado = !estoque.efetivado;
                             this.messageService.add({
                                 severity: 'error',
                                 summary: 'Erro',
@@ -473,69 +473,69 @@ export class LancamentosList implements OnInit {
                 }
             });
         } else {
-            // Se não tem Patrimonio, apenas atualiza o status do lançamento
-            this.lancamentoService.updateLancamento(lancamento.id!, lancamentoAtualizado).subscribe({
+            // Se não tem Patrimonio, apenas atualiza o status do estoque
+            this.lancamentoService.updateLancamento(estoque.id!, estoqueAtualizado).subscribe({
                 next: () => {
                     this.messageService.add({
                         severity: 'success',
                         summary: 'Sucesso',
-                        detail: novoStatus ? 'Lançamento efetivado com sucesso' : 'Lançamento desefetivado com sucesso'
+                        detail: novoStatus ? 'Estoque efetivado com sucesso' : 'Estoque desefetivado com sucesso'
                     });
-                    this.loadLancamentos();
+                    this.loadEstoques();
                 },
                 error: () => {
                     this.messageService.add({
                         severity: 'error',
                         summary: 'Erro',
-                        detail: 'Erro ao atualizar status do lançamento'
+                        detail: 'Erro ao atualizar status do estoque'
                     });
                 }
             });
         }
     }
 
-    atualizarSaldoContaAoSalvar(lancamentoOriginal?: Lancamento) {
+    atualizarSaldoContaAoSalvar(estoqueOriginal?: Estoque) {
         console.log('=== atualizarSaldoContaAoSalvar ===');
-        console.log('Lançamento atual:', JSON.stringify(this.lancamento, null, 2));
-        console.log('Lançamento original:', lancamentoOriginal ? JSON.stringify(lancamentoOriginal, null, 2) : 'null');
-        console.log('Campo efetivado:', this.lancamento.efetivado, 'Tipo:', typeof this.lancamento.efetivado);
+        console.log('Estoque atual:', JSON.stringify(this.estoque, null, 2));
+        console.log('Estoque original:', estoqueOriginal ? JSON.stringify(estoqueOriginal, null, 2) : 'null');
+        console.log('Campo efetivado:', this.estoque.efetivado, 'Tipo:', typeof this.estoque.efetivado);
 
         // Se não tem Patrimonio, não faz nada
-        if (!this.lancamento.patrimonioId) {
+        if (!this.estoque.patrimonioId) {
             console.log('Sem Patrimonio associada, pulando atualização');
             return;
         }
 
-        this.patrimonioService.getPatrimonioById(this.lancamento.patrimonioId).subscribe({
+        this.patrimonioService.getPatrimonioById(this.estoque.patrimonioId).subscribe({
             next: (patrimonio) => {
                 console.log('Patrimonio atual:', JSON.stringify(patrimonio, null, 2));
                 let novoSaldo = patrimonio.saldo;
                 console.log('Saldo inicial:', novoSaldo);
 
                 // Se está editando, primeiro reverte o valor anterior
-                if (lancamentoOriginal && lancamentoOriginal.efetivado && lancamentoOriginal.patrimonioId === this.lancamento.patrimonioId) {
-                    console.log('Revertendo lançamento original efetivado');
-                    if (lancamentoOriginal.tipo === 'RECEITA') {
-                        novoSaldo -= lancamentoOriginal.valor;
-                        console.log(`Removendo RECEITA: ${novoSaldo} = ${patrimonio.saldo} - ${lancamentoOriginal.valor}`);
+                if (estoqueOriginal && estoqueOriginal.efetivado && estoqueOriginal.patrimonioId === this.estoque.patrimonioId) {
+                    console.log('Revertendo estoque original efetivado');
+                    if (estoqueOriginal.tipo === 'RECEITA') {
+                        novoSaldo -= estoqueOriginal.valor;
+                        console.log(`Removendo RECEITA: ${novoSaldo} = ${patrimonio.saldo} - ${estoqueOriginal.valor}`);
                     } else {
-                        novoSaldo += lancamentoOriginal.valor;
-                        console.log(`Devolvendo DESPESA: ${novoSaldo} = ${patrimonio.saldo} + ${lancamentoOriginal.valor}`);
+                        novoSaldo += estoqueOriginal.valor;
+                        console.log(`Devolvendo DESPESA: ${novoSaldo} = ${patrimonio.saldo} + ${estoqueOriginal.valor}`);
                     }
                 }
 
                 // Aplica o novo valor se estiver efetivado
-                if (this.lancamento.efetivado) {
-                    console.log('Aplicando novo lançamento efetivado');
-                    if (this.lancamento.tipo === 'RECEITA') {
-                        novoSaldo += this.lancamento.valor;
-                        console.log(`Adicionando RECEITA: ${novoSaldo} = saldo anterior + ${this.lancamento.valor}`);
+                if (this.estoque.efetivado) {
+                    console.log('Aplicando novo estoque efetivado');
+                    if (this.estoque.tipo === 'RECEITA') {
+                        novoSaldo += this.estoque.valor;
+                        console.log(`Adicionando RECEITA: ${novoSaldo} = saldo anterior + ${this.estoque.valor}`);
                     } else {
-                        novoSaldo -= this.lancamento.valor;
-                        console.log(`Subtraindo DESPESA: ${novoSaldo} = saldo anterior - ${this.lancamento.valor}`);
+                        novoSaldo -= this.estoque.valor;
+                        console.log(`Subtraindo DESPESA: ${novoSaldo} = saldo anterior - ${this.estoque.valor}`);
                     }
                 } else {
-                    console.log('Lançamento NÃO está efetivado, não aplicando ao saldo');
+                    console.log('Estoque NÃO está efetivado, não aplicando ao saldo');
                 }
 
                 console.log('Saldo final calculado:', novoSaldo);
@@ -562,48 +562,48 @@ export class LancamentosList implements OnInit {
         });
     }
 
-    atualizarSaldoContaParaLancamento(lancamento: Lancamento, lancamentoOriginal?: Lancamento) {
-        console.log('=== atualizarSaldoContaParaLancamento ===');
-        console.log('Lançamento:', JSON.stringify(lancamento, null, 2));
-        console.log('Lançamento original:', lancamentoOriginal ? JSON.stringify(lancamentoOriginal, null, 2) : 'null');
-        console.log('Campo efetivado:', lancamento.efetivado, 'Tipo:', typeof lancamento.efetivado);
+    atualizarSaldoContaParaEstoque(estoque: Estoque, estoqueOriginal?: Estoque) {
+        console.log('=== atualizarSaldoContaParaEstoque ===');
+        console.log('Estoque:', JSON.stringify(estoque, null, 2));
+        console.log('Estoque original:', estoqueOriginal ? JSON.stringify(estoqueOriginal, null, 2) : 'null');
+        console.log('Campo efetivado:', estoque.efetivado, 'Tipo:', typeof estoque.efetivado);
 
         // Se não tem Patrimonio, não faz nada
-        if (!lancamento.patrimonioId) {
+        if (!estoque.patrimonioId) {
             console.log('Sem Patrimonio associada, pulando atualização');
             return;
         }
 
-        this.patrimonioService.getPatrimonioById(lancamento.patrimonioId).subscribe({
+        this.patrimonioService.getPatrimonioById(estoque.patrimonioId).subscribe({
             next: (patrimonio) => {
                 console.log('Patrimonio atual:', JSON.stringify(patrimonio, null, 2));
                 let novoSaldo = patrimonio.saldo;
                 console.log('Saldo inicial:', novoSaldo);
 
                 // Se está editando, primeiro reverte o valor anterior
-                if (lancamentoOriginal && lancamentoOriginal.efetivado && lancamentoOriginal.patrimonioId === lancamento.patrimonioId) {
-                    console.log('Revertendo lançamento original efetivado');
-                    if (lancamentoOriginal.tipo === 'RECEITA') {
-                        novoSaldo -= lancamentoOriginal.valor;
-                        console.log(`Removendo RECEITA: ${novoSaldo} = ${patrimonio.saldo} - ${lancamentoOriginal.valor}`);
+                if (estoqueOriginal && estoqueOriginal.efetivado && estoqueOriginal.patrimonioId === estoque.patrimonioId) {
+                    console.log('Revertendo estoque original efetivado');
+                    if (estoqueOriginal.tipo === 'RECEITA') {
+                        novoSaldo -= estoqueOriginal.valor;
+                        console.log(`Removendo RECEITA: ${novoSaldo} = ${patrimonio.saldo} - ${estoqueOriginal.valor}`);
                     } else {
-                        novoSaldo += lancamentoOriginal.valor;
-                        console.log(`Devolvendo DESPESA: ${novoSaldo} = ${patrimonio.saldo} + ${lancamentoOriginal.valor}`);
+                        novoSaldo += estoqueOriginal.valor;
+                        console.log(`Devolvendo DESPESA: ${novoSaldo} = ${patrimonio.saldo} + ${estoqueOriginal.valor}`);
                     }
                 }
 
                 // Aplica o novo valor se estiver efetivado
-                if (lancamento.efetivado) {
-                    console.log('Aplicando novo lançamento efetivado');
-                    if (lancamento.tipo === 'RECEITA') {
-                        novoSaldo += lancamento.valor;
-                        console.log(`Adicionando RECEITA: ${novoSaldo} = saldo anterior + ${lancamento.valor}`);
+                if (estoque.efetivado) {
+                    console.log('Aplicando novo estoque efetivado');
+                    if (estoque.tipo === 'RECEITA') {
+                        novoSaldo += estoque.valor;
+                        console.log(`Adicionando RECEITA: ${novoSaldo} = saldo anterior + ${estoque.valor}`);
                     } else {
-                        novoSaldo -= lancamento.valor;
-                        console.log(`Subtraindo DESPESA: ${novoSaldo} = saldo anterior - ${lancamento.valor}`);
+                        novoSaldo -= estoque.valor;
+                        console.log(`Subtraindo DESPESA: ${novoSaldo} = saldo anterior - ${estoque.valor}`);
                     }
                 } else {
-                    console.log('Lançamento NÃO está efetivado, não aplicando ao saldo');
+                    console.log('Estoque NÃO está efetivado, não aplicando ao saldo');
                 }
 
                 console.log('Saldo final calculado:', novoSaldo);

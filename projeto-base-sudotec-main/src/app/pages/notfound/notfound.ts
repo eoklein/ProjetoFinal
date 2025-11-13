@@ -64,7 +64,6 @@ import { ButtonModule } from 'primeng/button';
                             <span class="text-surface-600 dark:text-surface-200 lg:text-xl">Accumsan in nisl nisi scelerisque</span>
                         </span>
                         </a>
-                        <p-button label="Go to Dashboard" routerLink="/home/dashboard" />
                     </div>
                 </div>
             </div>

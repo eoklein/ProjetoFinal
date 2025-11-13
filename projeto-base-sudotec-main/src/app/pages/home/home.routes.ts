@@ -1,5 +1,4 @@
 import { Routes } from '@angular/router';
-import { Dashboard } from '@/pages/home/dashboard/dashboard';
 import { UsersList } from '@/pages/home/users/users-list';
 import { TiposPatrimonioList } from '@/pages/home/tiposPatrimonio/tiposPatrimonio-list';
 import { PatrimoniosList } from '@/pages/home/patrimonios/patrimonios-list';
@@ -12,8 +11,7 @@ export const homeRoutes: Routes = [
         path: '',
         component: AppLayout,
         children: [
-            { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-            { path: 'dashboard', component: Dashboard },
+            { path: '', redirectTo: 'lancamentos', pathMatch: 'full' },
             { path: 'users', component: UsersList, canActivate: [adminGuard] },
             { path: 'tiposPatrimonio', component: TiposPatrimonioList },
             { path: 'patrimonios', component: PatrimoniosList },
