@@ -5,6 +5,9 @@ const adminMiddleware = require('../middlewares/admin');
 
 const router = express.Router();
 
+// Rota para estoque compartilhado (todos os patrimônios)
+router.get('/compartilhados/todos', authMiddleware, patrimonioController.getAllPatrimoniosCompartilhados);
+
 // Rotas com autenticação básica
 router.get('/', authMiddleware, patrimonioController.getAllPatrimonios);
 router.get('/:id', authMiddleware, patrimonioController.getPatrimonioById);

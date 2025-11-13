@@ -14,6 +14,7 @@ import { Select } from 'primeng/select';
 import { Checkbox } from 'primeng/checkbox';
 import { Toolbar } from 'primeng/toolbar';
 import { TooltipModule } from 'primeng/tooltip';
+import { TagModule } from 'primeng/tag';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { LancamentoService } from '@/services/lancamento.service';
 import { TipoPatrimonioService } from '@/services/tipoPatrimonio.service';
@@ -27,7 +28,7 @@ import { InputIcon } from 'primeng/inputicon';
 @Component({
     selector: 'app-lancamentos-list',
     standalone: true,
-    imports: [CommonModule, FormsModule, TableModule, ButtonModule, Dialog, Toast, ConfirmDialog, InputTextModule, InputNumberModule, DatePicker, RadioButton, Select, Checkbox, Toolbar, TooltipModule, IconField, InputIcon],
+    imports: [CommonModule, FormsModule, TableModule, ButtonModule, Dialog, Toast, ConfirmDialog, InputTextModule, InputNumberModule, DatePicker, RadioButton, Select, Checkbox, Toolbar, TooltipModule, TagModule, IconField, InputIcon],
     templateUrl: './lancamentos-list.html',
     providers: [MessageService, ConfirmationService]
 })
@@ -68,7 +69,6 @@ export class LancamentosList implements OnInit {
     mesesNomes: string[] = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
     ngOnInit() {
-        this.loadEstoques();
         this.loadCategorias();
         this.loadPatrimonios();
     }
@@ -89,7 +89,7 @@ export class LancamentosList implements OnInit {
     }
 
     loadPatrimonios() {
-        this.patrimonioService.getPatrimonios().subscribe({
+        this.patrimonioService.getPatrimoniosCompartilhados().subscribe({
             next: (patrimonios) => {
                 this.patrimonios = patrimonios;
             },
@@ -154,15 +154,15 @@ export class LancamentosList implements OnInit {
         this.estoqueDialog = true;
     }
 
-    editEstoque(estoque: Estoque) {
-        this.estoque = {
-            ...estoque,
-            data: estoque.data ? new Date(estoque.data) : new Date()
+    editEstoque(patrimonio: any) {
+        // Abre o diálogo para editar o patrimonio
+        this.novoPatrimonio = {
+            id: patrimonio.id,
+            nome: patrimonio.nome,
+            status: patrimonio.status
         };
-        this.isEditMode = true;
-        this.temRetirada = false;
-        this.numeroRetiradas = 1;
-        this.estoqueDialog = true;
+        this.patrimonioSubmitted = false;
+        this.patrimonioDialog = true;
     }
 
     hideDialog() {
@@ -264,13 +264,33 @@ export class LancamentosList implements OnInit {
 
     confirmDelete(estoque: Estoque) {
         this.confirmationService.confirm({
-            message: `Tem certeza que deseja deletar o estoque "${estoque.descricao}"?`,
+            message: `Tem certeza que deseja deletar o patrimonio "${(estoque as any).nome}"?`,
             header: 'Confirmar Exclusão',
             icon: 'pi pi-exclamation-triangle',
             acceptLabel: 'Sim',
             rejectLabel: 'Não',
             accept: () => {
-                this.deleteEstoque(estoque.id!);
+                this.deletePatrimonio(estoque.id!);
+            }
+        });
+    }
+
+    deletePatrimonio(id: number) {
+        this.patrimonioService.deletePatrimonio(id).subscribe({
+            next: () => {
+                this.messageService.add({
+                    severity: 'success',
+                    summary: 'Sucesso',
+                    detail: 'Patrimonio deletado com sucesso'
+                });
+                this.loadPatrimonios();
+            },
+            error: () => {
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Erro',
+                    detail: 'Erro ao deletar patrimonio'
+                });
             }
         });
     }

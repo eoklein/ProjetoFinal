@@ -18,6 +18,13 @@ export class PatrimonioService {
     }
 
     /**
+     * Lista todos os patrimonios compartilhados (estoque geral)
+     */
+    getPatrimoniosCompartilhados(): Observable<any[]> {
+        return this.http.get<any[]>(`${this.apiUrl}/compartilhados/todos`);
+    }
+
+    /**
      * Busca um patrimonio por ID
      */
     getPatrimonioById(id: number): Observable<Patrimonio> {
