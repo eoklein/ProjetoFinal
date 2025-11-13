@@ -89,7 +89,7 @@ export class LancamentosList implements OnInit {
     }
 
     loadPatrimonios() {
-        this.patrimonioService.getPatrimoniosCompartilhados().subscribe({
+        this.patrimonioService.getPatrimonios().subscribe({
             next: (patrimonios) => {
                 this.patrimonios = patrimonios;
             },
