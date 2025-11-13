@@ -5,13 +5,13 @@ const reservaController = {
     async getAllReservas(req, res) {
         try {
             const userId = req.user.id;
+            const isAdmin = req.user.isAdmin;
+
+            // Admin vê todas as reservas, usuário comum vê apenas suas próprias
+            const whereClause = isAdmin ? {} : { userId };
 
             const reservas = await prisma.reserva.findMany({
-                where: {
-                    user: {
-                        id: userId
-                    }
-                },
+                where: whereClause,
                 include: {
                     patrimonio: {
                         select: {
@@ -24,6 +24,7 @@ const reservaController = {
                     },
                     user: {
                         select: {
+                            id: true,
                             username: true
                         }
                     }
@@ -75,8 +76,9 @@ const reservaController = {
 
     async createReserva(req, res) {
         try {
-            const { patrimonioId, dataDevolucao } = req.body;
-            const userId = req.user.id;
+            const { patrimonioId, dataDevolucao, userId: specifiedUserId } = req.body;
+            const currentUserId = req.user.id;
+            const isAdmin = req.user.isAdmin;
 
             if (!patrimonioId) {
                 return res.status(400).json({ error: 'Patrimônio é obrigatório' });
@@ -86,12 +88,26 @@ const reservaController = {
                 return res.status(400).json({ error: 'Data de devolução é obrigatória' });
             }
 
-            // Verificar se o patrimônio existe e pertence ao usuário
-            const patrimonio = await prisma.patrimonio.findFirst({
-                where: {
-                    id: patrimonioId,
-                    userId
+            // Determinar qual userId usar
+            let finalUserId = currentUserId;
+            if (isAdmin && specifiedUserId) {
+                finalUserId = specifiedUserId;
+                
+                // Verificar se o usuário especificado existe
+                const usuarioExists = await prisma.user.findUnique({
+                    where: { id: finalUserId }
+                });
+                
+                if (!usuarioExists) {
+                    return res.status(404).json({ error: 'Usuário não encontrado' });
                 }
+            } else if (!isAdmin && specifiedUserId && specifiedUserId !== currentUserId) {
+                return res.status(403).json({ error: 'Você não tem permissão para criar reserva para outro usuário' });
+            }
+
+            // Verificar se o patrimônio existe
+            const patrimonio = await prisma.patrimonio.findUnique({
+                where: { id: patrimonioId }
             });
 
             if (!patrimonio) {
@@ -121,7 +137,7 @@ const reservaController = {
             const reserva = await prisma.reserva.create({
                 data: {
                     patrimonioId,
-                    userId,
+                    userId: finalUserId,
                     dataDevolucao: dataDev,
                     status: 'ativa'
                 },
@@ -137,6 +153,7 @@ const reservaController = {
                     },
                     user: {
                         select: {
+                            id: true,
                             username: true
                         }
                     }
@@ -156,18 +173,21 @@ const reservaController = {
     async updateReserva(req, res) {
         try {
             const reservaId = parseInt(req.params.id);
-            const { dataDevolucao, status } = req.body;
-            const userId = req.user.id;
+            const { dataDevolucao, status, userId: specifiedUserId } = req.body;
+            const currentUserId = req.user.id;
+            const isAdmin = req.user.isAdmin;
 
-            const reserva = await prisma.reserva.findFirst({
-                where: {
-                    id: reservaId,
-                    userId
-                }
+            const reserva = await prisma.reserva.findUnique({
+                where: { id: reservaId }
             });
 
             if (!reserva) {
                 return res.status(404).json({ error: 'Reserva não encontrada' });
+            }
+
+            // Verificar permissões
+            if (!isAdmin && reserva.userId !== currentUserId) {
+                return res.status(403).json({ error: 'Você não tem permissão para atualizar esta reserva' });
             }
 
             const updateData = {};
@@ -190,6 +210,18 @@ const reservaController = {
                 updateData.status = status;
             }
 
+            if (isAdmin && specifiedUserId) {
+                // Verificar se o usuário existe
+                const usuarioExists = await prisma.user.findUnique({
+                    where: { id: specifiedUserId }
+                });
+                
+                if (!usuarioExists) {
+                    return res.status(404).json({ error: 'Usuário não encontrado' });
+                }
+                updateData.userId = specifiedUserId;
+            }
+
             const reservaAtualizada = await prisma.reserva.update({
                 where: { id: reservaId },
                 data: updateData,
@@ -205,6 +237,7 @@ const reservaController = {
                     },
                     user: {
                         select: {
+                            id: true,
                             username: true
                         }
                     }
@@ -224,17 +257,20 @@ const reservaController = {
     async deleteReserva(req, res) {
         try {
             const reservaId = parseInt(req.params.id);
-            const userId = req.user.id;
+            const currentUserId = req.user.id;
+            const isAdmin = req.user.isAdmin;
 
-            const reserva = await prisma.reserva.findFirst({
-                where: {
-                    id: reservaId,
-                    userId
-                }
+            const reserva = await prisma.reserva.findUnique({
+                where: { id: reservaId }
             });
 
             if (!reserva) {
                 return res.status(404).json({ error: 'Reserva não encontrada' });
+            }
+
+            // Verificar permissões
+            if (!isAdmin && reserva.userId !== currentUserId) {
+                return res.status(403).json({ error: 'Você não tem permissão para deletar esta reserva' });
             }
 
             await prisma.reserva.delete({

@@ -86,6 +86,12 @@
                     Status
                     <p-sortIcon field="status" />
                 </th>
+                @if (isAdmin) {
+                    <th pSortableColumn="user.username" style="width: 12%">
+                        Usuário
+                        <p-sortIcon field="user.username" />
+                    </th>
+                }
                 <th style="width: 20%" class="text-center">Ações</th>
             </tr>
         </ng-template>
@@ -120,6 +126,11 @@
                         styleClass="whitespace-nowrap">
                     </p-tag>
                 </td>
+                @if (isAdmin) {
+                    <td>
+                        <span class="font-semibold">{{ reserva.user?.username || '-' }}</span>
+                    </td>
+                }
                 <td>
                     <div class="flex justify-center gap-2">
                         <p-button
@@ -190,6 +201,27 @@
                 }
             </div>
 
+            @if (isAdmin) {
+                <div class="flex flex-col gap-2">
+                    <label for="usuario" class="font-semibold">
+                        Usuário @if (!isEditMode) {<span class="text-red-500">*</span>}
+                    </label>
+                    <p-select
+                        id="usuario"
+                        [(ngModel)]="reserva.userId"
+                        [options]="usuarios"
+                        optionLabel="username"
+                        optionValue="id"
+                        placeholder="Selecione um usuário"
+                        styleClass="w-full"
+                        [class.ng-invalid]="submitted && !isEditMode && !reserva.userId">
+                    </p-select>
+                    @if (submitted && !isEditMode && !reserva.userId) {
+                        <small class="text-red-500">Usuário é obrigatório.</small>
+                    }
+                </div>
+            }
+
             <div class="flex flex-col gap-2">
                 <label for="dataDevolucao" class="font-semibold">
                     Data de Devolução @if (!isEditMode) {<span class="text-red-500">*</span>}
@@ -199,6 +231,7 @@
                     [(ngModel)]="reserva.dataDevolucao"
                     dateFormat="dd/mm/yy"
                     [showIcon]="true"
+                    appendTo="body"
                     placeholder="Selecione a data"
                     styleClass="w-full"
                     [class.ng-invalid]="submitted && !isEditMode && !reserva.dataDevolucao">

@@ -15,6 +15,7 @@ import { TagModule } from 'primeng/tag';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ReservaService } from '@/services/reserva.service';
 import { AuthService } from '@/services/auth.service';
+import { UserService } from '@/services/user.service';
 import { Reserva } from '@/models/reserva.model';
 import { IconField } from 'primeng/iconfield';
 import { InputIcon } from 'primeng/inputicon';
@@ -30,17 +31,20 @@ import { InputIcon } from 'primeng/inputicon';
 export class ReservasComponent implements OnInit {
     reservaService = inject(ReservaService);
     authService = inject(AuthService);
+    userService = inject(UserService);
     messageService = inject(MessageService);
     confirmationService = inject(ConfirmationService);
 
     reservas: Reserva[] = [];
     patrimoniosDisponiveis: any[] = [];
+    usuarios: any[] = [];
     reserva: Reserva = {} as Reserva;
     reservaOriginal: Reserva = {} as Reserva;
     reservaDialog: boolean = false;
     isEditMode: boolean = false;
     submitted: boolean = false;
     loading: boolean = false;
+    isAdmin: boolean = false;
 
     statusOptions = [
         { label: 'Ativa', value: 'ativa' },
@@ -49,8 +53,12 @@ export class ReservasComponent implements OnInit {
     ];
 
     ngOnInit() {
+        this.isAdmin = this.authService.isAdmin();
         this.loadReservas();
         this.loadPatrimoniosDisponiveis();
+        if (this.isAdmin) {
+            this.loadUsuarios();
+        }
     }
 
     loadReservas() {
@@ -81,6 +89,21 @@ export class ReservasComponent implements OnInit {
                     severity: 'error',
                     summary: 'Erro',
                     detail: 'Erro ao carregar patrimônios disponíveis'
+                });
+            }
+        });
+    }
+
+    loadUsuarios() {
+        this.userService.getUsers().subscribe({
+            next: (usuarios) => {
+                this.usuarios = usuarios;
+            },
+            error: () => {
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Erro',
+                    detail: 'Erro ao carregar usuários'
                 });
             }
         });
@@ -128,11 +151,21 @@ export class ReservasComponent implements OnInit {
             return;
         }
 
+        if (this.isAdmin && !this.isEditMode && !this.reserva.userId) {
+            this.messageService.add({
+                severity: 'error',
+                summary: 'Erro',
+                detail: 'Usuário é obrigatório.'
+            });
+            return;
+        }
+
         if (this.isEditMode) {
             // Update
             this.reservaService.updateReserva(this.reserva.id!, {
                 dataDevolucao: this.reserva.dataDevolucao,
-                status: this.reserva.status
+                status: this.reserva.status,
+                userId: this.reserva.userId
             }).subscribe({
                 next: () => {
                     this.messageService.add({
@@ -156,7 +189,8 @@ export class ReservasComponent implements OnInit {
             // Create
             this.reservaService.createReserva({
                 patrimonioId: this.reserva.patrimonioId,
-                dataDevolucao: this.reserva.dataDevolucao
+                dataDevolucao: this.reserva.dataDevolucao,
+                userId: this.reserva.userId
             }).subscribe({
                 next: () => {
                     this.messageService.add({
