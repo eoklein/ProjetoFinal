@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -11,7 +11,6 @@ import { Toast } from 'primeng/toast';
 import { LoginService } from '@/services/login-service';
 import { AuthModel } from '@/models/auth.model';
 import { AuthService } from '@/services/auth.service';
-import { LayoutService } from '@/layout/service/layout.service';
 
 @Component({
     selector: 'app-login',
@@ -20,23 +19,17 @@ import { LayoutService } from '@/layout/service/layout.service';
     templateUrl: './login.html',
     providers: [MessageService, LoginService]
 })
-export class Login implements OnInit {
+export class Login {
     formBuilder = inject(FormBuilder);
     messageService = inject(MessageService);
     loginService = inject(LoginService);
     authService = inject(AuthService);
     router = inject(Router);
-    layoutService = inject(LayoutService);
 
     loginForm = this.formBuilder.group({
         username: ['', [Validators.required]],
         password: ['', [Validators.required]]
     });
-
-    ngOnInit() {
-        this.layoutService.layoutConfig.update((state) => ({ ...state, darkTheme: true, primary: 'fuchsia' }));
-        this.layoutService.toggleDarkMode({ ...this.layoutService.layoutConfig(), darkTheme: true });
-    }
 
     validarLogin() {
         if (this.loginForm.invalid) {

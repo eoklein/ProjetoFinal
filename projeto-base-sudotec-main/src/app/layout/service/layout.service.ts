@@ -82,6 +82,13 @@ export class LayoutService {
         effect(() => {
             const config = this.layoutConfig();
             if (config) {
+                // Força a cor primária a sempre ser fuchsia
+                if (config.primary !== 'fuchsia') {
+                    this.layoutConfig.set({
+                        ...config,
+                        primary: 'fuchsia'
+                    });
+                }
                 this.onConfigUpdate();
             }
         });
