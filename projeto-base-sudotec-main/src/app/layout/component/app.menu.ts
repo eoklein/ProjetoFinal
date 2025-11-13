@@ -35,7 +35,8 @@ export class AppMenu {
                 label: 'Cadastros',
                 items: [
                     { label: 'Tipos de Patrimonio', icon: 'pi pi-fw pi-tag', routerLink: ['/home/tiposPatrimonio'] },
-                    { label: 'Patrimonios', icon: 'pi pi-fw pi-wallet', routerLink: ['/home/patrimonios'] }
+                    { label: 'Patrimonios', icon: 'pi pi-fw pi-wallet', routerLink: ['/home/patrimonios'] },
+                    { label: 'Reservas', icon: 'pi pi-fw pi-calendar', routerLink: ['/home/reservas'] }
                 ]
             }
         ];
