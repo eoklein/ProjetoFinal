@@ -253,34 +253,41 @@ const patrimonioController = {
             }
 
             const updateData = {};
-            if (nome !== undefined) {
+            
+            // Apenas atualizar campos que foram explicitamente enviados e são diferentes
+            if (nome !== undefined && nome !== null && nome.trim() !== '') {
                 updateData.nome = nome;
             }
-            if (codigo !== undefined) {
+            if (codigo !== undefined && codigo !== null) {
                 updateData.codigo = codigo;
             }
-            if (status !== undefined) {
+            if (status !== undefined && status !== null && status !== '') {
                 const validStatuses = ['critico', 'danificado', 'bom'];
                 if (!validStatuses.includes(status)) {
                     return res.status(400).json({error: 'Status deve ser: critico, danificado ou bom'});
                 }
                 updateData.status = status;
             }
-            if (valor !== undefined) {
+            if (valor !== undefined && valor !== null) {
                 updateData.valor = valor;
             }
 
-            const patrimonio = await prisma.patrimonio.update({
-                where: {id: patrimonioId},
-                data: updateData
-            });
-
-            // Se tipoPatrimonioId foi alterado, atualizar o estoque associado
-            if (tipoPatrimonioId !== undefined) {
-                await prisma.estoque.updateMany({
-                    where: {patrimonioId: patrimonioId},
-                    data: {tipoPatrimonioId: tipoPatrimonioId}
+            // Se nenhum dado foi alterado, retornar o patrimonio atual sem atualizar
+            let patrimonio = existingPatrimonio;
+            
+            if (Object.keys(updateData).length > 0) {
+                patrimonio = await prisma.patrimonio.update({
+                    where: {id: patrimonioId},
+                    data: updateData
                 });
+
+                // Se tipoPatrimonioId foi alterado, atualizar o estoque associado
+                if (tipoPatrimonioId !== undefined && tipoPatrimonioId !== null) {
+                    await prisma.estoque.updateMany({
+                        where: {patrimonioId: patrimonioId},
+                        data: {tipoPatrimonioId: tipoPatrimonioId}
+                    });
+                }
             }
 
             // Buscar o tipo atualizado

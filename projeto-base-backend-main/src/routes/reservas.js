@@ -6,19 +6,17 @@ const router = express.Router();
 
 router.use(authMiddleware);
 
-// GET todas as reservas do usuário
-router.get('/', reservaController.getAllReservas);
-
+// Rotas específicas ANTES das rotas dinâmicas
 // GET patrimônios disponíveis (não reservados)
 router.get('/disponivel', reservaController.getPatrimoniosDisponiveis);
 
-// POST criar nova reserva
-router.post('/', reservaController.createReserva);
-
-// PUT atualizar reserva
+// Rotas com parâmetros dinâmicos
 router.put('/:id', reservaController.updateReserva);
-
-// DELETE deletar reserva
 router.delete('/:id', reservaController.deleteReserva);
+router.get('/:id', reservaController.getPatrimoniosDisponiveis); // Fallback se alguém tentar /reservas/:id
+
+// Rotas genéricas por último
+router.get('/', reservaController.getAllReservas);
+router.post('/', reservaController.createReserva);
 
 module.exports = router;

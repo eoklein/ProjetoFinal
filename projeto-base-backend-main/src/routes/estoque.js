@@ -3,26 +3,24 @@ const router = express.Router();
 const estoqueController = require('../controller/estoque');
 const authMiddleware = require('../middlewares/auth');
 
-// Rota para estoques compartilhados (ANTES das rotas dinâmicas)
-router.get('/compartilhados/todos', authMiddleware, estoqueController.getAllEstoquesCompartilhados);
+// Aplicar autenticação a todas as rotas
+router.use(authMiddleware);
 
-// Listar todos os estoques (requer autenticação)
-router.get('/', authMiddleware, estoqueController.getAllEstoques);
+// Rotas específicas ANTES das rotas dinâmicas
+// Rota para estoques compartilhados
+router.get('/compartilhados/todos', estoqueController.getAllEstoquesCompartilhados);
 
-// Criar estoque com retiradas (requer autenticação) - DEVE vir antes de /:id
-router.post('/com-retiradas', authMiddleware, estoqueController.createEstoqueComRetiradas);
+// Criar estoque com retiradas - DEVE vir antes de /:id
+router.post('/com-retiradas', estoqueController.createEstoqueComRetiradas);
 
-// Buscar estoque por ID (requer autenticação)
-router.get('/:id', authMiddleware, estoqueController.getEstoqueById);
+// Rotas com parâmetros dinâmicos (depois das rotas específicas)
+router.get('/:id', estoqueController.getEstoqueById);
+router.put('/:id', estoqueController.updateEstoque);
+router.delete('/:id', estoqueController.deleteEstoque);
 
-// Criar novo estoque (requer autenticação)
-router.post('/', authMiddleware, estoqueController.createEstoque);
-
-// Atualizar estoque (requer autenticação)
-router.put('/:id', authMiddleware, estoqueController.updateEstoque);
-
-// Deletar estoque (requer autenticação)
-router.delete('/:id', authMiddleware, estoqueController.deleteEstoque);
+// Rotas genéricas por último
+router.get('/', estoqueController.getAllEstoques);
+router.post('/', estoqueController.createEstoque);
 
 module.exports = router;
 

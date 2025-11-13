@@ -61,7 +61,7 @@ export class LancamentosList implements OnInit {
 
     statusOptions = [
         { label: 'Crítico', value: 'critico' },
-        { label: 'Normal', value: 'normal' },
+        { label: 'Danificado', value: 'danificado' },
         { label: 'Bom', value: 'bom' }
     ];
 
@@ -595,10 +595,11 @@ export class LancamentosList implements OnInit {
                 },
                 error: (erro) => {
                     console.error('Erro ao atualizar patrimonio:', erro);
+                    const mensagemErro = erro.error?.error || erro.message || 'Erro ao atualizar patrimonio';
                     this.messageService.add({
                         severity: 'error',
                         summary: 'Erro',
-                        detail: 'Erro ao atualizar patrimonio'
+                        detail: mensagemErro
                     });
                 }
             });

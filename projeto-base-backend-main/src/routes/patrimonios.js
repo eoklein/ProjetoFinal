@@ -5,18 +5,23 @@ const adminMiddleware = require('../middlewares/admin');
 
 const router = express.Router();
 
+// Aplicar autenticação a todas as rotas
+router.use(authMiddleware);
+
 // Rotas específicas ANTES das rotas dinâmicas
 // Rota para estoque compartilhado (todos os patrimônios)
-router.get('/compartilhados/todos', authMiddleware, patrimonioController.getAllPatrimoniosCompartilhados);
+router.get('/compartilhados/todos', patrimonioController.getAllPatrimoniosCompartilhados);
 
 // Rota para admin - todos os patrimônios (sem filtro de usuário)
-router.get('/admin/todos', authMiddleware, patrimonioController.getTodosPatrimonios);
+router.get('/admin/todos', patrimonioController.getTodosPatrimonios);
 
-// Rotas com autenticação básica (incluindo dinâmicas)
-router.get('/', authMiddleware, patrimonioController.getAllPatrimonios);
-router.get('/:id', authMiddleware, patrimonioController.getPatrimonioById);
-router.post('/', authMiddleware, patrimonioController.createPatrimonio);
-router.put('/:id', authMiddleware, patrimonioController.updatePatrimonio);
-router.delete('/:id', authMiddleware, adminMiddleware, patrimonioController.deletePatrimonio);
+// Rotas com parâmetros dinâmicos (depois das rotas específicas)
+router.get('/:id', patrimonioController.getPatrimonioById);
+router.post('/', patrimonioController.createPatrimonio);
+router.put('/:id', patrimonioController.updatePatrimonio);
+router.delete('/:id', adminMiddleware, patrimonioController.deletePatrimonio);
+
+// Rota GET genérica por último
+router.get('/', patrimonioController.getAllPatrimonios);
 
 module.exports = router;
