@@ -334,7 +334,7 @@ export class LancamentosList implements OnInit {
     getPatrimonioNome(patrimonioId?: number): string {
         if (!patrimonioId) return '-';
         const patrimonio = this.patrimonios.find((c) => c.id === patrimonioId);
-        return patrimonio?.descricao || '-';
+        return patrimonio?.nome || '-';
     }
 
     criarEstoquesComRetiradas() {

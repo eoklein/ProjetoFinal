@@ -27,7 +27,7 @@ model TipoPatrimonio {
 
 model Patrimonio {
   id          Int          @id @default(autoincrement())
-  descricao   String
+  nome        String
   status      String //critico / normal / bom
   data       DateTime @default(now()) // de quando foi requisitado
   userId      Int

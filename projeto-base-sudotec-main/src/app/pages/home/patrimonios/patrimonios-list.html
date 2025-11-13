@@ -43,7 +43,7 @@
         [rowsPerPageOptions]="[5, 10, 20, 50]"
         [showCurrentPageReport]="true"
         currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} patrimonios"
-        [globalFilterFields]="['descricao']"
+        [globalFilterFields]="['nome']"
         styleClass="p-datatable-gridlines"
         [tableStyle]="{ 'min-width': '50rem' }">
 
@@ -64,9 +64,9 @@
                     ID
                     <p-sortIcon field="id" />
                 </th>
-                <th pSortableColumn="descricao" style="width: 35%">
-                    Descrição
-                    <p-sortIcon field="descricao" />
+                <th pSortableColumn="nome" style="width: 35%">
+                    Nome
+                    <p-sortIcon field="nome" />
                 </th>
                 <th pSortableColumn="status" style="width: 20%">
                     Status
@@ -86,7 +86,7 @@
                 <td>
                     <div class="flex items-center gap-2">
                         <i class="pi pi-wallet text-lg"></i>
-                        <span class="font-medium">{{ patrimonio.descricao }}</span>
+                        <span class="font-medium">{{ patrimonio.nome }}</span>
                     </div>
                 </td>
                 <td>
@@ -160,20 +160,20 @@
     <ng-template #content>
         <div class="flex flex-col gap-6 p-4">
             <div class="flex flex-col gap-2">
-                <label for="descricao" class="font-semibold">
-                    Descrição <span class="text-red-500">*</span>
+                <label for="nome" class="font-semibold">
+                    Nome <span class="text-red-500">*</span>
                 </label>
                 <input
                     pInputText
-                    id="descricao"
-                    [(ngModel)]="patrimonio.descricao"
+                    id="nome"
+                    [(ngModel)]="patrimonio.nome"
                     required
                     autofocus
-                    placeholder="Digite a descrição do patrimonio"
+                    placeholder="Digite o nome do patrimonio"
                     class="w-full"
-                    [class.ng-invalid]="submitted && !patrimonio.descricao" />
-                @if (submitted && !patrimonio.descricao) {
-                    <small class="text-red-500">A descrição é obrigatória.</small>
+                    [class.ng-invalid]="submitted && !patrimonio.nome" />
+                @if (submitted && !patrimonio.nome) {
+                    <small class="text-red-500">O nome é obrigatório.</small>
                 }
             </div>
 
