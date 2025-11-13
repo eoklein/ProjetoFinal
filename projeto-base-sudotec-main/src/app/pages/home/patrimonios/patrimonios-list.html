@@ -43,7 +43,7 @@
         [rowsPerPageOptions]="[5, 10, 20, 50]"
         [showCurrentPageReport]="true"
         currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} patrimonios"
-        [globalFilterFields]="['descricao']"
+        [globalFilterFields]="['nome']"
         styleClass="p-datatable-gridlines"
         [tableStyle]="{ 'min-width': '50rem' }">
 
@@ -64,9 +64,9 @@
                     ID
                     <p-sortIcon field="id" />
                 </th>
-                <th pSortableColumn="descricao" style="width: 28%">
+                <th pSortableColumn="nome" style="width: 28%">
                     Nome
-                    <p-sortIcon field="descricao" />
+                    <p-sortIcon field="nome" />
                 </th>
                 <th pSortableColumn="status" style="width: 18%">
                     Status
@@ -90,7 +90,7 @@
                 <td>
                     <div class="flex items-center gap-2">
                         <i class="pi pi-wallet text-lg"></i>
-                        <span class="font-medium">{{ patrimonio.descricao }}</span>
+                        <span class="font-medium">{{ patrimonio.nome }}</span>
                     </div>
                 </td>
                 <td>

@@ -85,7 +85,7 @@ export class PatrimoniosList implements OnInit {
     saveContact() {
         this.submitted = true;
 
-        if (this.patrimonio.descricao?.trim() && this.patrimonio.status) {
+        if (this.patrimonio.nome?.trim() && this.patrimonio.status) {
             if (this.patrimonio.id) {
                 // Update
                 this.patrimonioService.updatePatrimonio(this.patrimonio.id, this.patrimonio).subscribe({
@@ -134,7 +134,7 @@ export class PatrimoniosList implements OnInit {
 
     confirmDelete(patrimonio: Patrimonio) {
         this.confirmationService.confirm({
-            message: `Tem certeza que deseja deletar o patrimonio "${patrimonio.descricao}"?`,
+            message: `Tem certeza que deseja deletar o patrimonio "${patrimonio.nome}"?`,
             header: 'Confirmar Exclusão',
             icon: 'pi pi-exclamation-triangle',
             acceptLabel: 'Sim',

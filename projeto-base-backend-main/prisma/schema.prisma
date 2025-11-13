@@ -27,8 +27,9 @@ model TipoPatrimonio {
 
 model Patrimonio {
   id          Int          @id @default(autoincrement())
-  descricao   String
+  nome        String
   status      String //critico / normal / bom
+  valor       Float?
   data       DateTime @default(now()) // de quando foi requisitado
   userId      Int
   user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
