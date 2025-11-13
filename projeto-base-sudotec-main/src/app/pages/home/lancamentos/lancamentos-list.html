@@ -67,19 +67,23 @@
                     ID
                     <p-sortIcon field="id" />
                 </th>
-                <th pSortableColumn="nome" style="width: 26%">
+                <th pSortableColumn="nome" style="width: 24%">
                     Nome
                     <p-sortIcon field="nome" />
                 </th>
-                <th pSortableColumn="status" style="width: 26%">
+                <th pSortableColumn="status" style="width: 20%">
                     Status
                     <p-sortIcon field="status" />
                 </th>
-                <th pSortableColumn="data" style="width: 17%">
+                <th pSortableColumn="valor" style="width: 18%">
+                    Valor
+                    <p-sortIcon field="valor" />
+                </th>
+                <th pSortableColumn="data" style="width: 12%">
                     Data
                     <p-sortIcon field="data" />
                 </th>
-                <th style="width: 23%" class="text-center">Ações</th>
+                <th style="width: 18%" class="text-center">Ações</th>
             </tr>
         </ng-template>
 
@@ -103,6 +107,12 @@
                         [severity]="patrimonio.status === 'critico' ? 'danger' : patrimonio.status === 'normal' ? 'warning' : 'success'"
                         styleClass="whitespace-nowrap">
                     </p-tag>
+                </td>
+                <td>
+                    <div class="flex items-center gap-2">
+                        <i class="pi pi-money-bill text-lg"></i>
+                        <span class="font-semibold text-green-600">{{ patrimonio.valor | currency: 'BRL' }}</span>
+                    </div>
                 </td>
                 <td>
                     <div class="flex items-center gap-2">
@@ -138,7 +148,7 @@
 
         <ng-template #emptymessage>
             <tr>
-                <td colspan="5" class="text-center py-8">
+                <td colspan="6" class="text-center py-8">
                     <div class="flex flex-col items-center gap-3">
                         <i class="pi pi-inbox text-4xl text-muted-color"></i>
                         <p class="text-muted-color text-lg">Nenhum patrimonio encontrado</p>

@@ -7,6 +7,7 @@ import { Dialog } from 'primeng/dialog';
 import { Toast } from 'primeng/toast';
 import { ConfirmDialog } from 'primeng/confirmdialog';
 import { InputTextModule } from 'primeng/inputtext';
+import { InputNumberModule } from 'primeng/inputnumber';
 import { SelectModule } from 'primeng/select';
 import { Toolbar } from 'primeng/toolbar';
 import { TooltipModule } from 'primeng/tooltip';
@@ -19,7 +20,7 @@ import { InputIcon } from 'primeng/inputicon';
 @Component({
     selector: 'app-patrimonios-list',
     standalone: true,
-    imports: [CommonModule, FormsModule, TableModule, ButtonModule, Dialog, Toast, ConfirmDialog, InputTextModule, SelectModule, Toolbar, TooltipModule, IconField, InputIcon],
+    imports: [CommonModule, FormsModule, TableModule, ButtonModule, Dialog, Toast, ConfirmDialog, InputTextModule, InputNumberModule, SelectModule, Toolbar, TooltipModule, IconField, InputIcon],
     templateUrl: './patrimonios-list.html',
     providers: [MessageService, ConfirmationService]
 })

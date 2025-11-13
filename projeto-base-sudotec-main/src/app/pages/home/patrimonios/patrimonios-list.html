@@ -60,23 +60,27 @@
 
         <ng-template #header>
             <tr>
-                <th pSortableColumn="id" style="width: 10%">
+                <th pSortableColumn="id" style="width: 8%">
                     ID
                     <p-sortIcon field="id" />
                 </th>
-                <th pSortableColumn="nome" style="width: 35%">
+                <th pSortableColumn="nome" style="width: 28%">
                     Nome
                     <p-sortIcon field="nome" />
                 </th>
-                <th pSortableColumn="status" style="width: 20%">
+                <th pSortableColumn="status" style="width: 18%">
                     Status
                     <p-sortIcon field="status" />
                 </th>
-                <th pSortableColumn="data" style="width: 20%">
+                <th pSortableColumn="valor" style="width: 18%">
+                    Valor
+                    <p-sortIcon field="valor" />
+                </th>
+                <th pSortableColumn="data" style="width: 15%">
                     Data
                     <p-sortIcon field="data" />
                 </th>
-                <th style="width: 15%" class="text-center">Ações</th>
+                <th style="width: 13%" class="text-center">Ações</th>
             </tr>
         </ng-template>
 
@@ -96,6 +100,11 @@
                         'bg-green-100 text-green-800 px-3 py-1 rounded-full': patrimonio.status === 'bom'
                     }" class="font-semibold">
                         {{ patrimonio.status | uppercase }}
+                    </span>
+                </td>
+                <td>
+                    <span class="font-semibold text-green-600">
+                        {{ patrimonio.valor | currency: 'BRL' }}
                     </span>
                 </td>
                 <td>
@@ -131,7 +140,7 @@
 
         <ng-template #emptymessage>
             <tr>
-                <td colspan="5" class="text-center py-8">
+                <td colspan="6" class="text-center py-8">
                     <div class="flex flex-col items-center gap-3">
                         <i class="pi pi-inbox text-4xl text-muted-color"></i>
                         <p class="text-muted-color text-lg">Nenhum patrimonio encontrado</p>
@@ -194,6 +203,21 @@
                 @if (submitted && !patrimonio.status) {
                     <small class="text-red-500">O status é obrigatório.</small>
                 }
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label for="valor" class="font-semibold">
+                    Valor
+                </label>
+                <p-inputNumber
+                    id="valor"
+                    [(ngModel)]="patrimonio.valor"
+                    mode="currency"
+                    currency="BRL"
+                    locale="pt-BR"
+                    placeholder="Digite o valor do patrimonio"
+                    styleClass="w-full">
+                </p-inputNumber>
             </div>
         </div>
     </ng-template>
