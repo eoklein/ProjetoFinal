@@ -67,7 +67,7 @@ export class LancamentosList implements OnInit {
     loadCategorias() {
         this.tipoPatrimonioService.getTiposPatrimonio().subscribe({
             next: (categorias) => {
-                this.categorias = categorias;
+                this.tiposPatrimonio = categorias;
             },
             error: () => {
                 this.messageService.add({

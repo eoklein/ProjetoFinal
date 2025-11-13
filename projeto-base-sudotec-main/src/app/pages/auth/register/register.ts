@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -8,6 +8,7 @@ import { MessageService } from 'primeng/api';
 import { Toast } from 'primeng/toast';
 import { RegisterService } from '../../../services/register-service';
 import { RegisterInput } from '@/models/registerInput';
+import { LayoutService } from '@/layout/service/layout.service';
 
 @Component({
     selector: 'app-register',
@@ -16,17 +17,23 @@ import { RegisterInput } from '@/models/registerInput';
     templateUrl: './register.html',
     providers: [MessageService, RegisterService]
 })
-export class Register {
+export class Register implements OnInit {
     formBuilder = inject(FormBuilder);
     messageService = inject(MessageService);
     registerService = inject(RegisterService);
     router = inject(Router);
+    layoutService = inject(LayoutService);
 
     registerForm = this.formBuilder.group({
         username: ['', [Validators.required, Validators.minLength(3)]],
         password: ['', [Validators.required, Validators.minLength(4)]],
         confirmPassword: ['', [Validators.required]]
     });
+
+    ngOnInit() {
+        this.layoutService.layoutConfig.update((state) => ({ ...state, darkTheme: true, primary: 'fuchsia' }));
+        this.layoutService.toggleDarkMode({ ...this.layoutService.layoutConfig(), darkTheme: true });
+    }
 
     validarCadastro() {
         if (this.registerForm.invalid) {
