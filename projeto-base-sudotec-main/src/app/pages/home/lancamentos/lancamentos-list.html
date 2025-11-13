@@ -2,7 +2,7 @@
 <p-confirmDialog />
 
 <!-- Toolbar: Gerenciar Estoque -->
-<p-toolbar styleClass="mb-4">
+<p-toolbar styleClass="mb-6">
     <ng-template #start>
         <div>
             <h2 class="text-3xl font-semibold text-surface-900 dark:text-surface-0 mb-2">
@@ -96,18 +96,19 @@
                 </td>
                 <td>
                     <div class="flex items-center gap-2">
-                        <i class="pi pi-wallet text-lg"></i>
                         <span class="font-medium">{{ patrimonio.nome }}</span>
                     </div>
                 </td>
                 <td>
-                    <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full font-semibold">
-                        {{ getTipoNome(patrimonio.tipoPatrimonioId) }}
-                    </span>
+                    <p-tag 
+                        [value]="getTipoNome(patrimonio.tipoPatrimonioId) | titlecase"
+                        severity="warning"
+                        styleClass="whitespace-nowrap">
+                    </p-tag>
                 </td>
                 <td>
                     <p-tag 
-                        [value]="patrimonio.status | uppercase"
+                        [value]="(patrimonio.status | titlecase)"
                         [severity]="patrimonio.status === 'critico' ? 'danger' : patrimonio.status === 'normal' ? 'warning' : 'success'"
                         styleClass="whitespace-nowrap">
                     </p-tag>
@@ -176,7 +177,7 @@
         <div class="flex flex-col gap-4 p-4">
             <div class="flex flex-col gap-2">
                 <label class="font-semibold">
-                    Tipo <span class="text-red-500">*</span>
+                    Tipo @if (!isEditMode) {<span class="text-red-500">*</span>}
                 </label>
                 <div class="flex gap-6">
                     <div class="flex items-center gap-2">
@@ -204,7 +205,7 @@
                         </label>
                     </div>
                 </div>
-                @if (submitted && !estoque.tipo) {
+                @if (submitted && !isEditMode && !estoque.tipo) {
                     <small class="text-red-500">O tipo é obrigatório.</small>
                 }
             </div>
@@ -245,7 +246,7 @@
 
             <div class="flex flex-col gap-2">
                 <label for="data" class="font-semibold">
-                    Data <span class="text-red-500">*</span>
+                    Data @if (!isEditMode) {<span class="text-red-500">*</span>}
                 </label>
                 <p-date-picker
                     id="data"
@@ -255,33 +256,33 @@
                     appendTo="body"
                     placeholder="Selecione a data"
                     styleClass="w-full"
-                    [class.ng-invalid]="submitted && !estoque.data">
+                    [class.ng-invalid]="submitted && !isEditMode && !estoque.data">
                 </p-date-picker>
-                @if (submitted && !estoque.data) {
+                @if (submitted && !isEditMode && !estoque.data) {
                     <small class="text-red-500">A data é obrigatória.</small>
                 }
             </div>
 
             <div class="flex flex-col gap-2">
                 <label for="descricao" class="font-semibold">
-                    Descrição <span class="text-red-500">*</span>
+                    Descrição @if (!isEditMode) {<span class="text-red-500">*</span>}
                 </label>
                 <input
                     pInputText
                     id="descricao"
                     [(ngModel)]="estoque.descricao"
-                    required
+                    [required]="!isEditMode"
                     placeholder="Digite a descrição do estoque"
                     class="w-full"
-                    [class.ng-invalid]="submitted && !estoque.descricao" />
-                @if (submitted && !estoque.descricao) {
+                    [class.ng-invalid]="submitted && !isEditMode && !estoque.descricao" />
+                @if (submitted && !isEditMode && !estoque.descricao) {
                     <small class="text-red-500">A descrição é obrigatória.</small>
                 }
             </div>
 
             <div class="flex flex-col gap-2">
                 <label for="valor" class="font-semibold">
-                    Valor <span class="text-red-500">*</span>
+                    Valor @if (!isEditMode) {<span class="text-red-500">*</span>}
                 </label>
                 <p-inputNumber
                     id="valor"
@@ -291,9 +292,9 @@
                     locale="pt-BR"
                     placeholder="Digite o valor"
                     styleClass="w-full"
-                    [class.ng-invalid]="submitted && estoque.valor === undefined">
+                    [class.ng-invalid]="submitted && !isEditMode && estoque.valor === undefined">
                 </p-inputNumber>
-                @if (submitted && estoque.valor === undefined) {
+                @if (submitted && !isEditMode && estoque.valor === undefined) {
                     <small class="text-red-500">O valor é obrigatório.</small>
                 }
             </div>
@@ -383,47 +384,83 @@
 <!-- Dialog para criar patrimonio -->
 <p-dialog
     [(visible)]="patrimonioDialog"
-    header="Criar Novo Patrimonio"
+    [header]="isEditMode ? 'Editar Patrimonio' : 'Novo Patrimonio'"
     [modal]="true"
     [closable]="true"
     [style]="{ width: '500px' }"
     [breakpoints]="{ '960px': '75vw', '640px': '90vw' }">
 
     <ng-template #content>
-        <div class="flex flex-col gap-4 p-4">
+        <div class="flex flex-col gap-6 p-4">
             <div class="flex flex-col gap-2">
-                <label for="patrimonioDescricao" class="font-semibold">
-                    Descrição <span class="text-red-500">*</span>
+                <label for="nome" class="font-semibold">
+                    Nome @if (!isEditMode) {<span class="text-red-500">*</span>}
                 </label>
                 <input
                     pInputText
-                    id="patrimonioDescricao"
-                    [(ngModel)]="novoPatrimonio.descricao"
-                    placeholder="Digite a descrição do patrimonio"
+                    id="nome"
+                    [(ngModel)]="novoPatrimonio.nome"
+                    [required]="!isEditMode"
+                    autofocus
+                    placeholder="Digite o nome do patrimonio"
                     class="w-full"
-                    [class.ng-invalid]="patrimonioSubmitted && !novoPatrimonio.descricao" />
-                @if (patrimonioSubmitted && !novoPatrimonio.descricao) {
-                    <small class="text-red-500">A descrição é obrigatória.</small>
+                    [class.ng-invalid]="patrimonioSubmitted && !isEditMode && !novoPatrimonio.nome" />
+                @if (patrimonioSubmitted && !isEditMode && !novoPatrimonio.nome) {
+                    <small class="text-red-500">O nome é obrigatório.</small>
                 }
             </div>
 
             <div class="flex flex-col gap-2">
-                <label for="patrimonioStatus" class="font-semibold">
-                    Status <span class="text-red-500">*</span>
+                <label for="tipo" class="font-semibold">
+                    Tipo de Patrimonio @if (!isEditMode) {<span class="text-red-500">*</span>}
                 </label>
                 <p-select
-                    id="patrimonioStatus"
+                    id="tipo"
+                    [(ngModel)]="novoPatrimonio.tipoPatrimonioId"
+                    [options]="tiposPatrimonio"
+                    optionLabel="nome"
+                    optionValue="id"
+                    placeholder="Selecione o tipo de patrimonio"
+                    styleClass="w-full"
+                    [class.ng-invalid]="patrimonioSubmitted && !isEditMode && !novoPatrimonio.tipoPatrimonioId">
+                </p-select>
+                @if (patrimonioSubmitted && !isEditMode && !novoPatrimonio.tipoPatrimonioId) {
+                    <small class="text-red-500">O tipo de patrimonio é obrigatório.</small>
+                }
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label for="status" class="font-semibold">
+                    Status @if (!isEditMode) {<span class="text-red-500">*</span>}
+                </label>
+                <p-select
+                    id="status"
                     [(ngModel)]="novoPatrimonio.status"
                     [options]="statusOptions"
                     optionLabel="label"
                     optionValue="value"
-                    placeholder="Selecione um status"
-                    appendTo="body"
-                    styleClass="w-full">
+                    placeholder="Selecione o status"
+                    styleClass="w-full"
+                    [class.ng-invalid]="patrimonioSubmitted && !isEditMode && !novoPatrimonio.status">
                 </p-select>
-                @if (patrimonioSubmitted && !novoPatrimonio.status) {
+                @if (patrimonioSubmitted && !isEditMode && !novoPatrimonio.status) {
                     <small class="text-red-500">O status é obrigatório.</small>
                 }
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label for="valor" class="font-semibold">
+                    Valor
+                </label>
+                <p-inputNumber
+                    id="valor"
+                    [(ngModel)]="novoPatrimonio.valor"
+                    mode="currency"
+                    currency="BRL"
+                    locale="pt-BR"
+                    placeholder="Digite o valor do patrimonio"
+                    styleClass="w-full">
+                </p-inputNumber>
             </div>
         </div>
     </ng-template>
@@ -438,7 +475,7 @@
                 (onClick)="hidePatrimonioDialog()">
             </p-button>
             <p-button
-                label="Criar Patrimonio"
+                [label]="isEditMode ? 'Atualizar' : 'Criar'"
                 icon="pi pi-check"
                 severity="success"
                 (onClick)="savePatrimonio()">

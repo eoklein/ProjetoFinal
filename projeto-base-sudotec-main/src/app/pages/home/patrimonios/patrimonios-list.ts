@@ -11,6 +11,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { SelectModule } from 'primeng/select';
 import { Toolbar } from 'primeng/toolbar';
 import { TooltipModule } from 'primeng/tooltip';
+import { TagModule } from 'primeng/tag';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { PatrimonioService } from '@/services/patrimonio.service';
 import { TipoPatrimonioService } from '@/services/tipoPatrimonio.service';
@@ -23,7 +24,7 @@ import { InputIcon } from 'primeng/inputicon';
 @Component({
     selector: 'app-patrimonios-list',
     standalone: true,
-    imports: [CommonModule, FormsModule, TableModule, ButtonModule, Dialog, Toast, ConfirmDialog, InputTextModule, InputNumberModule, SelectModule, Toolbar, TooltipModule, IconField, InputIcon],
+    imports: [CommonModule, FormsModule, TableModule, ButtonModule, Dialog, Toast, ConfirmDialog, InputTextModule, InputNumberModule, SelectModule, Toolbar, TooltipModule, TagModule, IconField, InputIcon],
     templateUrl: './patrimonios-list.html',
     providers: [MessageService, ConfirmationService]
 })
@@ -38,6 +39,7 @@ export class PatrimoniosList implements OnInit {
     tiposPatrimonio: TipoPatrimonio[] = [];
     patrimonioDialog: boolean = false;
     patrimonio: Patrimonio = {} as Patrimonio;
+    patrimonioOriginal: Patrimonio = {} as Patrimonio;
     submitted: boolean = false;
     loading: boolean = false;
     isEditMode: boolean = false;
@@ -101,6 +103,7 @@ export class PatrimoniosList implements OnInit {
     }
 
     editPatrimonio(patrimonio: Patrimonio) {
+        this.patrimonioOriginal = { ...patrimonio };
         this.patrimonio = { ...patrimonio };
         this.isEditMode = true;
         this.patrimonioDialog = true;
@@ -114,7 +117,25 @@ export class PatrimoniosList implements OnInit {
     saveContact() {
         this.submitted = true;
 
-        if (this.patrimonio.nome?.trim() && this.patrimonio.status && this.patrimonio.tipoPatrimonioId) {
+        // Restaurar campos vazios com valores originais durante edição
+        if (this.isEditMode) {
+            if (!this.patrimonio.nome?.trim()) {
+                this.patrimonio.nome = this.patrimonioOriginal.nome;
+            }
+            if (!this.patrimonio.status) {
+                this.patrimonio.status = this.patrimonioOriginal.status;
+            }
+            if (!this.patrimonio.tipoPatrimonioId) {
+                this.patrimonio.tipoPatrimonioId = this.patrimonioOriginal.tipoPatrimonioId;
+            }
+        }
+
+        // Validação diferenciada: criar requer todos os campos, editar é opcional
+        const isValid = this.isEditMode 
+            ? true  // Edição: não requer validação (todos os campos são opcionais)
+            : (this.patrimonio.nome?.trim() && this.patrimonio.status && this.patrimonio.tipoPatrimonioId);  // Criação: requer os 3 campos
+
+        if (isValid) {
             if (this.patrimonio.id) {
                 // Update
                 this.patrimonioService.updatePatrimonio(this.patrimonio.id, this.patrimonio).subscribe({
@@ -168,6 +189,8 @@ export class PatrimoniosList implements OnInit {
             icon: 'pi pi-exclamation-triangle',
             acceptLabel: 'Sim',
             rejectLabel: 'Não',
+            acceptButtonStyleClass: 'p-button-success',
+            rejectButtonStyleClass: 'p-button-danger',
             accept: () => {
                 this.deletePatrimonio(patrimonio.id!);
             }

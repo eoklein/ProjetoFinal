@@ -1,33 +1,35 @@
 <p-toast position="top-right" />
 <p-confirmDialog />
 
+<!-- Toolbar: Gerenciar Usuários -->
+<p-toolbar styleClass="mb-6">
+    <ng-template #start>
+        <div>
+            <h2 class="text-3xl font-semibold text-surface-900 dark:text-surface-0 mb-2">
+                Gerenciar Usuários
+            </h2>
+            <p class="text-muted-color">
+                Crie, edite e gerencie os usuários do sistema
+            </p>
+        </div>
+    </ng-template>
+
+    <ng-template #end>
+        <div class="flex gap-2">
+            <p-button
+                icon="pi pi-refresh"
+                label="Atualizar"
+                severity="secondary"
+                [outlined]="true"
+                (onClick)="loadUsers()"
+                [loading]="loading">
+            </p-button>
+        </div>
+    </ng-template>
+</p-toolbar>
+
+<!-- Card: Tabela de Usuários -->
 <div class="card">
-    <p-toolbar styleClass="mb-6">
-        <ng-template #start>
-            <div>
-                <h2 class="text-3xl font-semibold text-surface-900 dark:text-surface-0 mb-2">
-                    Gerenciar Usuários
-                </h2>
-                <p class="text-muted-color">
-                    Crie, edite e gerencie os usuários do sistema
-                </p>
-            </div>
-        </ng-template>
-
-        <ng-template #end>
-            <div class="flex gap-2">
-                <p-button
-                    icon="pi pi-refresh"
-                    label="Atualizar"
-                    severity="secondary"
-                    [outlined]="true"
-                    (onClick)="loadUsers()"
-                    [loading]="loading">
-                </p-button>
-            </div>
-        </ng-template>
-    </p-toolbar>
-
     <p-table
         [value]="users"
         [loading]="loading"

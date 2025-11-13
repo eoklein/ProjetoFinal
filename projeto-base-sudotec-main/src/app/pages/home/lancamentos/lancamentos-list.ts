@@ -49,6 +49,7 @@ export class LancamentosList implements OnInit {
     patrimonioDialog: boolean = false;
     estoque: Estoque = {} as Estoque;
     novoPatrimonio: any = {};
+    patrimonioOriginal: any = {};
     submitted: boolean = false;
     patrimonioSubmitted: boolean = false;
     loading: boolean = false;
@@ -176,11 +177,21 @@ export class LancamentosList implements OnInit {
 
     editEstoque(patrimonio: any) {
         // Abre o diálogo para editar o patrimonio
+        this.patrimonioOriginal = {
+            id: patrimonio.id,
+            nome: patrimonio.nome,
+            status: patrimonio.status,
+            tipoPatrimonioId: patrimonio.tipoPatrimonioId,
+            valor: patrimonio.valor
+        };
         this.novoPatrimonio = {
             id: patrimonio.id,
             nome: patrimonio.nome,
-            status: patrimonio.status
+            status: patrimonio.status,
+            tipoPatrimonioId: patrimonio.tipoPatrimonioId,
+            valor: patrimonio.valor
         };
+        this.isEditMode = true;
         this.patrimonioSubmitted = false;
         this.patrimonioDialog = true;
     }
@@ -194,7 +205,12 @@ export class LancamentosList implements OnInit {
         this.submitted = true;
         console.log('Dados do estoque antes de salvar:', JSON.stringify(this.estoque, null, 2));
 
-        if (this.estoque.descricao?.trim() && this.estoque.valor !== undefined && this.estoque.data && this.estoque.tipo) {
+        // Validação diferenciada: criar requer todos os campos, editar é opcional
+        const isValid = this.isEditMode 
+            ? true  // Edição: não requer validação (todos os campos são opcionais)
+            : (this.estoque.descricao?.trim() && this.estoque.valor !== undefined && this.estoque.data && this.estoque.tipo);  // Criação: requer os campos
+
+        if (isValid) {
             // Garante que efetivado seja sempre um booleano
             if (this.estoque.efetivado === undefined || this.estoque.efetivado === null) {
                 this.estoque.efetivado = false;
@@ -282,20 +298,20 @@ export class LancamentosList implements OnInit {
         }
     }
 
-    confirmDelete(estoque: Estoque) {
-        // Tenta obter o patrimonioId de várias formas
-        const patrimonioId = estoque.patrimonioId || (estoque as any).patrimonio?.id;
+    confirmDelete(patrimonio: any) {
+        // Usa o ID direto do patrimonio
+        const patrimonioId = patrimonio.id;
         
         if (!patrimonioId) {
             this.messageService.add({
                 severity: 'error',
                 summary: 'Erro',
-                detail: 'Patrimonio não identificado neste estoque'
+                detail: 'Patrimonio não identificado'
             });
             return;
         }
 
-        const patrimonioNome = (estoque as any).patrimonio?.nome || 'Patrimonio';
+        const patrimonioNome = patrimonio.nome || 'Patrimonio';
 
         this.confirmationService.confirm({
             message: `Tem certeza que deseja deletar o patrimonio "${patrimonioNome}"?`,
@@ -303,8 +319,28 @@ export class LancamentosList implements OnInit {
             icon: 'pi pi-exclamation-triangle',
             acceptLabel: 'Sim',
             rejectLabel: 'Não',
+            acceptButtonStyleClass: 'p-button-success',
+            rejectButtonStyleClass: 'p-button-danger',
             accept: () => {
                 this.deletePatrimonio(patrimonioId);
+            }
+        });
+    }
+
+    confirmDeleteEstoque(estoque: Estoque) {
+        const estoqueId = estoque.id;
+        const descricao = estoque.descricao || 'Estoque';
+
+        this.confirmationService.confirm({
+            message: `Tem certeza que deseja deletar o estoque "${descricao}"?`,
+            header: 'Confirmar Exclusão',
+            icon: 'pi pi-exclamation-triangle',
+            acceptLabel: 'Sim',
+            rejectLabel: 'Não',
+            acceptButtonStyleClass: 'p-button-success',
+            rejectButtonStyleClass: 'p-button-danger',
+            accept: () => {
+                this.deleteEstoque(estoqueId!);
             }
         });
     }
@@ -318,12 +354,14 @@ export class LancamentosList implements OnInit {
                     detail: 'Patrimonio deletado com sucesso'
                 });
                 this.loadPatrimonios();
+                this.loadEstoques();
             },
-            error: () => {
+            error: (err) => {
+                console.error('Erro ao deletar patrimonio:', err);
                 this.messageService.add({
                     severity: 'error',
                     summary: 'Erro',
-                    detail: 'Erro ao deletar patrimonio'
+                    detail: err.error?.error || 'Erro ao deletar patrimonio'
                 });
             }
         });
@@ -339,11 +377,12 @@ export class LancamentosList implements OnInit {
                 });
                 this.loadEstoques();
             },
-            error: () => {
+            error: (err) => {
+                console.error('Erro ao deletar estoque:', err);
                 this.messageService.add({
                     severity: 'error',
                     summary: 'Erro',
-                    detail: 'Erro ao deletar estoque'
+                    detail: err.error?.error || 'Erro ao deletar estoque'
                 });
             }
         });
@@ -482,6 +521,7 @@ export class LancamentosList implements OnInit {
         this.patrimonioDialog = false;
         this.novoPatrimonio = {};
         this.patrimonioSubmitted = false;
+        this.isEditMode = false;
     }
 
     confirmDeletePatrimonio() {
@@ -496,7 +536,25 @@ export class LancamentosList implements OnInit {
     savePatrimonio() {
         this.patrimonioSubmitted = true;
 
-        if (!this.novoPatrimonio.descricao || !this.novoPatrimonio.status) {
+        // Restaurar campos vazios com valores originais durante edição
+        if (this.isEditMode) {
+            if (!this.novoPatrimonio.nome?.trim()) {
+                this.novoPatrimonio.nome = this.patrimonioOriginal.nome;
+            }
+            if (!this.novoPatrimonio.status) {
+                this.novoPatrimonio.status = this.patrimonioOriginal.status;
+            }
+            if (!this.novoPatrimonio.tipoPatrimonioId) {
+                this.novoPatrimonio.tipoPatrimonioId = this.patrimonioOriginal.tipoPatrimonioId;
+            }
+        }
+
+        // Validação diferenciada: criar requer todos os campos, editar é opcional
+        const isValid = this.isEditMode 
+            ? true  // Edição: não requer validação (todos os campos são opcionais)
+            : (this.novoPatrimonio.nome?.trim() && this.novoPatrimonio.status && this.novoPatrimonio.tipoPatrimonioId);  // Criação: requer os campos
+
+        if (!isValid) {
             this.messageService.add({
                 severity: 'warn',
                 summary: 'Validação',
@@ -505,57 +563,81 @@ export class LancamentosList implements OnInit {
             return;
         }
 
-        this.patrimonioService.createPatrimonio(this.novoPatrimonio).subscribe({
-            next: (novoPatrimonio) => {
-                this.messageService.add({
-                    severity: 'success',
-                    summary: 'Sucesso',
-                    detail: 'Patrimonio criado com sucesso'
-                });
-                this.hidePatrimonioDialog();
-                this.loadPatrimonios();
-                
-                // Aguardar um pouco para garantir que o patrimonio foi criado no banco
-                setTimeout(() => {
-                    // Criar um estoque para exibir o patrimonio na tabela
-                    const estoqueDoPatrimonio: Estoque = {
-                        descricao: this.novoPatrimonio.descricao,
-                        valor: 0,
-                        data: new Date(),
-                        tipo: 'RECEITA',
-                        patrimonioId: novoPatrimonio.id,
-                        tipoPatrimonioId: undefined,
-                        efetivado: false
-                    } as Estoque;
-
-                    this.lancamentoService.createLancamento(estoqueDoPatrimonio).subscribe({
-                        next: () => {
-                            console.log('Estoque criado, recarregando lista...');
-                            // Forçar recarregar os estoques sem cache
-                            this.loading = true;
-                            this.loadEstoques();
-                            this.messageService.add({
-                                severity: 'success',
-                                summary: 'Sucesso',
-                                detail: 'Patrimonio e estoque criados com sucesso'
-                            });
-                        },
-                        error: (erro) => {
-                            console.error('Erro ao criar estoque do patrimonio:', erro);
-                            this.loadEstoques();
-                        }
+        if (this.isEditMode) {
+            // Update
+            this.patrimonioService.updatePatrimonio(this.novoPatrimonio.id, this.novoPatrimonio).subscribe({
+                next: () => {
+                    this.messageService.add({
+                        severity: 'success',
+                        summary: 'Sucesso',
+                        detail: 'Patrimonio atualizado com sucesso'
                     });
-                }, 500);
-            },
-            error: (erro) => {
-                console.error('Erro ao criar patrimonio:', erro);
-                this.messageService.add({
-                    severity: 'error',
-                    summary: 'Erro',
-                    detail: 'Erro ao criar patrimonio'
-                });
-            }
-        });
+                    this.hidePatrimonioDialog();
+                    this.loadPatrimonios();
+                },
+                error: (erro) => {
+                    console.error('Erro ao atualizar patrimonio:', erro);
+                    this.messageService.add({
+                        severity: 'error',
+                        summary: 'Erro',
+                        detail: 'Erro ao atualizar patrimonio'
+                    });
+                }
+            });
+        } else {
+            // Create
+            this.patrimonioService.createPatrimonio(this.novoPatrimonio).subscribe({
+                next: (novoPatrimonio) => {
+                    this.messageService.add({
+                        severity: 'success',
+                        summary: 'Sucesso',
+                        detail: 'Patrimonio criado com sucesso'
+                    });
+                    this.hidePatrimonioDialog();
+                    this.loadPatrimonios();
+                    
+                    // Aguardar um pouco para garantir que o patrimonio foi criado no banco
+                    setTimeout(() => {
+                        // Criar um estoque para exibir o patrimonio na tabela
+                        const estoqueDoPatrimonio: Estoque = {
+                            descricao: this.novoPatrimonio.descricao,
+                            valor: 0,
+                            data: new Date(),
+                            tipo: 'RECEITA',
+                            patrimonioId: novoPatrimonio.id,
+                            tipoPatrimonioId: undefined,
+                            efetivado: false
+                        } as Estoque;
+
+                        this.lancamentoService.createLancamento(estoqueDoPatrimonio).subscribe({
+                            next: () => {
+                                console.log('Estoque criado, recarregando lista...');
+                                // Forçar recarregar os estoques sem cache
+                                this.loading = true;
+                                this.loadEstoques();
+                                this.messageService.add({
+                                    severity: 'success',
+                                    summary: 'Sucesso',
+                                    detail: 'Patrimonio e estoque criados com sucesso'
+                                });
+                            },
+                            error: (erro) => {
+                                console.error('Erro ao criar estoque do patrimonio:', erro);
+                                this.loadEstoques();
+                            }
+                        });
+                    }, 500);
+                },
+                error: (erro) => {
+                    console.error('Erro ao criar patrimonio:', erro);
+                    this.messageService.add({
+                        severity: 'error',
+                        summary: 'Erro',
+                        detail: 'Erro ao criar patrimonio'
+                    });
+                }
+            });
+        }
     }
 
     getTipoNome(tipoId?: number): string {

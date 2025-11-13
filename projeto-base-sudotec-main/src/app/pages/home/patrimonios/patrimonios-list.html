@@ -1,39 +1,41 @@
 <p-toast position="top-right" />
 <p-confirmDialog />
 
+<!-- Toolbar: Gerenciar Patrimonios -->
+<p-toolbar styleClass="mb-6">
+    <ng-template #start>
+        <div>
+            <h2 class="text-3xl font-semibold text-surface-900 dark:text-surface-0 mb-2">
+                Gerenciar Patrimonios
+            </h2>
+            <p class="text-muted-color">
+                Crie, edite e gerencie os patrimonios do sistema
+            </p>
+        </div>
+    </ng-template>
+
+    <ng-template #end>
+        <div class="flex gap-2">
+            <p-button
+                icon="pi pi-refresh"
+                label="Atualizar"
+                severity="secondary"
+                [outlined]="true"
+                (onClick)="loadPatrimonios()"
+                [loading]="loading">
+            </p-button>
+            <p-button
+                icon="pi pi-plus"
+                label="Novo Patrimonio"
+                severity="success"
+                (onClick)="openNew()">
+            </p-button>
+        </div>
+    </ng-template>
+</p-toolbar>
+
+<!-- Card: Tabela de Patrimonios -->
 <div class="card">
-    <p-toolbar styleClass="mb-6">
-        <ng-template #start>
-            <div>
-                <h2 class="text-3xl font-semibold text-surface-900 dark:text-surface-0 mb-2">
-                    Gerenciar Patrimonios
-                </h2>
-                <p class="text-muted-color">
-                    Crie, edite e gerencie os patrimonios do sistema
-                </p>
-            </div>
-        </ng-template>
-
-        <ng-template #end>
-            <div class="flex gap-2">
-                <p-button
-                    icon="pi pi-refresh"
-                    label="Atualizar"
-                    severity="secondary"
-                    [outlined]="true"
-                    (onClick)="loadPatrimonios()"
-                    [loading]="loading">
-                </p-button>
-                <p-button
-                    icon="pi pi-plus"
-                    label="Novo Patrimonio"
-                    severity="success"
-                    (onClick)="openNew()">
-                </p-button>
-            </div>
-        </ng-template>
-    </p-toolbar>
-
     <p-table
         #dt
         [value]="patrimonios"
@@ -95,23 +97,22 @@
                 <td>{{ patrimonio.id }}</td>
                 <td>
                     <div class="flex items-center gap-2">
-                        <i class="pi pi-wallet text-lg"></i>
                         <span class="font-medium">{{ patrimonio.nome }}</span>
                     </div>
                 </td>
                 <td>
-                    <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full font-semibold">
-                        {{ getTipoNome(patrimonio.tipoPatrimonioId) }}
-                    </span>
+                    <p-tag 
+                        [value]="getTipoNome(patrimonio.tipoPatrimonioId) | titlecase"
+                        severity="warning"
+                        styleClass="whitespace-nowrap">
+                    </p-tag>
                 </td>
                 <td>
-                    <span [ngClass]="{
-                        'bg-red-100 text-red-800 px-3 py-1 rounded-full': patrimonio.status === 'critico',
-                        'bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full': patrimonio.status === 'normal',
-                        'bg-green-100 text-green-800 px-3 py-1 rounded-full': patrimonio.status === 'bom'
-                    }" class="font-semibold">
-                        {{ patrimonio.status | uppercase }}
-                    </span>
+                    <p-tag 
+                        [value]="(patrimonio.status | titlecase)"
+                        [severity]="patrimonio.status === 'critico' ? 'danger' : patrimonio.status === 'normal' ? 'warning' : 'success'"
+                        styleClass="whitespace-nowrap">
+                    </p-tag>
                 </td>
                 <td>
                     <span class="font-semibold text-green-600">
@@ -126,6 +127,15 @@
                 @if (isAdmin) {
                     <td>
                         <div class="flex justify-center gap-2">
+                            <p-button
+                                icon="pi pi-pencil"
+                                severity="info"
+                                size="small"
+                                [outlined]="true"
+                                (onClick)="editPatrimonio(patrimonio)"
+                                pTooltip="Editar"
+                                tooltipPosition="top">
+                            </p-button>
                             <p-button
                                 icon="pi pi-trash"
                                 severity="danger"
@@ -147,12 +157,6 @@
                     <div class="flex flex-col items-center gap-3">
                         <i class="pi pi-inbox text-4xl text-muted-color"></i>
                         <p class="text-muted-color text-lg">Nenhum patrimonio encontrado</p>
-                        <p-button
-                            label="Criar Primeiro Patrimonio"
-                            icon="pi pi-plus"
-                            size="small"
-                            (onClick)="openNew()">
-                        </p-button>
                     </div>
                 </td>
             </tr>
@@ -173,25 +177,25 @@
         <div class="flex flex-col gap-6 p-4">
             <div class="flex flex-col gap-2">
                 <label for="nome" class="font-semibold">
-                    Nome <span class="text-red-500">*</span>
+                    Nome @if (!isEditMode) {<span class="text-red-500">*</span>}
                 </label>
                 <input
                     pInputText
                     id="nome"
                     [(ngModel)]="patrimonio.nome"
-                    required
+                    [required]="!isEditMode"
                     autofocus
                     placeholder="Digite o nome do patrimonio"
                     class="w-full"
-                    [class.ng-invalid]="submitted && !patrimonio.nome" />
-                @if (submitted && !patrimonio.nome) {
+                    [class.ng-invalid]="submitted && !isEditMode && !patrimonio.nome" />
+                @if (submitted && !isEditMode && !patrimonio.nome) {
                     <small class="text-red-500">O nome é obrigatório.</small>
                 }
             </div>
 
             <div class="flex flex-col gap-2">
                 <label for="tipo" class="font-semibold">
-                    Tipo de Patrimonio <span class="text-red-500">*</span>
+                    Tipo de Patrimonio @if (!isEditMode) {<span class="text-red-500">*</span>}
                 </label>
                 <p-select
                     id="tipo"
@@ -201,16 +205,16 @@
                     optionValue="id"
                     placeholder="Selecione o tipo de patrimonio"
                     styleClass="w-full"
-                    [class.ng-invalid]="submitted && !patrimonio.tipoPatrimonioId">
+                    [class.ng-invalid]="submitted && !isEditMode && !patrimonio.tipoPatrimonioId">
                 </p-select>
-                @if (submitted && !patrimonio.tipoPatrimonioId) {
+                @if (submitted && !isEditMode && !patrimonio.tipoPatrimonioId) {
                     <small class="text-red-500">O tipo de patrimonio é obrigatório.</small>
                 }
             </div>
 
             <div class="flex flex-col gap-2">
                 <label for="status" class="font-semibold">
-                    Status <span class="text-red-500">*</span>
+                    Status @if (!isEditMode) {<span class="text-red-500">*</span>}
                 </label>
                 <p-select
                     id="status"
@@ -220,9 +224,9 @@
                     optionValue="value"
                     placeholder="Selecione o status"
                     styleClass="w-full"
-                    [class.ng-invalid]="submitted && !patrimonio.status">
+                    [class.ng-invalid]="submitted && !isEditMode && !patrimonio.status">
                 </p-select>
-                @if (submitted && !patrimonio.status) {
+                @if (submitted && !isEditMode && !patrimonio.status) {
                     <small class="text-red-500">O status é obrigatório.</small>
                 }
             </div>
@@ -254,7 +258,7 @@
                 (onClick)="hideDialog()">
             </p-button>
             <p-button
-                label="Salvar"
+                [label]="isEditMode ? 'Atualizar' : 'Criar Patrimonio'"
                 icon="pi pi-check"
                 severity="success"
                 (onClick)="saveContact()">

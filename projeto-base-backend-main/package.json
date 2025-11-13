@@ -3,10 +3,12 @@
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
+    "start": "node server.js",
     "dev": "node server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev --name init",
-    "prisma:seed": "node prisma/seed.js"
+    "prisma:seed": "node prisma/seed.js",
+    "prisma:setup": "prisma migrate deploy && npm run prisma:seed"
   },
   "keywords": [],
   "author": "",

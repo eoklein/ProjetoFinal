@@ -323,6 +323,21 @@ const patrimonioController = {
                 where: {id: patrimonioId}
             });
 
+            // Verificar se ainda há patrimonios
+            const countPatrimonios = await prisma.patrimonio.count();
+            
+            // Se não houver mais patrimonios, resetar o auto-increment
+            if (countPatrimonios === 0) {
+                try {
+                    // SQLite: Usar DELETE porque apenas DELETE funciona com sqlite_sequence
+                    // UPDATE não funciona em triggers SQLite, mas funciona aqui em código
+                    await prisma.$executeRawUnsafe(`DELETE FROM sqlite_sequence WHERE name = 'Patrimonio'`);
+                    console.log('✅ Sequência de Patrimonio resetada com sucesso');
+                } catch (error) {
+                    console.error('❌ Erro ao resetar sequência de Patrimonio:', error.message);
+                }
+            }
+
             res.status(204).send();
         } catch (error) {
             console.error('Erro ao deletar patrimonio:', error);

@@ -32,6 +32,7 @@ export class TiposPatrimonioList implements OnInit {
     tiposPatrimonio: TipoPatrimonio[] = [];
     tipoPatrimonioDialog: boolean = false;
     tipoPatrimonio: TipoPatrimonio = {} as TipoPatrimonio;
+    tipoPatrimonioOriginal: TipoPatrimonio = {} as TipoPatrimonio;
     submitted: boolean = false;
     loading: boolean = false;
     isEditMode: boolean = false;

@@ -51,6 +51,8 @@ export class PatrimonioService {
      * Deleta um patrimonio
      */
     deletePatrimonio(id: number): Observable<void> {
-        return this.http.delete<void>(`${this.apiUrl}/${id}`);
+        // Adicionar timestamp para evitar cache
+        const timestamp = new Date().getTime();
+        return this.http.delete<void>(`${this.apiUrl}/${id}?t=${timestamp}`);
     }
 }

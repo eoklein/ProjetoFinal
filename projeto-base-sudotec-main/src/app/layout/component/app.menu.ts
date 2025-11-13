@@ -27,17 +27,15 @@ export class AppMenu {
             {
                 label: 'Home',
                 items: [
-                    { label: 'Estoque', icon: 'pi pi-fw pi-money-bill', routerLink: ['/home/lancamentos'] }
+                    { label: 'Estoque', icon: 'pi pi-fw pi-money-bill', routerLink: ['/home/lancamentos'] },
+                    ...(isAdmin ? [{ label: 'Users', icon: 'pi pi-fw pi-users', routerLink: ['/home/users'] }] : [])
                 ]
             },
             {
                 label: 'Cadastros',
-                icon: 'pi pi-fw pi-briefcase',
-                routerLink: ['/pages'],
                 items: [
                     { label: 'Tipos de Patrimonio', icon: 'pi pi-fw pi-tag', routerLink: ['/home/tiposPatrimonio'] },
-                    { label: 'Patrimonios', icon: 'pi pi-fw pi-wallet', routerLink: ['/home/patrimonios'] },
-                    ...(isAdmin ? [{ label: 'Usuários', icon: 'pi pi-fw pi-users', routerLink: ['/home/users'] }] : [])
+                    { label: 'Patrimonios', icon: 'pi pi-fw pi-wallet', routerLink: ['/home/patrimonios'] }
                 ]
             }
         ];

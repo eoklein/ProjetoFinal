@@ -454,6 +454,20 @@ const estoqueController = {
                 where: {id: estoqueId}
             });
 
+            // Verificar se ainda há estoques
+            const countEstoques = await prisma.estoque.count();
+            
+            // Se não houver mais estoques, resetar o auto-increment
+            if (countEstoques === 0) {
+                try {
+                    // SQLite: DELETE funciona melhor que UPDATE para sqlite_sequence
+                    await prisma.$executeRawUnsafe(`DELETE FROM sqlite_sequence WHERE name = 'Estoque'`);
+                    console.log('✅ Sequência de Estoque resetada com sucesso');
+                } catch (error) {
+                    console.error('❌ Erro ao resetar sequência de Estoque:', error.message);
+                }
+            }
+
             res.status(204).send();
         } catch (error) {
             console.error('Erro ao deletar estoque:', error);
