@@ -1,25 +1,25 @@
 const express = require('express');
 const router = express.Router();
-const lancamentoController = require('../controller/lancamento');
+const estoqueController = require('../controller/lancamento');
 const authMiddleware = require('../middlewares/auth');
 
-// Listar todos os lançamentos (requer autenticação)
-router.get('/', authMiddleware, lancamentoController.getAllLancamentos);
+// Listar todos os estoques (requer autenticação)
+router.get('/', authMiddleware, estoqueController.getAllEstoques);
 
-// Criar lançamento parcelado (requer autenticação) - DEVE vir antes de /:id
-router.post('/parcelado', authMiddleware, lancamentoController.createLancamentoParcelado);
+// Criar estoque com retiradas (requer autenticação) - DEVE vir antes de /:id
+router.post('/com-retiradas', authMiddleware, estoqueController.createEstoqueComRetiradas);
 
-// Buscar lançamento por ID (requer autenticação)
-router.get('/:id', authMiddleware, lancamentoController.getLancamentoById);
+// Buscar estoque por ID (requer autenticação)
+router.get('/:id', authMiddleware, estoqueController.getEstoqueById);
 
-// Criar novo lançamento (requer autenticação)
-router.post('/', authMiddleware, lancamentoController.createLancamento);
+// Criar novo estoque (requer autenticação)
+router.post('/', authMiddleware, estoqueController.createEstoque);
 
-// Atualizar lançamento (requer autenticação)
-router.put('/:id', authMiddleware, lancamentoController.updateLancamento);
+// Atualizar estoque (requer autenticação)
+router.put('/:id', authMiddleware, estoqueController.updateEstoque);
 
-// Deletar lançamento (requer autenticação)
-router.delete('/:id', authMiddleware, lancamentoController.deleteLancamento);
+// Deletar estoque (requer autenticação)
+router.delete('/:id', authMiddleware, estoqueController.deleteEstoque);
 
 module.exports = router;
 

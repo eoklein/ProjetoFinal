@@ -65,12 +65,13 @@ app.get('/', (req, res) => {
         'PUT /patrimonios/:id': 'Atualizar patrimonio (auth required)',
         'DELETE /patrimonios/:id': 'Deletar patrimonio (auth required)'
       },
-      lancamentos: {
-        'GET /lancamentos': 'Listar todos os lançamentos (auth required)',
-        'GET /lancamentos/:id': 'Buscar lançamento por ID (auth required)',
-        'POST /lancamentos': 'Criar lançamento (auth required)',
-        'PUT /lancamentos/:id': 'Atualizar lançamento (auth required)',
-        'DELETE /lancamentos/:id': 'Deletar lançamento (auth required)'
+      estoques: {
+        'GET /lancamentos': 'Listar todos os estoques (auth required)',
+        'GET /lancamentos/:id': 'Buscar estoque por ID (auth required)',
+        'POST /lancamentos': 'Criar estoque (auth required)',
+        'POST /lancamentos/com-retiradas': 'Criar estoque com retiradas (auth required)',
+        'PUT /lancamentos/:id': 'Atualizar estoque (auth required)',
+        'DELETE /lancamentos/:id': 'Deletar estoque (auth required)'
       }
     }
   });

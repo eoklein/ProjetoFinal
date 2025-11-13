@@ -14,7 +14,7 @@ model User {
   isAdmin          Boolean           @default(false)
   tiposPatrimonio  TipoPatrimonio[]
   patrimonios      Patrimonio[]
-  lancamentos      Lancamento[]
+  estoques         Estoque[]
 }
 
 model Book {
@@ -29,7 +29,7 @@ model TipoPatrimonio {
   nome        String
   userId      Int
   user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  lancamentos Lancamento[]
+  estoques    Estoque[]
 }
 
 model Patrimonio {
@@ -39,10 +39,10 @@ model Patrimonio {
   limite      Float
   userId      Int
   user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  lancamentos Lancamento[]
+  estoques    Estoque[]
 }
 
-model Lancamento {
+model Estoque {
   id                  Int             @id @default(autoincrement())
   descricao           String
   valor               Float
@@ -54,10 +54,10 @@ model Lancamento {
   tipoPatrimonio      TipoPatrimonio? @relation(fields: [tipoPatrimonioId], references: [id])
   patrimonioId        Int?
   patrimonio          Patrimonio?     @relation(fields: [patrimonioId], references: [id])
-  numeroParcelas      Int? // Número total de parcelas
-  parcelaAtual        Int? // Número da parcela atual
-  lancamentoPaiId     Int? // ID do lançamento pai (se for uma parcela)
-  lancamentoPai       Lancamento?     @relation("ParcelasLancamento", fields: [lancamentoPaiId], references: [id], onDelete: Cascade)
-  parcelas            Lancamento[]    @relation("ParcelasLancamento")
+  numeroRetiradas     Int? // Número total de retiradas
+  retiradaAtual       Int? // Número da retirada atual
+  estoquePaiId        Int? // ID do estoque pai (se for uma retirada)
+  estoquePai          Estoque?        @relation("RetiradosEstoque", fields: [estoquePaiId], references: [id], onDelete: Cascade)
+  retirados           Estoque[]       @relation("RetiradosEstoque")
   efetivado           Boolean         @default(false)
 }
