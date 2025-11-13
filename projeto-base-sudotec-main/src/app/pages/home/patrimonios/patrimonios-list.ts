@@ -1,6 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { Dialog } from 'primeng/dialog';
@@ -16,6 +17,7 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { PatrimonioService } from '@/services/patrimonio.service';
 import { TipoPatrimonioService } from '@/services/tipoPatrimonio.service';
 import { AuthService } from '@/services/auth.service';
+import { NotificacaoService } from '@/services/notificacao.service';
 import { Patrimonio } from '@/models/patrimonio.model';
 import { TipoPatrimonio } from '@/models/tipoPatrimonio.model';
 import { IconField } from 'primeng/iconfield';
@@ -34,6 +36,8 @@ export class PatrimoniosList implements OnInit {
     authService = inject(AuthService);
     messageService = inject(MessageService);
     confirmationService = inject(ConfirmationService);
+    router = inject(Router);
+    notificacaoService = inject(NotificacaoService);
 
     patrimonios: Patrimonio[] = [];
     tiposPatrimonio: TipoPatrimonio[] = [];
@@ -55,6 +59,11 @@ export class PatrimoniosList implements OnInit {
         this.checkAdmin();
         this.loadTiposPatrimonio();
         this.loadPatrimonios();
+        
+        // Escutar notificações de mudança de reserva
+        this.notificacaoService.getReservaAlterada().subscribe(() => {
+            this.loadPatrimonios();
+        });
     }
 
     checkAdmin() {
@@ -222,5 +231,9 @@ export class PatrimoniosList implements OnInit {
         if (!tipoId) return 'N/A';
         const tipo = this.tiposPatrimonio.find(t => t.id === tipoId);
         return tipo ? tipo.nome : 'N/A';
+    }
+
+    openReservaDialog() {
+        this.router.navigate(['/home/reservas']);
     }
 }

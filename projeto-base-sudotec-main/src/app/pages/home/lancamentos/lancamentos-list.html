@@ -76,12 +76,15 @@
                     Valor
                     <p-sortIcon field="valor" />
                 </th>
-                <th pSortableColumn="data" style="width: 12%">
+                <th pSortableColumn="data" style="width: 10%">
                     Data
                     <p-sortIcon field="data" />
                 </th>
+                <th style="width: 12%">
+                    Status
+                </th>
                 @if (isAdmin) {
-                    <th style="width: 15%" class="text-center">Ações</th>
+                    <th style="width: 12%" class="text-center">Ações</th>
                 }
             </tr>
         </ng-template>
@@ -125,6 +128,21 @@
                         <span>{{ formatDate(patrimonio.data) }}</span>
                     </div>
                 </td>
+                <td>
+                    @if (patrimonio.status) {
+                        <p-tag 
+                            [value]="patrimonio.status"
+                            [severity]="patrimonio.status === 'Reservado' ? 'info' : patrimonio.status === 'devolvido' ? 'success' : 'warning'"
+                            styleClass="whitespace-nowrap">
+                        </p-tag>
+                    } @else {
+                        <p-tag 
+                            value="Disponível"
+                            severity="secondary"
+                            styleClass="whitespace-nowrap">
+                        </p-tag>
+                    }
+                </td>
                 @if (isAdmin) {
                     <td>
                         <div class="flex justify-center gap-2">
@@ -155,7 +173,7 @@
 
         <ng-template #emptymessage>
             <tr>
-                <td [attr.colspan]="isAdmin ? 7 : 6" class="text-center py-8">
+                <td [attr.colspan]="isAdmin ? 8 : 7" class="text-center py-8">
                     <div class="flex flex-col items-center gap-3">
                         <i class="pi pi-inbox text-4xl text-muted-color"></i>
                         <p class="text-muted-color text-lg">Nenhum patrimonio encontrado</p>

@@ -10,4 +10,5 @@ export interface Estoque {
     retiradaAtual?: number;
     estoquePaiId?: number;
     efetivado: boolean;
+    status?: string; // Reservado / devolvido / cancelado
 }

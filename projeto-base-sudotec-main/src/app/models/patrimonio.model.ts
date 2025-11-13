@@ -6,4 +6,5 @@ export interface Patrimonio {
     valor?: number;
     data?: Date;
     tipoPatrimonioId?: number;
+    status?: string; // Reservado / devolvido / cancelado
 }

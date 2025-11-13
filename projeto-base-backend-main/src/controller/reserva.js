@@ -51,7 +51,7 @@ const reservaController = {
                     userId,
                     reservas: {
                         none: {
-                            estado: 'ativa'
+                            status: 'ativa'
                         }
                     }
                 },
@@ -118,7 +118,7 @@ const reservaController = {
             const reservaExistente = await prisma.reserva.findFirst({
                 where: {
                     patrimonioId,
-                    estado: 'ativa'
+                    status: 'ativa'
                 }
             });
 
@@ -139,7 +139,7 @@ const reservaController = {
                     patrimonioId,
                     userId: finalUserId,
                     dataDevolucao: dataDev,
-                    estado: 'ativa'
+                    status: 'ativa'
                 },
                 include: {
                     patrimonio: {
@@ -160,6 +160,18 @@ const reservaController = {
                 }
             });
 
+            // Atualizar status do patrimonio para 'Reservado'
+            await prisma.patrimonio.update({
+                where: { id: patrimonioId },
+                data: { status: 'Reservado' }
+            });
+
+            // Atualizar status de todos os estoques relacionados ao patrimonio
+            await prisma.estoque.updateMany({
+                where: { patrimonioId: patrimonioId },
+                data: { status: 'Reservado' }
+            });
+
             res.status(201).json({
                 message: 'Reserva criada com sucesso',
                 reserva
@@ -173,7 +185,7 @@ const reservaController = {
     async updateReserva(req, res) {
         try {
             const reservaId = parseInt(req.params.id);
-            const { dataDevolucao, estado, userId: specifiedUserId } = req.body;
+            const { dataDevolucao, status, userId: specifiedUserId } = req.body;
             const currentUserId = req.user.id;
             const isAdmin = req.user.isAdmin;
 
@@ -202,12 +214,12 @@ const reservaController = {
                 updateData.dataDevolucao = dataDev;
             }
 
-            if (estado) {
-                const estadosValidos = ['ativa', 'devolvido', 'cancelado'];
-                if (!estadosValidos.includes(estado)) {
-                    return res.status(400).json({ error: 'Estado inválido' });
+            if (status) {
+                const statusValidos = ['ativa', 'devolvido', 'cancelado'];
+                if (!statusValidos.includes(status)) {
+                    return res.status(400).json({ error: 'Status inválido' });
                 }
-                updateData.estado = estado;
+                updateData.status = status;
             }
 
             if (isAdmin && specifiedUserId) {
@@ -244,6 +256,25 @@ const reservaController = {
                 }
             });
 
+            // Sincronizar status do patrimonio com o status da reserva
+            if (status) {
+                // Mapear status da reserva para status do patrimonio
+                let statusValue = status;
+                if (status === 'ativa') {
+                    statusValue = 'Reservado';
+                }
+                await prisma.patrimonio.update({
+                    where: { id: reserva.patrimonioId },
+                    data: { status: statusValue }
+                });
+
+                // Atualizar status de todos os estoques relacionados
+                await prisma.estoque.updateMany({
+                    where: { patrimonioId: reserva.patrimonioId },
+                    data: { status: statusValue }
+                });
+            }
+
             res.json({
                 message: 'Reserva atualizada com sucesso',
                 reserva: reservaAtualizada
@@ -272,6 +303,17 @@ const reservaController = {
             if (!isAdmin && reserva.userId !== currentUserId) {
                 return res.status(403).json({ error: 'Você não tem permissão para deletar esta reserva' });
             }
+
+            // Limpar status do patrimonio e estoques relacionados
+            await prisma.patrimonio.update({
+                where: { id: reserva.patrimonioId },
+                data: { status: null }
+            });
+
+            await prisma.estoque.updateMany({
+                where: { patrimonioId: reserva.patrimonioId },
+                data: { status: null }
+            });
 
             await prisma.reserva.delete({
                 where: { id: reservaId }

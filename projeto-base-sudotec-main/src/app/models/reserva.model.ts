@@ -4,7 +4,7 @@ export interface Reserva {
     userId?: number;
     dataReserva?: Date;
     dataDevolucao: Date;
-    estado?: string;
+    status?: string;
     criadoEm?: Date;
     patrimonio?: {
         id: number;

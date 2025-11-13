@@ -16,6 +16,7 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { ReservaService } from '@/services/reserva.service';
 import { AuthService } from '@/services/auth.service';
 import { UserService } from '@/services/user.service';
+import { NotificacaoService } from '@/services/notificacao.service';
 import { Reserva } from '@/models/reserva.model';
 import { IconField } from 'primeng/iconfield';
 import { InputIcon } from 'primeng/inputicon';
@@ -34,6 +35,7 @@ export class ReservasComponent implements OnInit {
     userService = inject(UserService);
     messageService = inject(MessageService);
     confirmationService = inject(ConfirmationService);
+    notificacaoService = inject(NotificacaoService);
 
     reservas: Reserva[] = [];
     patrimoniosDisponiveis: any[] = [];
@@ -110,6 +112,14 @@ export class ReservasComponent implements OnInit {
     }
 
     openNew() {
+        if (!this.isAdmin) {
+            this.messageService.add({
+                severity: 'error',
+                summary: 'Acesso Negado',
+                detail: 'Apenas administradores podem criar reservas'
+            });
+            return;
+        }
         this.reserva = { patrimonioId: 0, dataDevolucao: new Date() } as Reserva;
         this.isEditMode = false;
         this.submitted = false;
@@ -117,6 +127,14 @@ export class ReservasComponent implements OnInit {
     }
 
     editReserva(reserva: Reserva) {
+        if (!this.isAdmin) {
+            this.messageService.add({
+                severity: 'error',
+                summary: 'Acesso Negado',
+                detail: 'Apenas administradores podem editar reservas'
+            });
+            return;
+        }
         this.reserva = { ...reserva };
         this.reservaOriginal = { ...reserva };
         this.isEditMode = true;
@@ -164,7 +182,7 @@ export class ReservasComponent implements OnInit {
             // Update
             this.reservaService.updateReserva(this.reserva.id!, {
                 dataDevolucao: this.reserva.dataDevolucao,
-                estado: this.reserva.estado,
+                status: this.reserva.status,
                 userId: this.reserva.userId
             }).subscribe({
                 next: () => {
@@ -173,6 +191,11 @@ export class ReservasComponent implements OnInit {
                         summary: 'Sucesso',
                         detail: 'Reserva atualizada com sucesso'
                     });
+                    const statusDisplay = this.reserva.status === 'ativa' ? 'Reservado' : this.reserva.status;
+                    this.notificacaoService.notifyReservaAlterada(
+                        this.reserva.patrimonioId!,
+                        statusDisplay
+                    );
                     this.hideDialog();
                     this.loadReservas();
                 },
@@ -198,6 +221,10 @@ export class ReservasComponent implements OnInit {
                         summary: 'Sucesso',
                         detail: 'Reserva criada com sucesso'
                     });
+                    this.notificacaoService.notifyReservaAlterada(
+                        this.reserva.patrimonioId!,
+                        'Reservado'
+                    );
                     this.hideDialog();
                     this.loadReservas();
                     this.loadPatrimoniosDisponiveis();
@@ -215,6 +242,14 @@ export class ReservasComponent implements OnInit {
     }
 
     confirmDelete(reserva: Reserva) {
+        if (!this.isAdmin) {
+            this.messageService.add({
+                severity: 'error',
+                summary: 'Acesso Negado',
+                detail: 'Apenas administradores podem deletar reservas'
+            });
+            return;
+        }
         this.confirmationService.confirm({
             message: 'Tem certeza que deseja deletar esta reserva?',
             header: 'Confirmar Deleção',
@@ -226,6 +261,9 @@ export class ReservasComponent implements OnInit {
     }
 
     deleteReserva(id: number) {
+        // Encontrar a reserva para obter o patrimonioId antes de deletar
+        const reservaToDelete = this.reservas.find(r => r.id === id);
+        
         this.reservaService.deleteReserva(id).subscribe({
             next: () => {
                 this.messageService.add({
@@ -233,6 +271,12 @@ export class ReservasComponent implements OnInit {
                     summary: 'Sucesso',
                     detail: 'Reserva deletada com sucesso'
                 });
+                if (reservaToDelete) {
+                    this.notificacaoService.notifyReservaAlterada(
+                        reservaToDelete.patrimonioId!,
+                        undefined
+                    );
+                }
                 this.loadReservas();
                 this.loadPatrimoniosDisponiveis();
             },

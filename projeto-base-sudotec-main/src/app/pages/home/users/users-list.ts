@@ -1,32 +1,41 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
 import { Toast } from 'primeng/toast';
 import { ConfirmDialog } from 'primeng/confirmdialog';
+import { Dialog } from 'primeng/dialog';
+import { InputTextModule } from 'primeng/inputtext';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { UserService } from '@/services/user.service';
+import { RegisterService } from '@/services/register-service';
 import { AuthService } from '@/services/auth.service';
 import { UserData } from '@/models/auth.model';
+import { RegisterInput } from '@/models/registerInput';
 import { Toolbar } from 'primeng/toolbar';
 
 @Component({
     selector: 'app-users-list',
     standalone: true,
-    imports: [CommonModule, TableModule, ButtonModule, TagModule, Toast, ConfirmDialog, Toolbar],
+    imports: [CommonModule, FormsModule, TableModule, ButtonModule, TagModule, Toast, ConfirmDialog, Dialog, InputTextModule, Toolbar],
     templateUrl: './users-list.html',
-    providers: [MessageService, ConfirmationService]
+    providers: [MessageService, ConfirmationService, RegisterService]
 })
 export class UsersList implements OnInit {
     userService = inject(UserService);
     authService = inject(AuthService);
+    registerService = inject(RegisterService);
     messageService = inject(MessageService);
     confirmationService = inject(ConfirmationService);
 
     users: UserData[] = [];
     loading: boolean = false;
     currentUserId: number = 0;
+    userDialog: boolean = false;
+    newUser: RegisterInput = { username: '', password: '' };
+    submitted: boolean = false;
 
     ngOnInit() {
         this.currentUserId = this.authService.getUserData()?.id || 0;
@@ -129,6 +138,49 @@ export class UsersList implements OnInit {
 
     getAdminLabel(isAdmin: boolean): string {
         return isAdmin ? 'Admin' : 'Usuário';
+    }
+
+    openNew() {
+        this.newUser = { username: '', password: '' };
+        this.submitted = false;
+        this.userDialog = true;
+    }
+
+    hideDialog() {
+        this.userDialog = false;
+        this.submitted = false;
+    }
+
+    saveUser() {
+        this.submitted = true;
+
+        if (!this.newUser.username?.trim() || !this.newUser.password?.trim()) {
+            this.messageService.add({
+                severity: 'warn',
+                summary: 'Validação',
+                detail: 'Username e password são obrigatórios'
+            });
+            return;
+        }
+
+        this.registerService.register(this.newUser).subscribe({
+            next: () => {
+                this.messageService.add({
+                    severity: 'success',
+                    summary: 'Sucesso',
+                    detail: 'Usuário criado com sucesso'
+                });
+                this.hideDialog();
+                this.loadUsers();
+            },
+            error: (err) => {
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Erro',
+                    detail: err.error?.error || 'Erro ao criar usuário'
+                });
+            }
+        });
     }
 }
 

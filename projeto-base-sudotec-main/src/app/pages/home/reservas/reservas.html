@@ -1,6 +1,17 @@
 <p-toast position="top-right" />
 <p-confirmDialog />
 
+@if (!isAdmin) {
+    <div class="flex items-center gap-3 p-4 mb-6 bg-orange-50 dark:bg-orange-900 border border-orange-200 dark:border-orange-700 rounded-lg">
+        <i class="pi pi-exclamation-triangle text-2xl text-orange-600 dark:text-orange-300"></i>
+        <div>
+            <h3 class="font-semibold text-orange-900 dark:text-orange-100">Acesso Restrito</h3>
+            <p class="text-orange-700 dark:text-orange-200 text-sm">Apenas administradores podem gerenciar reservas. Entre em contato com um administrador.</p>
+        </div>
+    </div>
+}
+
+@if (isAdmin) {
 <!-- Toolbar: Gerenciar Reservas -->
 <p-toolbar styleClass="mb-6">
     <ng-template #start>
@@ -82,9 +93,9 @@
                     Data Devolução
                     <p-sortIcon field="dataDevolucao" />
                 </th>
-                <th pSortableColumn="estado" style="width: 12%">
-                    Estado
-                    <p-sortIcon field="estado" />
+                <th pSortableColumn="status" style="width: 12%">
+                    Status
+                    <p-sortIcon field="status" />
                 </th>
                 @if (isAdmin) {
                     <th pSortableColumn="user.username" style="width: 12%">
@@ -121,8 +132,8 @@
                 </td>
                 <td>
                     <p-tag 
-                        [value]="(reserva.estado | titlecase)"
-                        [severity]="reserva.estado === 'ativa' ? 'success' : reserva.estado === 'devolvido' ? 'info' : 'warning'"
+                        [value]="(reserva.status | titlecase)"
+                        [severity]="reserva.status === 'ativa' ? 'success' : reserva.status === 'devolvido' ? 'info' : 'warning'"
                         styleClass="whitespace-nowrap">
                     </p-tag>
                 </td>
@@ -132,27 +143,29 @@
                     </td>
                 }
                 <td>
-                    <div class="flex justify-center gap-2">
-                        <p-button
-                            icon="pi pi-pencil"
-                            severity="info"
-                            size="small"
-                            [outlined]="true"
-                            (onClick)="editReserva(reserva)"
-                            pTooltip="Editar"
-                            tooltipPosition="top">
-                        </p-button>
+                    @if (isAdmin) {
+                        <div class="flex justify-center gap-2">
+                            <p-button
+                                icon="pi pi-pencil"
+                                severity="info"
+                                size="small"
+                                [outlined]="true"
+                                (onClick)="editReserva(reserva)"
+                                pTooltip="Editar"
+                                tooltipPosition="top">
+                            </p-button>
 
-                        <p-button
-                            icon="pi pi-trash"
-                            severity="danger"
-                            size="small"
-                            [outlined]="true"
-                            (onClick)="confirmDelete(reserva)"
-                            pTooltip="Deletar"
-                            tooltipPosition="top">
-                        </p-button>
-                    </div>
+                            <p-button
+                                icon="pi pi-trash"
+                                severity="danger"
+                                size="small"
+                                [outlined]="true"
+                                (onClick)="confirmDelete(reserva)"
+                                pTooltip="Deletar"
+                                tooltipPosition="top">
+                            </p-button>
+                        </div>
+                    }
                 </td>
             </tr>
         </ng-template>
@@ -169,6 +182,7 @@
         </ng-template>
     </p-table>
 </div>
+}
 
 <!-- Dialog para criar/editar reserva -->
 <p-dialog
@@ -243,16 +257,16 @@
 
             @if (isEditMode) {
                 <div class="flex flex-col gap-2">
-                    <label for="estado" class="font-semibold">
-                        Estado
+                    <label for="status" class="font-semibold">
+                        Status
                     </label>
                     <p-select
-                        id="estado"
-                        [(ngModel)]="reserva.estado"
+                        id="status"
+                        [(ngModel)]="reserva.status"
                         [options]="statusOptions"
                         optionLabel="label"
                         optionValue="value"
-                        placeholder="Selecione o estado"
+                        placeholder="Selecione o status"
                         styleClass="w-full">
                     </p-select>
                 </div>

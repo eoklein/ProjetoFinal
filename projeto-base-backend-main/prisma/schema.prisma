@@ -37,6 +37,7 @@ model Patrimonio {
   user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   estoques    Estoque[]
   reservas    Reserva[]
+  status      String?      // status da reserva: Reservado / devolvido / cancelado
 }
 
 model Estoque {
@@ -57,6 +58,7 @@ model Estoque {
   estoquePai          Estoque?        @relation("RetiradosEstoque", fields: [estoquePaiId], references: [id], onDelete: Cascade)
   retirados           Estoque[]       @relation("RetiradosEstoque")
   efetivado           Boolean         @default(false)
+  status              String?         // status da reserva: Reservado / devolvido / cancelado
 }
 
 model Reserva {
@@ -67,6 +69,6 @@ model Reserva {
   user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   dataReserva     DateTime    @default(now())
   dataDevolucao   DateTime
-  estado          String      @default("ativa") // ativa / devolvido / cancelado
+  status          String      @default("ativa") // ativa / devolvido / cancelado
   criadoEm        DateTime    @default(now())
 }

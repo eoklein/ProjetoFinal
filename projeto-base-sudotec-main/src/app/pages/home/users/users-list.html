@@ -24,6 +24,12 @@
                 (onClick)="loadUsers()"
                 [loading]="loading">
             </p-button>
+            <p-button
+                icon="pi pi-plus"
+                label="Novo Usuário"
+                severity="success"
+                (onClick)="openNew()">
+            </p-button>
         </div>
     </ng-template>
 </p-toolbar>
@@ -106,4 +112,65 @@
         </ng-template>
     </p-table>
 </div>
+
+<!-- Dialog para criar novo usuário -->
+<p-dialog
+    [(visible)]="userDialog"
+    header="Novo Usuário"
+    [modal]="true"
+    [closable]="true"
+    [style]="{ width: '500px' }"
+    [breakpoints]="{ '960px': '75vw', '640px': '90vw' }">
+
+    <ng-template #content>
+        <div class="flex flex-col gap-6 p-4">
+            <div class="flex flex-col gap-2">
+                <label for="username" class="font-semibold">
+                    Username <span class="text-red-500">*</span>
+                </label>
+                <input
+                    pInputText
+                    id="username"
+                    [(ngModel)]="newUser.username"
+                    placeholder="Digite o username"
+                    class="w-full"
+                    [class.ng-invalid]="submitted && !newUser.username" />
+                @if (submitted && !newUser.username) {
+                    <small class="text-red-500">Username é obrigatório</small>
+                }
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label for="password" class="font-semibold">
+                    Password <span class="text-red-500">*</span>
+                </label>
+                <input
+                    pInputText
+                    id="password"
+                    [(ngModel)]="newUser.password"
+                    type="password"
+                    placeholder="Digite a password"
+                    class="w-full"
+                    [class.ng-invalid]="submitted && !newUser.password" />
+                @if (submitted && !newUser.password) {
+                    <small class="text-red-500">Password é obrigatória</small>
+                }
+            </div>
+        </div>
+    </ng-template>
+
+    <ng-template #footer>
+        <p-button
+            label="Cancelar"
+            severity="secondary"
+            [outlined]="true"
+            (onClick)="hideDialog()">
+        </p-button>
+        <p-button
+            label="Criar"
+            severity="success"
+            (onClick)="saveUser()">
+        </p-button>
+    </ng-template>
+</p-dialog>
 

@@ -20,6 +20,7 @@ import { LancamentoService } from '@/services/lancamento.service';
 import { TipoPatrimonioService } from '@/services/tipoPatrimonio.service';
 import { PatrimonioService } from '@/services/patrimonio.service';
 import { AuthService } from '@/services/auth.service';
+import { NotificacaoService } from '@/services/notificacao.service';
 import { Estoque } from '@/models/estoque.model';
 import { TipoPatrimonio } from '@/models/tipoPatrimonio.model';
 import { Patrimonio } from '@/models/patrimonio.model';
@@ -40,6 +41,7 @@ export class LancamentosList implements OnInit {
     authService = inject(AuthService);
     messageService = inject(MessageService);
     confirmationService = inject(ConfirmationService);
+    notificacaoService = inject(NotificacaoService);
 
     estoques: Estoque[] = [];
     estoquesFiltrados: Estoque[] = [];
@@ -77,6 +79,11 @@ export class LancamentosList implements OnInit {
         this.checkAdmin();
         this.loadCategorias();
         this.loadPatrimonios();
+        
+        // Escutar notificações de mudança de reserva
+        this.notificacaoService.getReservaAlterada().subscribe(() => {
+            this.loadPatrimonios();
+        });
     }
 
     checkAdmin() {
