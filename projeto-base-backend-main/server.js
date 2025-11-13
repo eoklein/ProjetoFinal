@@ -5,7 +5,7 @@ const bookRoutes = require('./src/routes/books');
 const userRoutes = require('./src/routes/users');
 const tipoPatrimonioRoutes = require('./src/routes/tiposPatrimonio');
 const patrimonioRoutes = require('./src/routes/patrimonios');
-const lancamentoRoutes = require('./src/routes/lancamentos');
+const lancamentoRoutes = require('./src/routes/estoque');
 
 const app = express();
 const PORT = process.env.PORT || 3000;

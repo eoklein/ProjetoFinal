@@ -595,7 +595,7 @@ module.exports = estoqueController;
             console.error('Erro ao buscar lançamentos:', error);
             res.status(500).json({error: 'Erro interno do servidor'});
         }
-    },
+        },
 
     async getLancamentoById(req, res) {
         try {

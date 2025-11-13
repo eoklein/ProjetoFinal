@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const estoqueController = require('../controller/lancamento');
+const estoqueController = require('../controller/estoque');
 const authMiddleware = require('../middlewares/auth');
 
 // Listar todos os estoques (requer autenticação)
