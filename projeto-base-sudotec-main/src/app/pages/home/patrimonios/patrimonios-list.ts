@@ -40,6 +40,7 @@ export class PatrimoniosList implements OnInit {
     notificacaoService = inject(NotificacaoService);
 
     patrimonios: Patrimonio[] = [];
+    filteredPatrimonios: Patrimonio[] = [];
     tiposPatrimonio: TipoPatrimonio[] = [];
     patrimonioDialog: boolean = false;
     patrimonio: Patrimonio = {} as Patrimonio;
@@ -48,6 +49,26 @@ export class PatrimoniosList implements OnInit {
     loading: boolean = false;
     isEditMode: boolean = false;
     isAdmin: boolean = false;
+    
+    // Filter variables
+    selectedTipo: number | null = null;
+    selectedEstado: string | null = null;
+    selectedStatus: string | null = null;
+    globalSearchTerm: string = '';
+    
+    // Filter options
+    tipoFilterOptions: any[] = [];
+    estadoFilterOptions = [
+        { label: 'Crítico', value: 'critico' },
+        { label: 'Danificado', value: 'danificado' },
+        { label: 'Bom', value: 'bom' }
+    ];
+    statusFilterOptions = [
+        { label: 'Disponível', value: 'disponivel' },
+        { label: 'Reservado', value: 'reservado' },
+        { label: 'Devolvido', value: 'devolvido' },
+        { label: 'Cancelado', value: 'cancelado' }
+    ];
     
     statusOptions = [
         { label: 'Crítico', value: 'critico' },
@@ -74,6 +95,11 @@ export class PatrimoniosList implements OnInit {
         this.tipoPatrimonioService.getTiposPatrimonio().subscribe({
             next: (tipos) => {
                 this.tiposPatrimonio = tipos;
+                // Build filter options for tipo
+                this.tipoFilterOptions = tipos.map(t => ({
+                    label: t.nome,
+                    value: t.id
+                }));
             },
             error: () => {
                 this.messageService.add({
@@ -91,6 +117,7 @@ export class PatrimoniosList implements OnInit {
             next: (patrimonios) => {
                 // Backend agora retorna tipoPatrimonioId diretamente
                 this.patrimonios = patrimonios;
+                this.applyFilters();
                 this.loading = false;
             },
             error: () => {
@@ -102,6 +129,65 @@ export class PatrimoniosList implements OnInit {
                 this.loading = false;
             }
         });
+    }
+
+    onGlobalSearch(value: string) {
+        this.globalSearchTerm = value.toLowerCase();
+        this.applyFilters();
+    }
+
+    applyFilters() {
+        this.filteredPatrimonios = this.patrimonios.filter(p => {
+            // Global search filter (nome or codigo)
+            const matchesSearch = !this.globalSearchTerm || 
+                p.nome?.toLowerCase().includes(this.globalSearchTerm) ||
+                p.codigo?.toLowerCase().includes(this.globalSearchTerm);
+            
+            // Tipo filter
+            const matchesTipo = !this.selectedTipo || p.tipoPatrimonioId === this.selectedTipo;
+            
+            // Estado filter
+            const matchesEstado = !this.selectedEstado || p.estado === this.selectedEstado;
+            
+            // Status filter
+            let matchesStatus = true;
+            if (this.selectedStatus) {
+                if (this.selectedStatus === 'disponivel') {
+                    matchesStatus = !p.status || p.status === '';
+                } else {
+                    matchesStatus = p.status === this.selectedStatus;
+                }
+            }
+            
+            return matchesSearch && matchesTipo && matchesEstado && matchesStatus;
+        });
+    }
+
+    // Summary methods
+    getTotalPatrimonios(): number {
+        return this.patrimonios.length;
+    }
+
+    getPatrimoniosDisponiveis(): number {
+        return this.patrimonios.filter(p => !p.status || p.status === '').length;
+    }
+
+    getPatrimoniosReservados(): number {
+        return this.patrimonios.filter(p => p.status === 'reservado').length;
+    }
+
+    getPatrimoniosCriticos(): number {
+        return this.patrimonios.filter(p => p.estado === 'critico').length;
+    }
+
+    // Check if devolucao is near (within 7 days)
+    isNearDevolucao(dataDevolucao: Date): boolean {
+        if (!dataDevolucao) return false;
+        const today = new Date();
+        const devolucao = new Date(dataDevolucao);
+        const diffTime = devolucao.getTime() - today.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays <= 7 && diffDays >= 0;
     }
 
     openNew() {
@@ -193,14 +279,18 @@ export class PatrimoniosList implements OnInit {
     }
 
     confirmDelete(patrimonio: Patrimonio) {
+        const statusInfo = patrimonio.status === 'reservado' 
+            ? '<br><br><strong class="text-orange-500">⚠️ Atenção:</strong> Este patrimônio está atualmente reservado!' 
+            : '';
+        
         this.confirmationService.confirm({
-            message: `Tem certeza que deseja deletar o patrimonio "${patrimonio.nome}"?`,
+            message: `Tem certeza que deseja deletar o patrimônio <strong>"${patrimonio.nome}"</strong>?${statusInfo}<br><br>Esta ação não pode ser desfeita.`,
             header: 'Confirmar Exclusão',
             icon: 'pi pi-exclamation-triangle',
-            acceptLabel: 'Sim',
-            rejectLabel: 'Não',
-            acceptButtonStyleClass: 'p-button-success',
-            rejectButtonStyleClass: 'p-button-danger',
+            acceptLabel: 'Sim, deletar',
+            rejectLabel: 'Cancelar',
+            acceptButtonStyleClass: 'p-button-danger',
+            rejectButtonStyleClass: 'p-button-secondary',
             accept: () => {
                 this.deletePatrimonio(patrimonio.id!);
             }
