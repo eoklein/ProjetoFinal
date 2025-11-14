@@ -20,6 +20,12 @@ app.use(cors({
 
 app.use(express.json());
 
+// LOG TODAS AS REQUISIÇÕES
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
+  next();
+});
+
 // Desabilitar cache para todas as rotas GET
 app.use((req, res, next) => {
   res.set({

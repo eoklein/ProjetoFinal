@@ -6,6 +6,9 @@ export interface Reserva {
     dataDevolucao: Date;
     status?: string;
     criadoEm?: Date;
+    prioridade?: 'normal' | 'alta' | 'urgente';
+    motivo?: string;
+    observacoes?: string;
     patrimonio?: {
         id: number;
         nome: string;

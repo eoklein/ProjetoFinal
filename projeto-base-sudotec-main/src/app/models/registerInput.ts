@@ -1,6 +1,7 @@
 export interface RegisterInput {
     username: string;
     password: string;
+    email?: string; // NOVO: Email opcional
 }
 
 export interface RegisterResponse {

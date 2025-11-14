@@ -20,7 +20,7 @@
                 Gerenciar Reservas
             </h2>
             <p class="text-muted-color">
-                Crie, edite e gerencie suas reservas de patrimônios
+                Crie, edite e gerencie as reservas de patrimônios
             </p>
         </div>
     </ng-template>
@@ -33,31 +33,105 @@
                 severity="secondary"
                 [outlined]="true"
                 (onClick)="loadReservas()"
-                [loading]="loading">
+                [loading]="loading"
+                pTooltip="Recarregar lista (Ctrl+R)"
+                tooltipPosition="top"
+                tooltipStyleClass="text-xs">
             </p-button>
             <p-button
                 icon="pi pi-plus"
                 label="Nova Reserva"
                 severity="success"
-                (onClick)="openNew()">
+                (onClick)="openNew()"
+                pTooltip="Criar nova reserva (Ctrl+N)"
+                tooltipPosition="top"
+                tooltipStyleClass="text-xs">
             </p-button>
         </div>
     </ng-template>
 </p-toolbar>
 
+<!-- Alertas de Atrasadas -->
+@if (getAtrasadas() > 0) {
+    <div class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg flex items-center gap-3">
+        <i class="pi pi-exclamation-circle text-red-600 text-xl"></i>
+        <span class="text-red-700 dark:text-red-300 font-semibold">
+            ⚠️ {{ getAtrasadas() }} reserva(s) atrasada(s) para devolver
+        </span>
+    </div>
+}
+
+<!-- Indicadores -->
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+    <!-- Total -->
+    <div class="p-4 bg-surface-50 dark:bg-surface-800 rounded-lg border border-surface-200 dark:border-surface-700">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-muted-color text-sm">Total</p>
+                <p class="text-2xl font-bold text-surface-900 dark:text-surface-0">{{ getTotalGeral() }}</p>
+            </div>
+            <i class="pi pi-inbox text-3xl text-muted-color"></i>
+        </div>
+    </div>
+
+    <!-- Ativas -->
+    <div class="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-700">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-red-700 dark:text-red-300 text-sm">Ativas</p>
+                <p class="text-2xl font-bold text-red-600 dark:text-red-400">{{ getAtivas() }}</p>
+            </div>
+            <i class="pi pi-lock text-3xl text-red-500"></i>
+        </div>
+    </div>
+
+    <!-- Atrasadas -->
+    <div class="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border-l-4 border-l-red-500 border border-red-200 dark:border-red-700">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-red-700 dark:text-red-300 text-sm">Atrasadas</p>
+                <p class="text-2xl font-bold text-red-600 dark:text-red-400">{{ getAtrasadas() }}</p>
+            </div>
+            <i class="pi pi-exclamation-circle text-3xl text-red-500"></i>
+        </div>
+    </div>
+
+    <!-- Próximas -->
+    <div class="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-700">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-amber-700 dark:text-amber-300 text-sm">Próximas</p>
+                <p class="text-2xl font-bold text-amber-600 dark:text-amber-400">{{ getProximas() }}</p>
+            </div>
+            <i class="pi pi-clock text-3xl text-amber-500"></i>
+        </div>
+    </div>
+
+    <!-- Devolvidas -->
+    <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-blue-700 dark:text-blue-300 text-sm">Devolvidas</p>
+                <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ getDevolvidas() }}</p>
+            </div>
+            <i class="pi pi-undo text-3xl text-blue-500"></i>
+        </div>
+    </div>
+</div>
+
 <!-- Card: Tabela de Reservas -->
 <div class="card">
     <p-table
         #dt
-        [value]="reservas"
+        [value]="filteredReservas"
         [loading]="loading"
         [paginator]="true"
         [rows]="10"
         [rowsPerPageOptions]="[5, 10, 20, 50]"
         [showCurrentPageReport]="true"
         currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} reservas"
-        [globalFilterFields]="['patrimonio.nome']"
-        styleClass="p-datatable-gridlines"
+        [globalFilterFields]="['patrimonio.nome', 'patrimonio.codigo', 'user.username']"
+        styleClass="p-datatable-gridlines p-datatable-striped"
         [tableStyle]="{ 'min-width': '50rem' }">
 
         <ng-template #caption>
@@ -66,7 +140,9 @@
                     <p-inputicon>
                         <i class="pi pi-search"></i>
                     </p-inputicon>
-                    <input pInputText type="text" (input)="dt.filterGlobal($any($event.target).value, 'contains')" placeholder="Buscar reservas..." />
+                    <input pInputText type="text" 
+                        (input)="dt.filterGlobal($any($event.target).value, 'contains')" 
+                        placeholder="Buscar rápido..." />
                 </p-iconfield>
             </div>
         </ng-template>
@@ -77,7 +153,7 @@
                     ID
                     <p-sortIcon field="id" />
                 </th>
-                <th pSortableColumn="patrimonio.nome" style="width: 20%">
+                <th pSortableColumn="patrimonio.nome" style="width: 18%">
                     Patrimônio
                     <p-sortIcon field="patrimonio.nome" />
                 </th>
@@ -85,94 +161,126 @@
                     Código
                     <p-sortIcon field="patrimonio.codigo" />
                 </th>
-                <th pSortableColumn="dataReserva" style="width: 15%">
+                <th pSortableColumn="dataReserva" style="width: 12%">
                     Data Reserva
                     <p-sortIcon field="dataReserva" />
                 </th>
-                <th pSortableColumn="dataDevolucao" style="width: 15%">
-                    Data Devolução
+                <th pSortableColumn="dataDevolucao" style="width: 12%">
+                    Devolução
                     <p-sortIcon field="dataDevolucao" />
                 </th>
-                <th pSortableColumn="status" style="width: 12%">
+                <th style="width: 8%">
+                    Duração
+                </th>
+                <th pSortableColumn="status" style="width: 10%">
                     Status
                     <p-sortIcon field="status" />
                 </th>
-                @if (isAdmin) {
-                    <th pSortableColumn="user.username" style="width: 12%">
-                        Usuário
-                        <p-sortIcon field="user.username" />
-                    </th>
-                }
-                <th style="width: 20%" class="text-center">Ações</th>
+                <th pSortableColumn="user.username" style="width: 12%">
+                    Usuário
+                    <p-sortIcon field="user.username" />
+                </th>
+                <th style="width: 14%" class="text-center">Ações</th>
             </tr>
         </ng-template>
 
         <ng-template #body let-reserva>
-            <tr>
-                <td>{{ reserva.id }}</td>
-                <td>
+            <tr [ngClass]="isAtrasada(reserva) ? 'bg-red-50 dark:bg-red-900/20 border-l-4 border-l-red-500' : 
+                                    isProximaVencer(reserva) ? 'bg-amber-50 dark:bg-amber-900/20 border-l-4 border-l-amber-500' : ''">
+                <td class="p-3">
+                    <div class="flex items-center gap-2">
+                        <i class="pi pi-hashtag text-lg"></i>
+                        <span class="font-mono text-sm">{{ reserva.id }}</span>
+                    </div>
+                </td>
+                <td class="p-3">
                     <div class="flex items-center gap-2">
                         <span class="font-medium">{{ reserva.patrimonio?.nome }}</span>
                     </div>
                 </td>
-                <td>
+                <td class="p-3">
                     <span class="font-mono text-sm bg-surface-100 dark:bg-surface-800 px-2 py-1 rounded">
                         {{ reserva.patrimonio?.codigo || '-' }}
                     </span>
                 </td>
-                <td>
-                    <span class="font-semibold">
-                        {{ reserva.dataReserva | date: 'dd/MM/yyyy HH:mm' }}
-                    </span>
+                <td class="p-3 text-center">
+                    <div class="flex items-center justify-center gap-2">
+                        <i class="pi pi-calendar text-lg"></i>
+                        <span>{{ reserva.dataReserva | date: 'dd/MM/yyyy' }}</span>
+                    </div>
                 </td>
-                <td>
-                    <span class="font-semibold">
-                        {{ reserva.dataDevolucao | date: 'dd/MM/yyyy' }}
-                    </span>
+                <td class="p-3 text-center">
+                    <div class="flex items-center justify-center gap-2">
+                        @if (isAtrasada(reserva)) {
+                            <i class="pi pi-exclamation-circle text-red-500" pTooltip="Atrasada" tooltipPosition="top"></i>
+                        } @else if (isProximaVencer(reserva)) {
+                            <i class="pi pi-clock text-amber-500" pTooltip="Próxima a vencer" tooltipPosition="top"></i>
+                        } @else {
+                            <i class="pi pi-calendar text-lg"></i>
+                        }
+                        <span [ngClass]="isAtrasada(reserva) ? 'text-red-600 dark:text-red-400 font-bold' : 
+                                                  isProximaVencer(reserva) ? 'text-amber-600 dark:text-amber-400 font-semibold' : ''">
+                            {{ reserva.dataDevolucao | date: 'dd/MM/yyyy' }}
+                        </span>
+                        @if (isAtrasada(reserva)) {
+                            <span class="text-xs bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 px-2 py-1 rounded">Atrasada</span>
+                        } @else if (isProximaVencer(reserva)) {
+                            <span class="text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-2 py-1 rounded">{{ getDiasAte(reserva.dataDevolucao) }}d</span>
+                        }
+                    </div>
                 </td>
-                <td>
+                <td class="p-3 text-center">
                     <p-tag 
-                        [value]="(reserva.status | titlecase)"
-                        [severity]="reserva.status === 'reservado' ? 'danger' : reserva.status === 'devolvido' ? 'info' : reserva.status === 'cancelado' ? 'warn' : 'success'"
+                        [value]="getDuracao(reserva.dataReserva, reserva.dataDevolucao) + ' dias'"
+                        severity="info"
                         styleClass="whitespace-nowrap">
                     </p-tag>
                 </td>
-                @if (isAdmin) {
-                    <td>
-                        <span class="font-semibold">{{ reserva.user?.username || '-' }}</span>
-                    </td>
-                }
-                <td>
-                    @if (isAdmin) {
-                        <div class="flex justify-center gap-2">
-                            <p-button
-                                icon="pi pi-pencil"
-                                severity="info"
-                                size="small"
-                                [outlined]="true"
-                                (onClick)="editReserva(reserva)"
-                                pTooltip="Editar"
-                                tooltipPosition="top">
-                            </p-button>
+                <td class="p-3">
+                    <p-tag 
+                        [value]="(reserva.status | titlecase)"
+                        [icon]="reserva.status === 'ativa' ? 'pi pi-lock' : 
+                                reserva.status === 'devolvido' ? 'pi pi-undo' : 
+                                'pi pi-times-circle'"
+                        [severity]="reserva.status === 'ativa' ? 'danger' : 
+                                    reserva.status === 'devolvido' ? 'info' : 'warn'"
+                        styleClass="whitespace-nowrap">
+                    </p-tag>
+                </td>
+                <td class="p-3">
+                    <span class="font-semibold">{{ reserva.user?.username || '-' }}</span>
+                </td>
+                <td class="p-3 text-center">
+                    <div class="flex justify-center gap-2">
+                        <p-button
+                            icon="pi pi-pencil"
+                            severity="info"
+                            size="small"
+                            [outlined]="true"
+                            (onClick)="editReserva(reserva)"
+                            pTooltip="Editar"
+                            tooltipPosition="top"
+                            tooltipStyleClass="text-xs">
+                        </p-button>
 
-                            <p-button
-                                icon="pi pi-trash"
-                                severity="danger"
-                                size="small"
-                                [outlined]="true"
-                                (onClick)="confirmDelete(reserva)"
-                                pTooltip="Deletar"
-                                tooltipPosition="top">
-                            </p-button>
-                        </div>
-                    }
+                        <p-button
+                            icon="pi pi-trash"
+                            severity="danger"
+                            size="small"
+                            [outlined]="true"
+                            (onClick)="confirmDelete(reserva)"
+                            pTooltip="Deletar"
+                            tooltipPosition="top"
+                            tooltipStyleClass="text-xs">
+                        </p-button>
+                    </div>
                 </td>
             </tr>
         </ng-template>
 
         <ng-template #emptymessage>
             <tr>
-                <td colspan="7" class="text-center py-8">
+                <td colspan="9" class="text-center py-8">
                     <div class="flex flex-col items-center gap-3">
                         <i class="pi pi-inbox text-4xl text-muted-color"></i>
                         <p class="text-muted-color text-lg">Nenhuma reserva encontrada</p>
@@ -208,6 +316,7 @@
                     placeholder="Selecione um patrimônio"
                     styleClass="w-full"
                     [disabled]="isEditMode"
+                    appendTo="body"
                     [class.ng-invalid]="submitted && !isEditMode && !reserva.patrimonioId">
                 </p-select>
                 @if (submitted && !isEditMode && !reserva.patrimonioId) {
@@ -215,27 +324,25 @@
                 }
             </div>
 
-            @if (isAdmin) {
-                <div class="flex flex-col gap-2">
-                    <label for="usuario" class="font-semibold">
-                        Usuário @if (!isEditMode) {<span class="text-red-500">*</span>}
-                    </label>
-                    <p-select
-                        id="usuario"
-                        [(ngModel)]="reserva.userId"
-                        [options]="usuarios"
-                        optionLabel="username"
-                        optionValue="id"
-                        placeholder="Selecione um usuário"
-                        styleClass="w-full"
-                        appendTo="body"
-                        [class.ng-invalid]="submitted && !isEditMode && !reserva.userId">
-                    </p-select>
-                    @if (submitted && !isEditMode && !reserva.userId) {
-                        <small class="text-red-500">Usuário é obrigatório.</small>
-                    }
-                </div>
-            }
+            <div class="flex flex-col gap-2">
+                <label for="usuario" class="font-semibold">
+                    Usuário @if (!isEditMode) {<span class="text-red-500">*</span>}
+                </label>
+                <p-select
+                    id="usuario"
+                    [(ngModel)]="reserva.userId"
+                    [options]="usuarios"
+                    optionLabel="username"
+                    optionValue="id"
+                    placeholder="Selecione um usuário"
+                    styleClass="w-full"
+                    appendTo="body"
+                    [class.ng-invalid]="submitted && !isEditMode && !reserva.userId">
+                </p-select>
+                @if (submitted && !isEditMode && !reserva.userId) {
+                    <small class="text-red-500">Usuário é obrigatório.</small>
+                }
+            </div>
 
             <div class="flex flex-col gap-2">
                 <label for="dataDevolucao" class="font-semibold">
@@ -254,6 +361,47 @@
                 @if (submitted && !isEditMode && !reserva.dataDevolucao) {
                     <small class="text-red-500">Data de devolução é obrigatória.</small>
                 }
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label for="prioridade" class="font-semibold">
+                    Prioridade
+                </label>
+                <p-select
+                    id="prioridade"
+                    [(ngModel)]="reserva.prioridade"
+                    [options]="priorityOptions"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Selecione a prioridade"
+                    styleClass="w-full">
+                </p-select>
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label for="motivo" class="font-semibold">
+                    Motivo da Reserva
+                </label>
+                <textarea pInputTextarea 
+                    id="motivo"
+                    [(ngModel)]="reserva.motivo"
+                    rows="2"
+                    placeholder="Ex: Necessário para apresentação..."
+                    class="w-full">
+                </textarea>
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label for="observacoes" class="font-semibold">
+                    Observações
+                </label>
+                <textarea pInputTextarea 
+                    id="observacoes"
+                    [(ngModel)]="reserva.observacoes"
+                    rows="2"
+                    placeholder="Observações adicionais..."
+                    class="w-full">
+                </textarea>
             </div>
 
             @if (isEditMode) {
@@ -293,4 +441,3 @@
         </div>
     </ng-template>
 </p-dialog>
-

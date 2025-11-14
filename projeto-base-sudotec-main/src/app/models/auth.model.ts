@@ -11,6 +11,7 @@ export interface LoginResponse {
 export interface UserData {
     id: number;
     username: string;
+    email?: string;
     isAdmin: boolean;
     token: string;
 }

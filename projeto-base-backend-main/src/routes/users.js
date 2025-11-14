@@ -5,7 +5,10 @@ const adminMiddleware = require('../middlewares/admin');
 
 const router = express.Router();
 
-// Todas as rotas requerem autenticação
+// GET /users/check/availability - SEM autenticação (verificar antes de cadastrar)
+router.get('/check/availability', userController.checkAvailability);
+
+// Todas as outras rotas requerem autenticação
 router.use(authMiddleware);
 
 // GET /users - Listar todos os usuários (requer admin)
@@ -19,6 +22,9 @@ router.delete('/:id', adminMiddleware, userController.deleteUser);
 
 // PATCH /users/:id/admin - Atualizar status de admin (requer admin)
 router.patch('/:id/admin', adminMiddleware, userController.updateUserAdmin);
+
+// PUT /users/:id/email - Adicionar ou atualizar email (qualquer usuário autenticado)
+router.put('/:id/email', userController.updateUserEmail);
 
 module.exports = router;
 

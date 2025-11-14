@@ -6,10 +6,10 @@
     <ng-template #start>
         <div>
             <h2 class="text-3xl font-semibold text-surface-900 dark:text-surface-0 mb-2">
-                Gerenciar Patrimonios
+                Gerenciar Patrimônios
             </h2>
             <p class="text-muted-color">
-                Crie, edite e gerencie os patrimonios do sistema
+                Crie, edite e gerencie os patrimônios do sistema
             </p>
         </div>
     </ng-template>
@@ -34,7 +34,7 @@
             }
             <p-button
                 icon="pi pi-plus"
-                label="Novo Patrimonio"
+                label="Novo Patrimônio"
                 severity="success"
                 (onClick)="openNew()">
             </p-button>
@@ -42,19 +42,76 @@
     </ng-template>
 </p-toolbar>
 
+<!-- Alertas de Críticos -->
+@if (getCriticos() > 0) {
+    <div class="mb-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg flex items-center gap-3">
+        <i class="pi pi-exclamation-triangle text-amber-600 text-xl"></i>
+        <span class="text-amber-700 dark:text-amber-300 font-semibold">
+            ⚠️ {{ getCriticos() }} patrimônio(s) em estado crítico requerem atenção
+        </span>
+    </div>
+}
+<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+    <!-- Total de Patrimônios -->
+    <div class="p-4 bg-surface-50 dark:bg-surface-800 rounded-lg border border-surface-200 dark:border-surface-700">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-muted-color text-sm">Total</p>
+                <p class="text-2xl font-bold text-surface-900 dark:text-surface-0">{{ getTotalGeral() }}</p>
+            </div>
+            <i class="pi pi-inbox text-3xl text-muted-color"></i>
+        </div>
+    </div>
+
+    <!-- Disponíveis -->
+    <div class="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-700">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-green-700 dark:text-green-300 text-sm">Disponíveis</p>
+                <p class="text-2xl font-bold text-green-600 dark:text-green-400">{{ getDisponiveis() }}</p>
+            </div>
+            <i class="pi pi-check-circle text-3xl text-green-500"></i>
+        </div>
+    </div>
+
+    <!-- Reservados -->
+    <div class="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-700">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-red-700 dark:text-red-300 text-sm">Reservados</p>
+                <p class="text-2xl font-bold text-red-600 dark:text-red-400">{{ getReservados() }}</p>
+            </div>
+            <i class="pi pi-lock text-3xl text-red-500"></i>
+        </div>
+    </div>
+
+    <!-- Críticos -->
+    <div class="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-700">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-orange-700 dark:text-orange-300 text-sm">Críticos</p>
+                <p class="text-2xl font-bold text-orange-600 dark:text-orange-400">{{ getCriticos() }}</p>
+            </div>
+            <i class="pi pi-exclamation-triangle text-3xl text-orange-500"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Filtros removidos - usar busca global -->
+
 <!-- Card: Tabela de Patrimonios -->
 <div class="card">
     <p-table
         #dt
-        [value]="patrimonios"
+        [value]="filteredPatrimonios"
         [loading]="loading"
         [paginator]="true"
         [rows]="10"
         [rowsPerPageOptions]="[5, 10, 20, 50]"
         [showCurrentPageReport]="true"
-        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} patrimonios"
-        [globalFilterFields]="['nome']"
-        styleClass="p-datatable-gridlines"
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} patrimônios"
+        [globalFilterFields]="['id', 'nome', 'codigo', 'tipoPatrimonioId', 'estado']"
+        styleClass="p-datatable-gridlines p-datatable-striped"
         [tableStyle]="{ 'min-width': '50rem' }">
 
         <ng-template #caption>
@@ -63,7 +120,7 @@
                     <p-inputicon>
                         <i class="pi pi-search"></i>
                     </p-inputicon>
-                    <input pInputText type="text" (input)="dt.filterGlobal($any($event.target).value, 'contains')" placeholder="Buscar patrimonios..." />
+                    <input pInputText type="text" (input)="dt.filterGlobal($any($event.target).value, 'contains')" placeholder="Buscar patrimônios..." />
                 </p-iconfield>
             </div>
         </ng-template>
@@ -78,10 +135,6 @@
                     Nome
                     <p-sortIcon field="nome" />
                 </th>
-                <th pSortableColumn="codigo" style="width: 10%">
-                    Código
-                    <p-sortIcon field="codigo" />
-                </th>
                 <th pSortableColumn="tipoPatrimonioId" style="width: 15%">
                     Tipo
                     <p-sortIcon field="tipoPatrimonioId" />
@@ -90,7 +143,7 @@
                     Estado
                     <p-sortIcon field="estado" />
                 </th>
-                <th pSortableColumn="valor" style="width: 12%">
+                <th pSortableColumn="valor" style="width: 15%">
                     Valor
                     <p-sortIcon field="valor" />
                 </th>
@@ -105,75 +158,95 @@
                     Data Devolução
                 </th>
                 @if (isAdmin) {
-                    <th style="width: 15%" class="text-center">Ações</th>
+                    <th style="width: 12%" class="text-center">Ações</th>
                 }
             </tr>
         </ng-template>
 
         <ng-template #body let-patrimonio>
-            <tr>
-                <td>{{ patrimonio.id }}</td>
-                <td>
+            <tr [ngClass]="isCritico(patrimonio) ? 'bg-red-50 dark:bg-red-900/20' : ''">
+                <td class="p-3">
+                    <div class="flex items-center gap-2">
+                        <i class="pi pi-hashtag text-lg"></i>
+                        <span class="font-mono text-sm">{{ patrimonio.id }}</span>
+                    </div>
+                </td>
+                <td class="p-3">
                     <div class="flex items-center gap-2">
                         <span class="font-medium">{{ patrimonio.nome }}</span>
                     </div>
                 </td>
-                <td>
-                    <span class="font-mono text-sm bg-surface-100 dark:bg-surface-800 px-2 py-1 rounded">
-                        {{ patrimonio.codigo || '-' }}
-                    </span>
-                </td>
-                <td>
+                <td class="p-3">
                     <p-tag 
                         [value]="getTipoNome(patrimonio.tipoPatrimonioId) | titlecase"
+                        icon="pi pi-tag text-xs"
                         severity="warning"
                         styleClass="whitespace-nowrap">
                     </p-tag>
                 </td>
-                <td>
-                    <p-tag 
-                        [value]="(patrimonio.estado | titlecase)"
-                        [severity]="patrimonio.estado === 'critico' ? 'danger' : patrimonio.estado === 'danificado' ? 'warn' : 'success'"
-                        styleClass="whitespace-nowrap">
-                    </p-tag>
+                <td class="p-3">
+                    <div class="flex items-center gap-2">
+                        @if (isCritico(patrimonio)) {
+                            <i class="pi pi-exclamation-circle text-red-500" pTooltip="Estado crítico" tooltipPosition="top"></i>
+                        }
+                        <p-tag 
+                            [value]="(patrimonio.estado | titlecase)"
+                            [severity]="patrimonio.estado === 'critico' ? 'danger' : patrimonio.estado === 'danificado' ? 'warn' : 'success'"
+                            styleClass="whitespace-nowrap">
+                        </p-tag>
+                    </div>
                 </td>
-                <td>
-                    <span class="font-semibold text-green-600">
-                        {{ patrimonio.valor | currency: 'BRL' }}
-                    </span>
+                <td class="p-3 text-right">
+                    <div class="flex items-center justify-end gap-2">
+                        <i class="pi pi-money-bill text-lg"></i>
+                        <span class="font-semibold text-green-600 dark:text-green-400">{{ patrimonio.valor | currency: 'BRL' }}</span>
+                    </div>
                 </td>
-                <td>
-                    <span class="font-semibold">
-                        {{ patrimonio.data | date: 'dd/MM/yyyy' }}
-                    </span>
+                <td class="p-3 text-center">
+                    <div class="flex items-center justify-center gap-2">
+                        <i class="pi pi-calendar text-lg"></i>
+                        <span>{{ patrimonio.data | date: 'dd/MM/yyyy' }}</span>
+                    </div>
                 </td>
-                <td>
+                <td class="p-3 text-center">
                     @if (patrimonio.status) {
                         <p-tag 
                             [value]="patrimonio.status | titlecase"
+                            [icon]="patrimonio.status === 'reservado' ? 'pi pi-lock' : patrimonio.status === 'devolvido' ? 'pi pi-undo' : patrimonio.status === 'cancelado' ? 'pi pi-times-circle' : 'pi pi-check-circle'"
                             [severity]="patrimonio.status === 'reservado' ? 'danger' : patrimonio.status === 'devolvido' ? 'info' : patrimonio.status === 'cancelado' ? 'warn' : 'success'"
                             styleClass="whitespace-nowrap">
                         </p-tag>
                     } @else {
                         <p-tag 
                             value="Disponível"
+                            icon="pi pi-check-circle"
                             severity="success"
                             styleClass="whitespace-nowrap">
                         </p-tag>
                     }
                 </td>
-                <td>
+                <td class="p-3 text-center">
                     @if (patrimonio.status === 'reservado' && patrimonio.dataDevolucao) {
-                        <div class="flex items-center gap-2">
-                            <i class="pi pi-calendar text-lg"></i>
-                            <span class="font-semibold">{{ patrimonio.dataDevolucao | date: 'dd/MM/yyyy' }}</span>
+                        <div class="flex items-center justify-center gap-2">
+                            @if (isDevolucaoProxima(patrimonio)) {
+                                <i class="pi pi-clock text-amber-500" pTooltip="Devolução próxima" tooltipPosition="top"></i>
+                            } @else {
+                                <i class="pi pi-calendar text-lg"></i>
+                            }
+                            <span class="font-semibold" [ngClass]="isDevolucaoProxima(patrimonio) ? 'text-amber-600 dark:text-amber-400' : ''">{{ patrimonio.dataDevolucao | date: 'dd/MM/yyyy' }}</span>
+                            @if (isDevolucaoProxima(patrimonio)) {
+                                <span class="text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-2 py-1 rounded">Próxima</span>
+                            }
                         </div>
                     } @else {
-                        <span class="text-muted-color italic">Ainda não reservado</span>
+                        <div class="flex items-center justify-center gap-2 text-muted-color">
+                            <i class="pi pi-circle-fill text-xs"></i>
+                            <span class="italic text-sm">Sem reserva</span>
+                        </div>
                     }
                 </td>
                 @if (isAdmin) {
-                    <td>
+                    <td class="p-3 text-center">
                         <div class="flex justify-center gap-2">
                             <p-button
                                 icon="pi pi-pencil"
@@ -181,17 +254,20 @@
                                 size="small"
                                 [outlined]="true"
                                 (onClick)="editPatrimonio(patrimonio)"
-                                pTooltip="Editar"
-                                tooltipPosition="top">
+                                pTooltip="Editar patrimônio"
+                                tooltipPosition="top"
+                                tooltipStyleClass="text-xs">
                             </p-button>
+
                             <p-button
                                 icon="pi pi-trash"
                                 severity="danger"
                                 size="small"
                                 [outlined]="true"
                                 (onClick)="confirmDelete(patrimonio)"
-                                pTooltip="Deletar"
-                                tooltipPosition="top">
+                                pTooltip="Deletar patrimônio"
+                                tooltipPosition="top"
+                                tooltipStyleClass="text-xs">
                             </p-button>
                         </div>
                     </td>

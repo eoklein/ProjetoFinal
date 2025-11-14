@@ -29,23 +29,64 @@
 
                 <div>
                     <form [formGroup]="loginForm">
+                        <!-- ETAPA 1: Atualização dos campos -->
                         <label for="username"
-                               class="block text-surface-900 dark:text-surface-0 text-base sm:text-lg md:text-xl font-medium mb-2">Usuário</label>
-                        <input pInputText id="username" formControlName="username" type="text" placeholder="Nome de usuário"
-                               class="w-full mb-4 sm:mb-6 md:mb-8" />
+                               class="block text-surface-900 dark:text-surface-0 text-base sm:text-lg md:text-xl font-medium mb-2">Usuário ou E-mail</label>
+                        
+                        <!-- ETAPA 5: Bordas com feedback visual -->
+                        <div class="relative mb-4 sm:mb-6 md:mb-8">
+                            <input 
+                                #usernameInput
+                                pInputText 
+                                id="username" 
+                                formControlName="username" 
+                                type="text" 
+                                placeholder="Usuário ou e-mail"
+                                (keydown)="onKeyDown($event)"
+                                [ngClass]="{
+                                    'border-2': loginForm.get('username')?.touched,
+                                    'border-green-500': loginForm.get('username')?.valid && loginForm.get('username')?.value,
+                                    'border-red-500': loginForm.get('username')?.invalid && loginForm.get('username')?.touched
+                                }"
+                                class="w-full transition-colors duration-200" 
+                                style="border-radius: 6px;"/>
+                            <!-- ETAPA 3: Ícone de validação -->
+                            <span *ngIf="isValidLogin() && loginForm.get('username')?.value" 
+                                  class="absolute right-3 top-1/2 transform -translate-y-1/2 text-green-500 text-lg">
+                                ✓
+                            </span>
+                        </div>
 
+                        <!-- ETAPA 2: Ícone de olho para senha -->
                         <label for="password"
-                               class="block text-surface-900 dark:text-surface-0 font-medium text-base sm:text-lg md:text-xl mb-2">Password</label>
-                        <p-password id="password" formControlName="password" placeholder="Password" [toggleMask]="true" styleClass="mb-4" [fluid]="true"
-                                    [feedback]="false"></p-password>
+                               class="block text-surface-900 dark:text-surface-0 font-medium text-base sm:text-lg md:text-xl mb-2">Senha</label>
+                        <div class="relative mb-4 sm:mb-6">
+                            <p-password 
+                                id="password" 
+                                formControlName="password" 
+                                placeholder="Senha" 
+                                [toggleMask]="true" 
+                                [fluid]="true"
+                                [feedback]="false"
+                                (keydown)="onKeyDown($event)">
+                            </p-password>
+                        </div>
 
+                        <!-- Botão de login com estados -->
                         <div class="flex flex-col gap-3">
-                            <p-button label="Login" styleClass="w-full" (onClick)="validarLogin()"></p-button>
+                            <p-button 
+                                label="Login" 
+                                [label]="isLoading ? 'Entrando...' : 'Login'"
+                                [disabled]="loginForm.invalid || isLoading"
+                                styleClass="w-full"
+                                [loading]="isLoading"
+                                (onClick)="validarLogin()">
+                            </p-button>
 
                             <div class="text-center">
                                 <span class="text-muted-color text-sm">Não possui uma conta? </span>
                                 <a routerLink="/register" class="font-medium text-primary text-sm cursor-pointer hover:underline">
-                                    Criar conta
+                                    Cadastre-se
                                 </a>
                             </div>
                         </div>

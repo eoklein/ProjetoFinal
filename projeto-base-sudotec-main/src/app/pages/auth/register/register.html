@@ -34,12 +34,39 @@
                                class="block text-surface-900 dark:text-surface-0 text-base sm:text-lg md:text-xl font-medium mb-2">
                             Usuário
                         </label>
-                        <input pInputText
+                        <input #usernameInput
+                               pInputText
                                id="username"
                                formControlName="username"
                                type="text"
                                placeholder="Nome de usuário (mínimo 3 caracteres)"
                                class="w-full mb-4 sm:mb-6" />
+
+                        <!-- NOVO: Campo de Email -->
+                        <label for="email"
+                               class="block text-surface-900 dark:text-surface-0 text-base sm:text-lg md:text-xl font-medium mb-2">
+                            E-mail <span class="text-muted-color text-sm font-normal">(opcional)</span>
+                        </label>
+                        <div class="relative mb-4 sm:mb-6">
+                            <input pInputText
+                                   id="email"
+                                   formControlName="email"
+                                   type="email"
+                                   placeholder="seu@email.com"
+                                   [ngClass]="getEmailClasses()"
+                                   class="w-full transition-colors duration-200"
+                                   style="border-radius: 6px;" />
+                            <!-- Ícone de validação de email -->
+                            <span *ngIf="isValidEmail(registerForm.get('email')?.value)"
+                                  class="absolute right-3 top-1/2 transform -translate-y-1/2 text-green-500 text-lg">
+                                ✓
+                            </span>
+                            <!-- Ícone de erro de email -->
+                            <span *ngIf="registerForm.get('email')?.value && !isValidEmail(registerForm.get('email')?.value)"
+                                  class="absolute right-3 top-1/2 transform -translate-y-1/2 text-red-500 text-lg">
+                                ✗
+                            </span>
+                        </div>
 
                         <label for="password"
                                class="block text-surface-900 dark:text-surface-0 font-medium text-base sm:text-lg md:text-xl mb-2">
@@ -73,6 +100,8 @@
                             <p-button
                                 label="Criar Conta"
                                 styleClass="w-full"
+                                [disabled]="registerForm.invalid || isLoading"
+                                [loading]="isLoading"
                                 (onClick)="validarCadastro()">
                             </p-button>
 

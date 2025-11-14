@@ -21,6 +21,7 @@ export class LoginService {
             map((response) => ({
                 id: response.user.id,
                 username: response.user.username,
+                email: response.user.email,
                 isAdmin: response.user.isAdmin,
                 token: encodedCredentials
             }))

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -40,6 +40,7 @@ export class PatrimoniosList implements OnInit {
     notificacaoService = inject(NotificacaoService);
 
     patrimonios: Patrimonio[] = [];
+    filteredPatrimonios: Patrimonio[] = [];
     tiposPatrimonio: TipoPatrimonio[] = [];
     patrimonioDialog: boolean = false;
     patrimonio: Patrimonio = {} as Patrimonio;
@@ -48,11 +49,27 @@ export class PatrimoniosList implements OnInit {
     loading: boolean = false;
     isEditMode: boolean = false;
     isAdmin: boolean = false;
+    // Busca e filtros
+    searchTerm: string = '';
+    filterTipoId: number | null = null;
+    filterEstado: string | null = null;
+    filterStatus: string | null = null; // reservado, devolvido, cancelado, disponivel
+    dateRange: Date[] | null = null; // [start, end]
+    dateStart: string | null = null; // yyyy-mm-dd
+    dateEnd: string | null = null;   // yyyy-mm-dd
     
     statusOptions = [
         { label: 'Crítico', value: 'critico' },
         { label: 'Danificado', value: 'danificado' },
         { label: 'Bom', value: 'bom' }
+    ];
+
+    statusReservaOptions = [
+        { label: 'Todos', value: null },
+        { label: 'Disponível', value: 'disponivel' },
+        { label: 'Reservado', value: 'reservado' },
+        { label: 'Devolvido', value: 'devolvido' },
+        { label: 'Cancelado', value: 'cancelado' }
     ];
 
     ngOnInit() {
@@ -74,6 +91,8 @@ export class PatrimoniosList implements OnInit {
         this.tipoPatrimonioService.getTiposPatrimonio().subscribe({
             next: (tipos) => {
                 this.tiposPatrimonio = tipos;
+                this.enrichPatrimonios();
+                this.applyFilters();
             },
             error: () => {
                 this.messageService.add({
@@ -91,6 +110,8 @@ export class PatrimoniosList implements OnInit {
             next: (patrimonios) => {
                 // Backend agora retorna tipoPatrimonioId diretamente
                 this.patrimonios = patrimonios;
+                this.enrichPatrimonios();
+                this.applyFilters();
                 this.loading = false;
             },
             error: () => {
@@ -102,6 +123,143 @@ export class PatrimoniosList implements OnInit {
                 this.loading = false;
             }
         });
+    }
+
+    private enrichPatrimonios() {
+        if (!this.patrimonios?.length) {
+            this.filteredPatrimonios = [];
+            return;
+        }
+        const tipoMap = new Map<number, string>(this.tiposPatrimonio.map(t => [t.id!, t.nome]));
+        this.patrimonios = this.patrimonios.map(p => ({
+            ...p,
+            // adiciona campo auxiliar para filtro global por nome do tipo
+            tipoNome: p.tipoPatrimonioId ? (tipoMap.get(p.tipoPatrimonioId) || '') : ''
+        })) as any;
+    }
+
+    handleSearch(term: string) {
+        this.searchTerm = (term || '').trim();
+        this.applyFilters();
+    }
+
+    onFilterChange() {
+        this.applyFilters();
+    }
+
+    onDateChange() {
+        const start = this.dateStart ? new Date(this.dateStart) : null;
+        const end = this.dateEnd ? new Date(this.dateEnd) : null;
+        this.dateRange = start && end ? [start, end] : null;
+        this.applyFilters();
+    }
+
+    clearFilters() {
+        this.searchTerm = '';
+        this.filterTipoId = null;
+        this.filterEstado = null;
+        this.filterStatus = null;
+        this.dateRange = null;
+        this.dateStart = null;
+        this.dateEnd = null;
+        this.applyFilters();
+    }
+
+    private applyFilters() {
+        let data = [...this.patrimonios];
+
+        // Texto: busca em id, nome, codigo, tipoNome
+        const q = this.searchTerm.toLowerCase();
+        if (q) {
+            data = data.filter((p: any) => {
+                const idMatch = String(p.id).includes(q);
+                const nomeMatch = (p.nome || '').toLowerCase().includes(q);
+                const codMatch = (p.codigo || '').toLowerCase().includes(q);
+                const tipoMatch = (p.tipoNome || '').toLowerCase().includes(q);
+                return idMatch || nomeMatch || codMatch || tipoMatch;
+            });
+        }
+
+        // Tipo
+        if (this.filterTipoId) {
+            data = data.filter(p => p.tipoPatrimonioId === this.filterTipoId);
+        }
+
+        // Estado (critico, danificado, bom)
+        if (this.filterEstado) {
+            data = data.filter(p => p.estado === this.filterEstado);
+        }
+
+        // Status de reserva (reservado, devolvido, cancelado, disponivel)
+        if (this.filterStatus) {
+            if (this.filterStatus === 'disponivel') {
+                data = data.filter(p => !p.status);
+            } else {
+                data = data.filter(p => p.status === this.filterStatus);
+            }
+        }
+
+        // Intervalo de datas (campo p.data)
+        if (this.dateRange && this.dateRange.length === 2 && this.dateRange[0] && this.dateRange[1]) {
+            const start = new Date(this.dateRange[0]);
+            const end = new Date(this.dateRange[1]);
+            // normalizar fim do dia
+            end.setHours(23, 59, 59, 999);
+            data = data.filter(p => {
+                if (!p.data) return false;
+                const d = new Date(p.data);
+                return d >= start && d <= end;
+            });
+        }
+
+        this.filteredPatrimonios = data;
+    }
+
+    // Indicadores (contadores) com base na lista filtrada
+    getTotal(): number {
+        return this.filteredPatrimonios.length;
+    }
+
+    getTotalGeral(): number {
+        return this.patrimonios.length;
+    }
+
+    getDisponiveis(): number {
+        return this.filteredPatrimonios.filter(p => !p.status).length;
+    }
+
+    getReservados(): number {
+        return this.filteredPatrimonios.filter(p => p.status === 'reservado').length;
+    }
+
+    getDevolvidos(): number {
+        return this.filteredPatrimonios.filter(p => p.status === 'devolvido').length;
+    }
+
+    getCancelados(): number {
+        return this.filteredPatrimonios.filter(p => p.status === 'cancelado').length;
+    }
+
+    getCriticos(): number {
+        return this.filteredPatrimonios.filter(p => p.estado === 'critico').length;
+    }
+
+    getDanificados(): number {
+        return this.filteredPatrimonios.filter(p => p.estado === 'danificado').length;
+    }
+
+    getBons(): number {
+        return this.filteredPatrimonios.filter(p => p.estado === 'bom').length;
+    }
+
+    getActiveFiltersCount(): number {
+        let n = 0;
+        if (this.searchTerm) n++;
+        if (this.filterTipoId) n++;
+        if (this.filterEstado) n++;
+        if (this.filterStatus) n++;
+        if (this.dateRange && this.dateRange.length === 2 && this.dateRange[0] && this.dateRange[1]) n++;
+        return n;
     }
 
     openNew() {
@@ -212,6 +370,17 @@ export class PatrimoniosList implements OnInit {
     }
 
     confirmDelete(patrimonio: Patrimonio) {
+        // Validar se está reservado
+        if (patrimonio.status === 'reservado') {
+            this.messageService.add({
+                severity: 'error',
+                summary: 'Não é Possível Deletar',
+                detail: `O patrimônio "${patrimonio.nome}" está reservado. Cancele a reserva antes de deletar.`,
+                life: 5000
+            });
+            return;
+        }
+        
         this.confirmationService.confirm({
             message: `Tem certeza que deseja deletar o patrimonio "${patrimonio.nome}"?`,
             header: 'Confirmar Exclusão',
@@ -250,6 +419,35 @@ export class PatrimoniosList implements OnInit {
         if (!tipoId) return 'N/A';
         const tipo = this.tiposPatrimonio.find(t => t.id === tipoId);
         return tipo ? tipo.nome : 'N/A';
+    }
+
+    // Helpers para avisos visuais
+    isCritico(patrimonio: Patrimonio): boolean {
+        return patrimonio.estado === 'critico';
+    }
+
+    isDevolucaoProxima(patrimonio: Patrimonio): boolean {
+        if (!patrimonio.dataDevolucao || patrimonio.status !== 'reservado') return false;
+        const devolucao = new Date(patrimonio.dataDevolucao);
+        const hoje = new Date();
+        const diasAte = Math.ceil((devolucao.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
+        return diasAte >= 0 && diasAte <= 7;
+    }
+
+    getDiasAte(data: string | Date | undefined): number | null {
+        if (!data) return null;
+        const d = new Date(data);
+        const hoje = new Date();
+        return Math.ceil((d.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
+    }
+
+    // Atalho Ctrl+N: novo patrimônio
+    @HostListener('window:keydown', ['$event'])
+    handleKeyboardEvent(event: KeyboardEvent) {
+        if (event.ctrlKey && event.key === 'n' && this.isAdmin) {
+            event.preventDefault();
+            this.openNew();
+        }
     }
 
     openReservaDialog() {
