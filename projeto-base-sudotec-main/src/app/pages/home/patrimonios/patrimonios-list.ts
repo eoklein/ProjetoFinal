@@ -148,7 +148,26 @@ export class PatrimoniosList implements OnInit {
         if (isValid) {
             if (this.patrimonio.id) {
                 // Update
-                this.patrimonioService.updatePatrimonio(this.patrimonio.id, this.patrimonio).subscribe({
+                let patrimonioId: any = this.patrimonio.id;
+                
+                // Sanitizar ID se vir malformado (ex: "6:1" -> 6)
+                if (typeof patrimonioId === 'string') {
+                    patrimonioId = parseInt(patrimonioId.split(':')[0], 10);
+                } else {
+                    patrimonioId = parseInt(patrimonioId, 10);
+                }
+                
+                // Criar objeto limpo com apenas os campos do Patrimonio (sem ID)
+                const patrimonioAtualizado: any = {};
+                
+                // Copiar apenas os campos válidos de Patrimonio
+                if (this.patrimonio.nome !== undefined) patrimonioAtualizado.nome = this.patrimonio.nome;
+                if (this.patrimonio.estado !== undefined) patrimonioAtualizado.estado = this.patrimonio.estado;
+                if (this.patrimonio.tipoPatrimonioId !== undefined) patrimonioAtualizado.tipoPatrimonioId = this.patrimonio.tipoPatrimonioId;
+                if (this.patrimonio.valor !== undefined) patrimonioAtualizado.valor = this.patrimonio.valor;
+                if (this.patrimonio.codigo !== undefined) patrimonioAtualizado.codigo = this.patrimonio.codigo;
+                
+                this.patrimonioService.updatePatrimonio(patrimonioId, patrimonioAtualizado).subscribe({
                     next: () => {
                         this.messageService.add({
                             severity: 'success',

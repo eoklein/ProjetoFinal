@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
@@ -15,11 +15,13 @@ import { AuthService } from '@/services/auth.service';
 import { UserData } from '@/models/auth.model';
 import { RegisterInput } from '@/models/registerInput';
 import { Toolbar } from 'primeng/toolbar';
+import { TooltipModule } from 'primeng/tooltip';
+import { SelectModule } from 'primeng/select';
 
 @Component({
     selector: 'app-users-list',
     standalone: true,
-    imports: [CommonModule, FormsModule, TableModule, ButtonModule, TagModule, Toast, ConfirmDialog, Dialog, InputTextModule, Toolbar],
+    imports: [CommonModule, FormsModule, TableModule, ButtonModule, TagModule, Toast, ConfirmDialog, Dialog, InputTextModule, Toolbar, TooltipModule, SelectModule],
     templateUrl: './users-list.html',
     providers: [MessageService, ConfirmationService, RegisterService]
 })
@@ -31,11 +33,14 @@ export class UsersList implements OnInit {
     confirmationService = inject(ConfirmationService);
 
     users: UserData[] = [];
+    filteredUsers: UserData[] = [];
     loading: boolean = false;
     currentUserId: number = 0;
     userDialog: boolean = false;
     newUser: RegisterInput = { username: '', password: '' };
     submitted: boolean = false;
+    searchTerm: string = '';
+    selectedFilter: string = 'all'; // 'all', 'admin', 'user'
 
     ngOnInit() {
         this.currentUserId = this.authService.getUserData()?.id || 0;
@@ -47,6 +52,7 @@ export class UsersList implements OnInit {
         this.userService.getUsers().subscribe({
             next: (users) => {
                 this.users = users;
+                this.filteredUsers = users;
                 this.loading = false;
             },
             error: () => {
@@ -184,5 +190,69 @@ export class UsersList implements OnInit {
             }
         });
     }
-}
 
+    // Step 2: Métodos para indicadores
+    countTotalUsers(): number {
+        return this.users.length;
+    }
+
+    countAdmins(): number {
+        return this.users.filter(u => u.isAdmin).length;
+    }
+
+    countCommonUsers(): number {
+        return this.users.filter(u => !u.isAdmin).length;
+    }
+
+    // Step 2: Métodos para busca e filtro
+    handleSearch(term: string): void {
+        this.searchTerm = term.toLowerCase();
+        this.applyFilters();
+    }
+
+    applyFilters(): void {
+        this.filteredUsers = this.users.filter(user => {
+            // Aplicar filtro de tipo (admin/user/all)
+            if (this.selectedFilter !== 'all') {
+                if (this.selectedFilter === 'admin' && !user.isAdmin) return false;
+                if (this.selectedFilter === 'user' && user.isAdmin) return false;
+            }
+
+            // Aplicar busca por username
+            if (this.searchTerm) {
+                const searchLower = this.searchTerm.toLowerCase();
+                return (
+                    user.username.toLowerCase().includes(searchLower) ||
+                    user.id.toString().includes(searchLower)
+                );
+            }
+
+            return true;
+        });
+    }
+
+    clearFilters(): void {
+        this.searchTerm = '';
+        this.selectedFilter = 'all';
+        this.applyFilters();
+    }
+
+    onFilterChange(): void {
+        this.applyFilters();
+    }
+
+    // Step 3: Keyboard shortcuts
+    @HostListener('window:keydown', ['$event'])
+    handleKeyboardEvent(event: KeyboardEvent) {
+        // Ctrl+N: Novo usuário
+        if (event.ctrlKey && event.key === 'n') {
+            event.preventDefault();
+            this.openNew();
+        }
+        // Escape: Fechar diálogo
+        if (event.key === 'Escape' && this.userDialog) {
+            event.preventDefault();
+            this.hideDialog();
+        }
+    }
+}

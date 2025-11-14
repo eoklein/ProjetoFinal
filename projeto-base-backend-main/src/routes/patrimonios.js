@@ -8,6 +8,9 @@ const router = express.Router();
 // Aplicar autenticação a todas as rotas
 router.use(authMiddleware);
 
+// Rota GET genérica PRIMEIRA (antes das rotas com :id)
+router.get('/', patrimonioController.getAllPatrimonios);
+
 // Rotas específicas ANTES das rotas dinâmicas
 // Rota para estoque compartilhado (todos os patrimônios)
 router.get('/compartilhados/todos', patrimonioController.getAllPatrimoniosCompartilhados);
@@ -20,8 +23,5 @@ router.get('/:id', patrimonioController.getPatrimonioById);
 router.post('/', patrimonioController.createPatrimonio);
 router.put('/:id', patrimonioController.updatePatrimonio);
 router.delete('/:id', patrimonioController.deletePatrimonio);
-
-// Rota GET genérica por último
-router.get('/', patrimonioController.getAllPatrimonios);
 
 module.exports = router;

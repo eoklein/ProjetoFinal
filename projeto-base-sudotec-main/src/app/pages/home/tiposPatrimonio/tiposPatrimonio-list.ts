@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
@@ -37,6 +37,7 @@ export class TiposPatrimonioList implements OnInit {
     loading: boolean = false;
     isEditMode: boolean = false;
     isAdmin: boolean = false;
+    searchTerm: string = '';
 
     ngOnInit() {
         this.checkAdmin();
@@ -168,13 +169,13 @@ export class TiposPatrimonioList implements OnInit {
 
     confirmDelete(tipoPatrimonio: TipoPatrimonio) {
         this.confirmationService.confirm({
-            message: `Tem certeza que deseja deletar o tipo de patrimonio "${tipoPatrimonio.nome}"?`,
+            message: `Tem certeza que deseja deletar o tipo <strong class="text-red-500">"${tipoPatrimonio.nome}"</strong>? Esta ação não pode ser desfeita.`,
             header: 'Confirmar Exclusão',
             icon: 'pi pi-exclamation-triangle',
-            acceptLabel: 'Sim',
-            rejectLabel: 'Não',
-            acceptButtonStyleClass: 'p-button-success',
-            rejectButtonStyleClass: 'p-button-danger',
+            acceptLabel: 'Deletar',
+            rejectLabel: 'Cancelar',
+            acceptButtonStyleClass: 'p-button-danger',
+            rejectButtonStyleClass: 'p-button-secondary',
             accept: () => {
                 this.deleteTipoPatrimonio(tipoPatrimonio.id!);
             }
@@ -199,5 +200,42 @@ export class TiposPatrimonioList implements OnInit {
                 });
             }
         });
+    }
+
+    // Step 2: Métodos para busca melhorada
+    handleSearch(term: string, dt: any): void {
+        this.searchTerm = term;
+        dt.filterGlobal(term, 'contains');
+    }
+
+    clearSearch(dt: any): void {
+        this.searchTerm = '';
+        dt.filterGlobal('', 'contains');
+    }
+
+    // Step 3: Métodos para contadores
+    getTotalTipos(): number {
+        return this.tiposPatrimonio.length;
+    }
+
+    getLastTipo(): TipoPatrimonio | undefined {
+        return this.tiposPatrimonio.length > 0 
+            ? this.tiposPatrimonio[this.tiposPatrimonio.length - 1] 
+            : undefined;
+    }
+
+    // Step 3: Keyboard shortcuts
+    @HostListener('window:keydown', ['$event'])
+    handleKeyboardEvent(event: KeyboardEvent) {
+        // Ctrl+N: Novo tipo
+        if (event.ctrlKey && event.key === 'n' && this.isAdmin) {
+            event.preventDefault();
+            this.openNew();
+        }
+        // Escape: Fechar diálogo
+        if (event.key === 'Escape' && this.tipoPatrimonioDialog) {
+            event.preventDefault();
+            this.hideDialog();
+        }
     }
 }

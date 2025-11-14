@@ -22,22 +22,106 @@
                 severity="secondary"
                 [outlined]="true"
                 (onClick)="loadUsers()"
-                [loading]="loading">
+                [loading]="loading"
+                pTooltip="Recarregar lista de usuários"
+                tooltipPosition="bottom">
             </p-button>
             <p-button
                 icon="pi pi-plus"
                 label="Novo Usuário"
                 severity="success"
-                (onClick)="openNew()">
+                (onClick)="openNew()"
+                pTooltip="Criar novo usuário (Ctrl+N)"
+                tooltipPosition="bottom">
             </p-button>
         </div>
     </ng-template>
 </p-toolbar>
 
-<!-- Card: Tabela de Usuários -->
+<!-- Step 2: Indicadores (Statistics Cards) -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <!-- Total de Usuários -->
+    <div class="bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-lg p-6 flex items-center gap-4">
+        <div class="flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-900/30">
+            <i class="pi pi-users text-2xl text-blue-600 dark:text-blue-400"></i>
+        </div>
+        <div class="flex-1">
+            <p class="text-muted-color text-sm font-medium">Total de Usuários</p>
+            <p class="text-3xl font-bold text-surface-900 dark:text-surface-0">{{ countTotalUsers() }}</p>
+        </div>
+    </div>
+
+    <!-- Administradores -->
+    <div class="bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-lg p-6 flex items-center gap-4">
+        <div class="flex items-center justify-center w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30">
+            <i class="pi pi-shield text-2xl text-green-600 dark:text-green-400"></i>
+        </div>
+        <div class="flex-1">
+            <p class="text-muted-color text-sm font-medium">Administradores</p>
+            <p class="text-3xl font-bold text-surface-900 dark:text-surface-0">{{ countAdmins() }}</p>
+        </div>
+    </div>
+
+    <!-- Usuários Comuns -->
+    <div class="bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-lg p-6 flex items-center gap-4">
+        <div class="flex items-center justify-center w-16 h-16 rounded-full bg-purple-100 dark:bg-purple-900/30">
+            <i class="pi pi-user text-2xl text-purple-600 dark:text-purple-400"></i>
+        </div>
+        <div class="flex-1">
+            <p class="text-muted-color text-sm font-medium">Usuários Comuns</p>
+            <p class="text-3xl font-bold text-surface-900 dark:text-surface-0">{{ countCommonUsers() }}</p>
+        </div>
+    </div>
+</div>
+
+<!-- Card: Busca, Filtro e Tabela -->
 <div class="card">
+    <!-- Step 2: Busca e Filtro -->
+    <div class="flex flex-col md:flex-row gap-4 mb-6 pb-6 border-b border-surface-200 dark:border-surface-700">
+        <!-- Busca -->
+        <div class="flex-1">
+            <div class="flex items-center gap-2 bg-surface-100 dark:bg-surface-800 rounded-lg px-4 py-3 border border-surface-200 dark:border-surface-700">
+                <i class="pi pi-search text-muted-color"></i>
+                <input
+                    type="text"
+                    placeholder="Buscar por username ou ID..."
+                    [(ngModel)]="searchTerm"
+                    (input)="handleSearch(searchTerm)"
+                    class="flex-1 bg-transparent outline-none text-surface-900 dark:text-surface-0 placeholder-muted-color" />
+                @if (searchTerm) {
+                    <button
+                        (click)="clearFilters()"
+                        class="text-muted-color hover:text-surface-900 dark:hover:text-surface-0 transition-colors"
+                        pTooltip="Limpar filtros"
+                        tooltipPosition="bottom">
+                        <i class="pi pi-times"></i>
+                    </button>
+                }
+            </div>
+        </div>
+
+        <!-- Filtro -->
+        <div class="w-full md:w-56">
+            <p-select
+                [(ngModel)]="selectedFilter"
+                (onChange)="onFilterChange()"
+                [options]="[
+                    { label: 'Todos os Usuários', value: 'all' },
+                    { label: 'Apenas Admins', value: 'admin' },
+                    { label: 'Apenas Usuários Comuns', value: 'user' }
+                ]"
+                optionLabel="label"
+                optionValue="value"
+                styleClass="w-full"
+                pTooltip="Filtrar por tipo de usuário"
+                tooltipPosition="bottom">
+            </p-select>
+        </div>
+    </div>
+
+    <!-- Tabela de Usuários -->
     <p-table
-        [value]="users"
+        [value]="filteredUsers"
         [loading]="loading"
         [paginator]="true"
         [rows]="10"
@@ -73,6 +157,14 @@
                         [value]="getAdminLabel(user.isAdmin)"
                         [severity]="getSeverity(user.isAdmin)"
                         [rounded]="true">
+                        <ng-template #content>
+                            @if (user.isAdmin) {
+                                <i class="pi pi-shield mr-2"></i>
+                            } @else {
+                                <i class="pi pi-user mr-2"></i>
+                            }
+                            {{ getAdminLabel(user.isAdmin) }}
+                        </ng-template>
                     </p-tag>
                 </td>
                 <td>
@@ -84,7 +176,9 @@
                             size="small"
                             [outlined]="true"
                             (onClick)="toggleAdmin(user)"
-                            [disabled]="user.id === currentUserId">
+                            [disabled]="user.id === currentUserId"
+                            [pTooltip]="user.id === currentUserId ? 'Você não pode alterar seu próprio status' : (user.isAdmin ? 'Remover privilégios de admin' : 'Conceder privilégios de admin')"
+                            tooltipPosition="top">
                         </p-button>
 
                         <p-button
@@ -93,7 +187,9 @@
                             size="small"
                             [outlined]="true"
                             (onClick)="confirmDelete(user)"
-                            [disabled]="user.id === currentUserId">
+                            [disabled]="user.id === currentUserId"
+                            [pTooltip]="user.id === currentUserId ? 'Você não pode deletar sua própria conta' : 'Deletar usuário'"
+                            tooltipPosition="top">
                         </p-button>
                     </div>
                 </td>

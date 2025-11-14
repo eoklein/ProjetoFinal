@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
@@ -15,6 +15,7 @@ import { Checkbox } from 'primeng/checkbox';
 import { Toolbar } from 'primeng/toolbar';
 import { TooltipModule } from 'primeng/tooltip';
 import { TagModule } from 'primeng/tag';
+import { Message } from 'primeng/message';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { EstoqueService } from '@/services/estoque.service';
 import { TipoPatrimonioService } from '@/services/tipoPatrimonio.service';
@@ -30,7 +31,7 @@ import { InputIcon } from 'primeng/inputicon';
 @Component({
     selector: 'app-lancamentos-list',
     standalone: true,
-    imports: [CommonModule, FormsModule, TableModule, ButtonModule, Dialog, Toast, ConfirmDialog, InputTextModule, InputNumberModule, DatePicker, RadioButton, Select, Checkbox, Toolbar, TooltipModule, TagModule, IconField, InputIcon],
+    imports: [CommonModule, FormsModule, TableModule, ButtonModule, Dialog, Toast, ConfirmDialog, InputTextModule, InputNumberModule, DatePicker, RadioButton, Select, Checkbox, Toolbar, TooltipModule, TagModule, IconField, InputIcon, Message],
     templateUrl: './lancamentos-list.html',
     providers: [MessageService, ConfirmationService]
 })
@@ -44,7 +45,7 @@ export class LancamentosList implements OnInit {
     notificacaoService = inject(NotificacaoService);
 
     estoques: Estoque[] = [];
-    estoquesFiltrados: Estoque[] = [];
+    estoquesFiltrados: Patrimonio[] = [];
     tiposPatrimonio: TipoPatrimonio[] = [];
     patrimonios: Patrimonio[] = [];
     estoqueDialog: boolean = false;
@@ -60,6 +61,26 @@ export class LancamentosList implements OnInit {
     temRetirada: boolean = false;
     numeroRetiradas: number = 1;
     isAdmin: boolean = false;
+
+    // Filtros
+    filtroEstado: string = '';
+    filtroStatus: string = '';
+    filtroTipo: number = 0;
+
+    estadoFiltros = [
+        { label: 'Todos', value: '' },
+        { label: 'Crítico', value: 'critico' },
+        { label: 'Danificado', value: 'danificado' },
+        { label: 'Bom', value: 'bom' }
+    ];
+
+    statusFiltros = [
+        { label: 'Todos', value: '' },
+        { label: 'Disponível', value: null },
+        { label: 'Reservado', value: 'reservado' },
+        { label: 'Devolvido', value: 'devolvido' },
+        { label: 'Cancelado', value: 'cancelado' }
+    ];
 
     statusOptions = [
         { label: 'Crítico', value: 'critico' },
@@ -184,21 +205,9 @@ export class LancamentosList implements OnInit {
     }
 
     editEstoque(patrimonio: any) {
-        // Abre o diálogo para editar o patrimonio
-        this.patrimonioOriginal = {
-            id: patrimonio.id,
-            nome: patrimonio.nome,
-            estado: patrimonio.estado,
-            tipoPatrimonioId: patrimonio.tipoPatrimonioId,
-            valor: patrimonio.valor
-        };
-        this.novoPatrimonio = {
-            id: patrimonio.id,
-            nome: patrimonio.nome,
-            estado: patrimonio.estado,
-            tipoPatrimonioId: patrimonio.tipoPatrimonioId,
-            valor: patrimonio.valor
-        };
+        // Abre o diálogo para editar o patrimonio - MESMO PADRÃO DE PATRIMONIOS-LIST
+        this.patrimonioOriginal = { ...patrimonio };
+        this.novoPatrimonio = { ...patrimonio };
         this.isEditMode = true;
         this.patrimonioSubmitted = false;
         this.patrimonioDialog = true;
@@ -241,84 +250,77 @@ export class LancamentosList implements OnInit {
                 this.estoque.efetivado = false;
             }
 
-            // Log para debug
-            console.log('Salvando estoque:', JSON.stringify(this.estoque, null, 2));
-            console.log('Campo efetivado:', this.estoque.efetivado, 'Tipo:', typeof this.estoque.efetivado);
-
             if (this.estoque.id) {
-                // Update
-                // Guarda o estoque original para comparar mudanças no saldo
-                const estoqueOriginalId = this.estoque.id;
-                this.estoqueService.getEstoqueById(estoqueOriginalId).subscribe({
-                    next: (estoqueOriginal) => {
-                        this.estoqueService.updateEstoque(estoqueOriginalId, this.estoque).subscribe({
-                            next: () => {
-                                // Atualiza o saldo se necessário
-                                if (
-                                    this.estoque.patrimonioId &&
-                                    (estoqueOriginal.efetivado !== this.estoque.efetivado ||
-                                        estoqueOriginal.valor !== this.estoque.valor ||
-                                        estoqueOriginal.patrimonioId !== this.estoque.patrimonioId ||
-                                        estoqueOriginal.tipo !== this.estoque.tipo)
-                                ) {
-                                    // this.atualizarSaldoContaAoSalvar(estoqueOriginal);
-                                }
-
-                                this.messageService.add({
-                                    severity: 'success',
-                                    summary: 'Sucesso',
-                                    detail: 'Estoque atualizado com sucesso'
-                                });
-                                this.loadEstoques();
-                                this.estoqueDialog = false;
-                                this.estoque = {} as Estoque;
-                            },
-                            error: () => {
-                                this.messageService.add({
-                                    severity: 'error',
-                                    summary: 'Erro',
-                                    detail: 'Erro ao atualizar estoque'
-                                });
-                            }
+                // Update - Sanitizar ID e criar objeto limpo
+                let estoqueId: any = this.estoque.id;
+                
+                // Sanitizar ID se vir malformado
+                if (typeof estoqueId === 'string') {
+                    estoqueId = parseInt(estoqueId.split(':')[0], 10);
+                } else {
+                    estoqueId = parseInt(estoqueId, 10);
+                }
+                
+                const estoqueParaEnviar: any = {
+                    descricao: this.estoque.descricao,
+                    valor: this.estoque.valor,
+                    data: this.estoque.data,
+                    tipo: this.estoque.tipo,
+                    tipoPatrimonioId: this.estoque.tipoPatrimonioId,
+                    patrimonioId: this.estoque.patrimonioId,
+                    efetivado: this.estoque.efetivado
+                };
+                
+                this.estoqueService.updateEstoque(estoqueId, estoqueParaEnviar).subscribe({
+                    next: () => {
+                        this.messageService.add({
+                            severity: 'success',
+                            summary: 'Sucesso',
+                            detail: 'Estoque atualizado com sucesso'
+                        });
+                        this.loadEstoques();
+                        this.estoqueDialog = false;
+                        this.estoque = {} as Estoque;
+                    },
+                    error: () => {
+                        this.messageService.add({
+                            severity: 'error',
+                            summary: 'Erro',
+                            detail: 'Erro ao atualizar estoque'
                         });
                     }
                 });
             } else {
-                // Create
-                console.log('Criando novo estoque');
-                if (this.temRetirada && this.numeroRetiradas > 1) {
-                    this.criarEstoquesComRetiradas();
-                } else {
-                    // Guarda uma cópia do estoque antes de salvar
-                    const estoqueParaSalvar = { ...this.estoque };
-
-                    this.estoqueService.createEstoque(estoqueParaSalvar).subscribe({
-                        next: () => {
-                            // Atualiza o saldo se o lançamento está efetivado e tem Patrimonio
-                            // Usa a cópia guardada ao invés de this.lancamento
-                            if (estoqueParaSalvar.patrimonioId && estoqueParaSalvar.efetivado) {
-                                console.log('Atualizando saldo da Patrimonio após criar estoque efetivado');
-                                // this.atualizarSaldoContaParaEstoque(estoqueParaSalvar);
-                            }
-
-                            this.messageService.add({
-                                severity: 'success',
-                                summary: 'Sucesso',
-                                detail: 'Estoque criado com sucesso'
-                            });
-                            this.loadEstoques();
-                            this.estoqueDialog = false;
-                            this.estoque = {} as Estoque;
-                        },
-                        error: () => {
-                            this.messageService.add({
-                                severity: 'error',
-                                summary: 'Erro',
-                                detail: 'Erro ao criar estoque'
-                            });
-                        }
-                    });
-                }
+                // Create - Criar objeto limpo com apenas os campos esperados pelo backend
+                const estoqueParaEnviar: any = {
+                    descricao: this.estoque.descricao,
+                    valor: this.estoque.valor,
+                    data: this.estoque.data,
+                    tipo: this.estoque.tipo,
+                    tipoPatrimonioId: this.estoque.tipoPatrimonioId,
+                    patrimonioId: this.estoque.patrimonioId,
+                    efetivado: this.estoque.efetivado
+                };
+                
+                this.estoqueService.createEstoque(estoqueParaEnviar).subscribe({
+                    next: () => {
+                        this.messageService.add({
+                            severity: 'success',
+                            summary: 'Sucesso',
+                            detail: 'Estoque criado com sucesso'
+                        });
+                        this.loadEstoques();
+                        this.estoqueDialog = false;
+                        this.estoque = {} as Estoque;
+                    },
+                    error: () => {
+                        this.messageService.add({
+                            severity: 'error',
+                            summary: 'Erro',
+                            detail: 'Erro ao criar estoque'
+                        });
+                    }
+                });
             }
         }
     }
@@ -589,8 +591,25 @@ export class LancamentosList implements OnInit {
         }
 
         if (this.isEditMode) {
-            // Update
-            this.patrimonioService.updatePatrimonio(this.novoPatrimonio.id, this.novoPatrimonio).subscribe({
+            // Update - Sanitizar ID e criar objeto limpo
+            let patrimonioId: any = this.novoPatrimonio.id;
+            
+            // Sanitizar ID se vir malformado (ex: "6:1" -> 6)
+            if (typeof patrimonioId === 'string') {
+                patrimonioId = parseInt(patrimonioId.split(':')[0], 10);
+            } else {
+                patrimonioId = parseInt(patrimonioId, 10);
+            }
+            
+            const patrimonioParaEnviar: any = {
+                nome: this.novoPatrimonio.nome,
+                estado: this.novoPatrimonio.estado,
+                tipoPatrimonioId: this.novoPatrimonio.tipoPatrimonioId,
+                valor: this.novoPatrimonio.valor,
+                codigo: this.novoPatrimonio.codigo
+            };
+            
+            this.patrimonioService.updatePatrimonio(patrimonioId, patrimonioParaEnviar).subscribe({
                 next: () => {
                     this.messageService.add({
                         severity: 'success',
@@ -611,8 +630,16 @@ export class LancamentosList implements OnInit {
                 }
             });
         } else {
-            // Create
-            this.patrimonioService.createPatrimonio(this.novoPatrimonio).subscribe({
+            // Create - Criar objeto limpo com apenas os campos esperados pelo backend
+            const patrimonioParaEnviar: any = {
+                nome: this.novoPatrimonio.nome,
+                estado: this.novoPatrimonio.estado,
+                tipoPatrimonioId: this.novoPatrimonio.tipoPatrimonioId,
+                valor: this.novoPatrimonio.valor,
+                codigo: this.novoPatrimonio.codigo
+            };
+            
+            this.patrimonioService.createPatrimonio(patrimonioParaEnviar).subscribe({
                 next: (novoPatrimonio) => {
                     this.messageService.add({
                         severity: 'success',
@@ -670,6 +697,102 @@ export class LancamentosList implements OnInit {
         if (!tipoId) return 'N/A';
         const tipo = this.tiposPatrimonio.find(t => t.id === tipoId);
         return tipo ? tipo.nome : 'N/A';
+    }
+
+    // Métodos para Indicadores
+    contarDisponivel(): number {
+        return this.patrimonios.filter(p => !p.status || p.status === 'devolvido' || p.status === 'cancelado').length;
+    }
+
+    contarReservado(): number {
+        return this.patrimonios.filter(p => p.status === 'reservado').length;
+    }
+
+    contarCriticos(): number {
+        return this.patrimonios.filter(p => p.estado === 'critico').length;
+    }
+
+    isDatasProxima(date?: Date): boolean {
+        if (!date) return false;
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+        const dataDev = new Date(date);
+        dataDev.setHours(0, 0, 0, 0);
+        const diff = (dataDev.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24);
+        return diff > 0 && diff <= 3;
+    }
+
+    temAlerts(): boolean {
+        return this.patrimonios.some(p =>
+            p.status === 'reservado' && this.isDatasProxima(p.dataDevolucao)
+        );
+    }
+
+    contarAlertas(): number {
+        return this.patrimonios.filter(p =>
+            p.status === 'reservado' && this.isDatasProxima(p.dataDevolucao)
+        ).length;
+    }
+
+    getIconEstado(estado: string): string {
+        switch (estado) {
+            case 'critico': return 'pi pi-exclamation-triangle';
+            case 'danificado': return 'pi pi-wrench';
+            case 'bom': return 'pi pi-check';
+            default: return '';
+        }
+    }
+
+    // Métodos para Filtros
+    aplicarFiltros() {
+        let patrimoniosFiltrados = [...this.patrimonios];
+
+        if (this.filtroEstado) {
+            patrimoniosFiltrados = patrimoniosFiltrados.filter(p => p.estado === this.filtroEstado);
+        }
+
+        if (this.filtroStatus !== '') {
+            patrimoniosFiltrados = patrimoniosFiltrados.filter(p => p.status === this.filtroStatus);
+        }
+
+        if (this.filtroTipo) {
+            patrimoniosFiltrados = patrimoniosFiltrados.filter(p => p.tipoPatrimonioId === this.filtroTipo);
+        }
+
+        this.estoquesFiltrados = patrimoniosFiltrados;
+    }
+
+    limparFiltros() {
+        this.filtroEstado = '';
+        this.filtroStatus = '';
+        this.filtroTipo = 0;
+        this.estoquesFiltrados = [];
+    }
+
+    // Atalhos de Teclado
+    @HostListener('window:keydown', ['$event'])
+    handleKeyboardEvent(event: KeyboardEvent) {
+        // Ctrl/Cmd + N: Novo
+        if ((event.ctrlKey || event.metaKey) && event.key === 'n') {
+            event.preventDefault();
+            this.openNew();
+        }
+        // Escape: Fechar dialogs
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            this.hideDialog();
+            this.hidePatrimonioDialog();
+        }
+        // Enter: Salvar (quando em dialog)
+        if (event.key === 'Enter' && this.estoqueDialog) {
+            event.preventDefault();
+            this.saveEstoque();
+        }
+        // Ctrl/Cmd + Shift + C: Limpar filtros
+        if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'C') {
+            event.preventDefault();
+            this.limparFiltros();
+        }
     }
 }
 

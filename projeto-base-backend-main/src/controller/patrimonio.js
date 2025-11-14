@@ -171,7 +171,10 @@ const patrimonioController = {
 
     async getPatrimonioById(req, res) {
         try {
-            const patrimonioId = parseInt(req.params.id);
+            let rawId = req.params.id;
+            // Limpar o ID de caracteres inválidos (ex: "6:1" -> "6")
+            rawId = rawId.toString().split(':')[0].trim();
+            const patrimonioId = parseInt(rawId, 10);
             const userId = req.user.id;
 
             const patrimonio = await prisma.patrimonio.findFirst({
@@ -279,8 +282,21 @@ const patrimonioController = {
 
     async updatePatrimonio(req, res) {
         try {
-            console.log('Requisição de atualização recebida:', req.params.id, req.body);
-            const patrimonioId = parseInt(req.params.id);
+            let rawId = req.params.id;
+            console.log('ID bruto recebido:', rawId, 'Tipo:', typeof rawId);
+            
+            // Limpar o ID de caracteres inválidos (ex: "6:1" -> "6")
+            rawId = rawId.toString().split(':')[0].trim();
+            console.log('ID após limpeza:', rawId);
+            
+            const patrimonioId = parseInt(rawId, 10);
+            
+            console.log('Requisição de atualização recebida:', patrimonioId, req.body);
+            
+            if (isNaN(patrimonioId)) {
+                return res.status(400).json({error: 'ID de patrimônio inválido'});
+            }
+            
             const {nome, codigo, estado, valor, tipoPatrimonioId} = req.body;
             const userId = req.user.id;
 
@@ -361,7 +377,10 @@ const patrimonioController = {
 
     async deletePatrimonio(req, res) {
         try {
-            const patrimonioId = parseInt(req.params.id);
+            let rawId = req.params.id;
+            // Limpar o ID de caracteres inválidos (ex: "6:1" -> "6")
+            rawId = rawId.toString().split(':')[0].trim();
+            const patrimonioId = parseInt(rawId, 10);
             const userId = req.user.id;
 
             const existingPatrimonio = await prisma.patrimonio.findUnique({
