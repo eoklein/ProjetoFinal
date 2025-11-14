@@ -44,136 +44,249 @@
 
 <!-- Card: Tabela de Patrimonios -->
 <div class="card">
+    <!-- Summary Indicators -->
+    <div class="grid mb-4">
+        <div class="col-12 md:col-3">
+            <div class="surface-card p-4 shadow-sm border-round">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <span class="block text-muted-color font-medium mb-2">Total de Patrimônios</span>
+                        <div class="text-3xl font-semibold text-surface-900 dark:text-surface-0">{{ getTotalPatrimonios() }}</div>
+                    </div>
+                    <div class="flex items-center justify-center bg-blue-100 dark:bg-blue-500/20 border-round" style="width: 3rem; height: 3rem">
+                        <i class="pi pi-box text-blue-500 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 md:col-3">
+            <div class="surface-card p-4 shadow-sm border-round">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <span class="block text-muted-color font-medium mb-2">Disponíveis</span>
+                        <div class="text-3xl font-semibold text-green-500">{{ getPatrimoniosDisponiveis() }}</div>
+                    </div>
+                    <div class="flex items-center justify-center bg-green-100 dark:bg-green-500/20 border-round" style="width: 3rem; height: 3rem">
+                        <i class="pi pi-check-circle text-green-500 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 md:col-3">
+            <div class="surface-card p-4 shadow-sm border-round">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <span class="block text-muted-color font-medium mb-2">Reservados</span>
+                        <div class="text-3xl font-semibold text-orange-500">{{ getPatrimoniosReservados() }}</div>
+                    </div>
+                    <div class="flex items-center justify-center bg-orange-100 dark:bg-orange-500/20 border-round" style="width: 3rem; height: 3rem">
+                        <i class="pi pi-calendar text-orange-500 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 md:col-3">
+            <div class="surface-card p-4 shadow-sm border-round">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <span class="block text-muted-color font-medium mb-2">Estado Crítico</span>
+                        <div class="text-3xl font-semibold text-red-500">{{ getPatrimoniosCriticos() }}</div>
+                    </div>
+                    <div class="flex items-center justify-center bg-red-100 dark:bg-red-500/20 border-round" style="width: 3rem; height: 3rem">
+                        <i class="pi pi-exclamation-triangle text-red-500 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <p-table
         #dt
-        [value]="patrimonios"
+        [value]="filteredPatrimonios"
         [loading]="loading"
         [paginator]="true"
         [rows]="10"
         [rowsPerPageOptions]="[5, 10, 20, 50]"
         [showCurrentPageReport]="true"
-        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} patrimonios"
-        [globalFilterFields]="['nome']"
-        styleClass="p-datatable-gridlines"
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} patrimônios"
+        [globalFilterFields]="['nome', 'codigo']"
+        styleClass="p-datatable-gridlines p-datatable-striped"
         [tableStyle]="{ 'min-width': '50rem' }">
 
         <ng-template #caption>
-            <div class="flex">
-                <p-iconfield iconPosition="left" class="ml-auto">
+            <div class="flex flex-col md:flex-row gap-3">
+                <p-iconfield iconPosition="left" class="flex-1">
                     <p-inputicon>
                         <i class="pi pi-search"></i>
                     </p-inputicon>
-                    <input pInputText type="text" (input)="dt.filterGlobal($any($event.target).value, 'contains')" placeholder="Buscar patrimonios..." />
+                    <input pInputText type="text" (input)="onGlobalSearch($any($event.target).value)" placeholder="Buscar por nome ou código..." class="w-full" />
                 </p-iconfield>
+                
+                <p-select
+                    [(ngModel)]="selectedTipo"
+                    [options]="tipoFilterOptions"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Filtrar por Tipo"
+                    (onChange)="applyFilters()"
+                    [showClear]="true"
+                    styleClass="w-full md:w-auto">
+                </p-select>
+                
+                <p-select
+                    [(ngModel)]="selectedEstado"
+                    [options]="estadoFilterOptions"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Filtrar por Estado"
+                    (onChange)="applyFilters()"
+                    [showClear]="true"
+                    styleClass="w-full md:w-auto">
+                </p-select>
+                
+                <p-select
+                    [(ngModel)]="selectedStatus"
+                    [options]="statusFilterOptions"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Filtrar por Status"
+                    (onChange)="applyFilters()"
+                    [showClear]="true"
+                    styleClass="w-full md:w-auto">
+                </p-select>
             </div>
         </ng-template>
 
         <ng-template #header>
             <tr>
-                <th pSortableColumn="id" style="width: 8%">
-                    ID
-                    <p-sortIcon field="id" />
+                <th pSortableColumn="id" style="width: 6%; padding: 1rem;">
+                    <div class="flex items-center gap-2">
+                        <span>ID</span>
+                        <p-sortIcon field="id" />
+                    </div>
                 </th>
-                <th pSortableColumn="nome" style="width: 20%">
-                    Nome
-                    <p-sortIcon field="nome" />
+                <th pSortableColumn="nome" style="width: 18%; padding: 1rem;">
+                    <div class="flex items-center gap-2">
+                        <span>Nome</span>
+                        <p-sortIcon field="nome" />
+                    </div>
                 </th>
-                <th pSortableColumn="codigo" style="width: 10%">
-                    Código
-                    <p-sortIcon field="codigo" />
+                <th pSortableColumn="codigo" style="width: 10%; padding: 1rem;">
+                    <div class="flex items-center gap-2">
+                        <span>Código</span>
+                        <p-sortIcon field="codigo" />
+                    </div>
                 </th>
-                <th pSortableColumn="tipoPatrimonioId" style="width: 15%">
-                    Tipo
-                    <p-sortIcon field="tipoPatrimonioId" />
+                <th pSortableColumn="tipoPatrimonioId" style="width: 12%; padding: 1rem;">
+                    <div class="flex items-center gap-2">
+                        <span>Tipo</span>
+                        <p-sortIcon field="tipoPatrimonioId" />
+                    </div>
                 </th>
-                <th pSortableColumn="estado" style="width: 15%">
-                    Estado
-                    <p-sortIcon field="estado" />
+                <th pSortableColumn="estado" style="width: 11%; padding: 1rem;">
+                    <div class="flex items-center gap-2">
+                        <span>Estado</span>
+                        <p-sortIcon field="estado" />
+                    </div>
                 </th>
-                <th pSortableColumn="valor" style="width: 12%">
-                    Valor
-                    <p-sortIcon field="valor" />
+                <th pSortableColumn="valor" style="width: 10%; padding: 1rem;">
+                    <div class="flex items-center gap-2">
+                        <span>Valor</span>
+                        <p-sortIcon field="valor" />
+                    </div>
                 </th>
-                <th pSortableColumn="data" style="width: 10%">
-                    Data
-                    <p-sortIcon field="data" />
+                <th pSortableColumn="data" style="width: 10%; padding: 1rem;">
+                    <div class="flex items-center gap-2">
+                        <span>Data</span>
+                        <p-sortIcon field="data" />
+                    </div>
                 </th>
-                <th style="width: 12%">
-                    Status
+                <th style="width: 11%; padding: 1rem;">
+                    <span>Status</span>
                 </th>
-                <th style="width: 12%">
-                    Data Devolução
+                <th style="width: 12%; padding: 1rem;">
+                    <span>Data Devolução</span>
                 </th>
                 @if (isAdmin) {
-                    <th style="width: 15%" class="text-center">Ações</th>
+                    <th style="width: 10%; padding: 1rem;" class="text-center">
+                        <span>Ações</span>
+                    </th>
                 }
             </tr>
         </ng-template>
 
         <ng-template #body let-patrimonio>
-            <tr>
-                <td>{{ patrimonio.id }}</td>
-                <td>
+            <tr [ngClass]="{'bg-red-50 dark:bg-red-900/10': patrimonio.estado === 'critico'}">
+                <td style="padding: 0.75rem 1rem;">
+                    <span class="font-medium">{{ patrimonio.id }}</span>
+                </td>
+                <td style="padding: 0.75rem 1rem;">
                     <div class="flex items-center gap-2">
+                        @if (patrimonio.estado === 'critico') {
+                            <i class="pi pi-exclamation-circle text-red-500" pTooltip="Item em estado crítico!" tooltipPosition="top"></i>
+                        }
                         <span class="font-medium">{{ patrimonio.nome }}</span>
                     </div>
                 </td>
-                <td>
-                    <span class="font-mono text-sm bg-surface-100 dark:bg-surface-800 px-2 py-1 rounded">
-                        {{ patrimonio.codigo || '-' }}
+                <td style="padding: 0.75rem 1rem;">
+                    <span class="font-mono text-xs bg-surface-100 dark:bg-surface-800 px-2.5 py-1.5 rounded border border-surface-200 dark:border-surface-700">
+                        {{ patrimonio.codigo || 'N/A' }}
                     </span>
                 </td>
-                <td>
+                <td style="padding: 0.75rem 1rem;">
                     <p-tag 
                         [value]="getTipoNome(patrimonio.tipoPatrimonioId) | titlecase"
-                        severity="warning"
-                        styleClass="whitespace-nowrap">
+                        severity="info"
+                        [style]="{'font-size': '0.75rem', 'padding': '0.375rem 0.75rem'}">
                     </p-tag>
                 </td>
-                <td>
+                <td style="padding: 0.75rem 1rem;">
                     <p-tag 
                         [value]="(patrimonio.estado | titlecase)"
                         [severity]="patrimonio.estado === 'critico' ? 'danger' : patrimonio.estado === 'danificado' ? 'warn' : 'success'"
-                        styleClass="whitespace-nowrap">
+                        [style]="{'font-size': '0.75rem', 'padding': '0.375rem 0.75rem'}">
                     </p-tag>
                 </td>
-                <td>
-                    <span class="font-semibold text-green-600">
+                <td style="padding: 0.75rem 1rem;">
+                    <span class="font-semibold text-green-600 dark:text-green-400">
                         {{ patrimonio.valor | currency: 'BRL' }}
                     </span>
                 </td>
-                <td>
-                    <span class="font-semibold">
+                <td style="padding: 0.75rem 1rem;">
+                    <span class="font-medium text-sm">
                         {{ patrimonio.data | date: 'dd/MM/yyyy' }}
                     </span>
                 </td>
-                <td>
+                <td style="padding: 0.75rem 1rem;">
                     @if (patrimonio.status) {
                         <p-tag 
                             [value]="patrimonio.status | titlecase"
                             [severity]="patrimonio.status === 'reservado' ? 'danger' : patrimonio.status === 'devolvido' ? 'info' : patrimonio.status === 'cancelado' ? 'warn' : 'success'"
-                            styleClass="whitespace-nowrap">
+                            [style]="{'font-size': '0.75rem', 'padding': '0.375rem 0.75rem'}">
                         </p-tag>
                     } @else {
                         <p-tag 
                             value="Disponível"
                             severity="success"
-                            styleClass="whitespace-nowrap">
+                            [style]="{'font-size': '0.75rem', 'padding': '0.375rem 0.75rem'}">
                         </p-tag>
                     }
                 </td>
-                <td>
+                <td style="padding: 0.75rem 1rem;">
                     @if (patrimonio.status === 'reservado' && patrimonio.dataDevolucao) {
                         <div class="flex items-center gap-2">
-                            <i class="pi pi-calendar text-lg"></i>
-                            <span class="font-semibold">{{ patrimonio.dataDevolucao | date: 'dd/MM/yyyy' }}</span>
+                            @if (isNearDevolucao(patrimonio.dataDevolucao)) {
+                                <i class="pi pi-clock text-orange-500" pTooltip="Devolução próxima!" tooltipPosition="top"></i>
+                            }
+                            <i class="pi pi-calendar text-sm text-muted-color"></i>
+                            <span class="font-medium text-sm">{{ patrimonio.dataDevolucao | date: 'dd/MM/yyyy' }}</span>
                         </div>
                     } @else {
-                        <span class="text-muted-color italic">Ainda não reservado</span>
+                        <span class="text-muted-color text-sm">-</span>
                     }
                 </td>
                 @if (isAdmin) {
-                    <td>
+                    <td style="padding: 0.75rem 1rem;">
                         <div class="flex justify-center gap-2">
                             <p-button
                                 icon="pi pi-pencil"
@@ -181,7 +294,7 @@
                                 size="small"
                                 [outlined]="true"
                                 (onClick)="editPatrimonio(patrimonio)"
-                                pTooltip="Editar"
+                                pTooltip="Editar patrimônio"
                                 tooltipPosition="top">
                             </p-button>
                             <p-button
@@ -190,7 +303,7 @@
                                 size="small"
                                 [outlined]="true"
                                 (onClick)="confirmDelete(patrimonio)"
-                                pTooltip="Deletar"
+                                pTooltip="Excluir patrimônio"
                                 tooltipPosition="top">
                             </p-button>
                         </div>
