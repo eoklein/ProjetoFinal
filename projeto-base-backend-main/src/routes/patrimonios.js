@@ -19,7 +19,7 @@ router.get('/admin/todos', patrimonioController.getTodosPatrimonios);
 router.get('/:id', patrimonioController.getPatrimonioById);
 router.post('/', patrimonioController.createPatrimonio);
 router.put('/:id', patrimonioController.updatePatrimonio);
-router.delete('/:id', adminMiddleware, patrimonioController.deletePatrimonio);
+router.delete('/:id', patrimonioController.deletePatrimonio);
 
 // Rota GET genérica por último
 router.get('/', patrimonioController.getAllPatrimonios);

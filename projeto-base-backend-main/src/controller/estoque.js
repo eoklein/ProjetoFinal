@@ -15,6 +15,7 @@ const estoqueController = {
                     data: true,
                     tipo: true,
                     userId: true,
+                    status: true,
                     tipoPatrimonioId: true,
                     patrimonioId: true,
                     numeroRetiradas: true,
@@ -30,7 +31,16 @@ const estoqueController = {
                     patrimonio: {
                         select: {
                             id: true,
-                            nome: true
+                            nome: true,
+                            status: true,
+                            reservas: {
+                                where: { status: 'reservado' },
+                                select: {
+                                    dataDevolucao: true,
+                                    status: true
+                                },
+                                take: 1
+                            }
                         }
                     }
                 },
@@ -57,6 +67,7 @@ const estoqueController = {
                     data: true,
                     tipo: true,
                     userId: true,
+                    status: true,
                     tipoPatrimonioId: true,
                     patrimonioId: true,
                     numeroRetiradas: true,
@@ -72,7 +83,16 @@ const estoqueController = {
                     patrimonio: {
                         select: {
                             id: true,
-                            nome: true
+                            nome: true,
+                            status: true,
+                            reservas: {
+                                where: { status: 'reservado' },
+                                select: {
+                                    dataDevolucao: true,
+                                    status: true
+                                },
+                                take: 1
+                            }
                         }
                     },
                     user: {
@@ -126,7 +146,16 @@ const estoqueController = {
                         select: {
                             id: true,
                             nome: true,
-                            saldo: true
+                            saldo: true,
+                            status: true,
+                            reservas: {
+                                where: { status: 'reservado' },
+                                select: {
+                                    dataDevolucao: true,
+                                    status: true
+                                },
+                                take: 1
+                            }
                         }
                     },
                     retirados: {

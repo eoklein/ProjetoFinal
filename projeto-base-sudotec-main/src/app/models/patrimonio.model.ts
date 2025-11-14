@@ -7,4 +7,5 @@ export interface Patrimonio {
     data?: Date;
     tipoPatrimonioId?: number;
     status?: string; // Reservado / devolvido / cancelado
+    dataDevolucao?: Date; // Data de devolução da reserva ativa
 }

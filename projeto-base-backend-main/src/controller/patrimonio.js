@@ -13,22 +13,36 @@ const patrimonioController = {
                     nome: true,
                     codigo: true,
                     estado: true,
+                    status: true,
                     data: true,
                     userId: true,
                     valor: true
                 }
             });
 
-            // Enriquecer com tipoPatrimonioId do estoque
+            // Enriquecer com tipoPatrimonioId do estoque e datas de devolução
             const patrimoniosComTipo = await Promise.all(
                 patrimonios.map(async (p) => {
                     const estoque = await prisma.estoque.findFirst({
                         where: {patrimonioId: p.id},
                         select: {tipoPatrimonioId: true}
                     });
+                    
+                    // Buscar reserva ativa para data de devolução
+                    const reservaAtiva = await prisma.reserva.findFirst({
+                        where: {
+                            patrimonioId: p.id,
+                            status: 'reservado'
+                        },
+                        select: {
+                            dataDevolucao: true
+                        }
+                    });
+                    
                     return {
                         ...p,
-                        tipoPatrimonioId: estoque?.tipoPatrimonioId || null
+                        tipoPatrimonioId: estoque?.tipoPatrimonioId || null,
+                        dataDevolucao: reservaAtiva?.dataDevolucao || null
                     };
                 })
             );
@@ -49,6 +63,7 @@ const patrimonioController = {
                     nome: true,
                     codigo: true,
                     estado: true,
+                    status: true,
                     data: true,
                     userId: true,
                     valor: true,
@@ -63,16 +78,29 @@ const patrimonioController = {
                 }
             });
 
-            // Enriquecer com tipoPatrimonioId do estoque
+            // Enriquecer com tipoPatrimonioId do estoque e datas de devolução
             const patrimoniosComTipo = await Promise.all(
                 patrimonios.map(async (p) => {
                     const estoque = await prisma.estoque.findFirst({
                         where: {patrimonioId: p.id},
                         select: {tipoPatrimonioId: true}
                     });
+                    
+                    // Buscar reserva ativa para data de devolução
+                    const reservaAtiva = await prisma.reserva.findFirst({
+                        where: {
+                            patrimonioId: p.id,
+                            status: 'reservado'
+                        },
+                        select: {
+                            dataDevolucao: true
+                        }
+                    });
+                    
                     return {
                         ...p,
-                        tipoPatrimonioId: estoque?.tipoPatrimonioId || null
+                        tipoPatrimonioId: estoque?.tipoPatrimonioId || null,
+                        dataDevolucao: reservaAtiva?.dataDevolucao || null
                     };
                 })
             );
@@ -95,6 +123,7 @@ const patrimonioController = {
                     data: true,
                     userId: true,
                     valor: true,
+                    status: true,
                     user: {
                         select: {
                             username: true
@@ -106,16 +135,29 @@ const patrimonioController = {
                 }
             });
 
-            // Enriquecer com tipoPatrimonioId do estoque
+            // Enriquecer com tipoPatrimonioId do estoque e datas de devolução
             const patrimoniosComTipo = await Promise.all(
                 patrimonios.map(async (p) => {
                     const estoque = await prisma.estoque.findFirst({
                         where: {patrimonioId: p.id},
                         select: {tipoPatrimonioId: true}
                     });
+                    
+                    // Buscar reserva ativa para data de devolução
+                    const reservaAtiva = await prisma.reserva.findFirst({
+                        where: {
+                            patrimonioId: p.id,
+                            status: 'reservado'
+                        },
+                        select: {
+                            dataDevolucao: true
+                        }
+                    });
+                    
                     return {
                         ...p,
-                        tipoPatrimonioId: estoque?.tipoPatrimonioId || null
+                        tipoPatrimonioId: estoque?.tipoPatrimonioId || null,
+                        dataDevolucao: reservaAtiva?.dataDevolucao || null
                     };
                 })
             );
@@ -144,7 +186,8 @@ const patrimonioController = {
                     estado: true,
                     data: true,
                     userId: true,
-                    valor: true
+                    valor: true,
+                    status: true
                 }
             });
 
@@ -306,6 +349,7 @@ const patrimonioController = {
                     valor: patrimonio.valor,
                     data: patrimonio.data,
                     userId: patrimonio.userId,
+                    status: patrimonio.status,
                     tipoPatrimonioId: estoqueComTipo?.tipoPatrimonioId
                 }
             });
@@ -318,6 +362,7 @@ const patrimonioController = {
     async deletePatrimonio(req, res) {
         try {
             const patrimonioId = parseInt(req.params.id);
+            const userId = req.user.id;
 
             const existingPatrimonio = await prisma.patrimonio.findUnique({
                 where: {
@@ -329,7 +374,17 @@ const patrimonioController = {
                 return res.status(404).json({error: 'Patrimonio não encontrado'});
             }
 
-            // Deletar todos os estoques associados primeiro
+            // Verificar se o patrimonio pertence ao usuário ou se é admin
+            if (existingPatrimonio.userId !== userId && !req.user.isAdmin) {
+                return res.status(403).json({error: 'Acesso negado. Você só pode deletar seus próprios patrimônios'});
+            }
+
+            // Deletar todas as reservas associadas primeiro (onDelete: Restrict)
+            await prisma.reserva.deleteMany({
+                where: {patrimonioId: patrimonioId}
+            });
+
+            // Deletar todos os estoques associados
             await prisma.estoque.deleteMany({
                 where: {patrimonioId: patrimonioId}
             });

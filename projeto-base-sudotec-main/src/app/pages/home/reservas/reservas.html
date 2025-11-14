@@ -133,7 +133,7 @@
                 <td>
                     <p-tag 
                         [value]="(reserva.status | titlecase)"
-                        [severity]="reserva.status === 'ativa' ? 'success' : reserva.status === 'devolvido' ? 'info' : 'warning'"
+                        [severity]="reserva.status === 'reservado' ? 'danger' : reserva.status === 'devolvido' ? 'info' : reserva.status === 'cancelado' ? 'warn' : 'success'"
                         styleClass="whitespace-nowrap">
                     </p-tag>
                 </td>
@@ -228,6 +228,7 @@
                         optionValue="id"
                         placeholder="Selecione um usuário"
                         styleClass="w-full"
+                        appendTo="body"
                         [class.ng-invalid]="submitted && !isEditMode && !reserva.userId">
                     </p-select>
                     @if (submitted && !isEditMode && !reserva.userId) {

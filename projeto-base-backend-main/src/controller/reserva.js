@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const statusSync = require('../utils/statusSync');
 
 const reservaController = {
     async getAllReservas(req, res) {
@@ -44,23 +45,35 @@ const reservaController = {
     async getPatrimoniosDisponiveis(req, res) {
         try {
             const userId = req.user.id;
+            const isAdmin = req.user.isAdmin;
+
+            // Admin vê todos os patrimônios disponíveis, usuário comum vê apenas seus próprios
+            const whereClause = {
+                reservas: {
+                    none: {
+                        status: 'reservado'
+                    }
+                }
+            };
+
+            if (!isAdmin) {
+                whereClause.userId = userId;
+            }
 
             // Buscar patrimônios que NÃO têm reservas ativas
             const patrimonios = await prisma.patrimonio.findMany({
-                where: {
-                    userId,
-                    reservas: {
-                        none: {
-                            status: 'ativa'
-                        }
-                    }
-                },
+                where: whereClause,
                 select: {
                     id: true,
                     nome: true,
                     codigo: true,
                     estado: true,
-                    valor: true
+                    valor: true,
+                    user: {
+                        select: {
+                            username: true
+                        }
+                    }
                 },
                 orderBy: {
                     nome: 'asc'
@@ -118,7 +131,7 @@ const reservaController = {
             const reservaExistente = await prisma.reserva.findFirst({
                 where: {
                     patrimonioId,
-                    status: 'ativa'
+                    status: 'reservado'
                 }
             });
 
@@ -139,7 +152,7 @@ const reservaController = {
                     patrimonioId,
                     userId: finalUserId,
                     dataDevolucao: dataDev,
-                    status: 'ativa'
+                    status: 'reservado'
                 },
                 include: {
                     patrimonio: {
@@ -160,17 +173,8 @@ const reservaController = {
                 }
             });
 
-            // Atualizar status do patrimonio para 'Reservado'
-            await prisma.patrimonio.update({
-                where: { id: patrimonioId },
-                data: { status: 'Reservado' }
-            });
-
-            // Atualizar status de todos os estoques relacionados ao patrimonio
-            await prisma.estoque.updateMany({
-                where: { patrimonioId: patrimonioId },
-                data: { status: 'Reservado' }
-            });
+            // Sincronizar status usando a função centralizada
+            await statusSync.syncPatrimonioStatus(patrimonioId, 'reservado');
 
             res.status(201).json({
                 message: 'Reserva criada com sucesso',
@@ -215,7 +219,7 @@ const reservaController = {
             }
 
             if (status) {
-                const statusValidos = ['ativa', 'devolvido', 'cancelado'];
+                const statusValidos = ['reservado', 'devolvido', 'cancelado'];
                 if (!statusValidos.includes(status)) {
                     return res.status(400).json({ error: 'Status inválido' });
                 }
@@ -258,21 +262,13 @@ const reservaController = {
 
             // Sincronizar status do patrimonio com o status da reserva
             if (status) {
-                // Mapear status da reserva para status do patrimonio
-                let statusValue = status;
-                if (status === 'ativa') {
-                    statusValue = 'Reservado';
+                const statusValidos = ['reservado', 'devolvido', 'cancelado'];
+                if (!statusValidos.includes(status.toLowerCase())) {
+                    return res.status(400).json({ error: 'Status inválido' });
                 }
-                await prisma.patrimonio.update({
-                    where: { id: reserva.patrimonioId },
-                    data: { status: statusValue }
-                });
-
-                // Atualizar status de todos os estoques relacionados
-                await prisma.estoque.updateMany({
-                    where: { patrimonioId: reserva.patrimonioId },
-                    data: { status: statusValue }
-                });
+                
+                // Usar função centralizada de sincronização
+                await statusSync.syncPatrimonioStatus(reserva.patrimonioId, status);
             }
 
             res.json({
@@ -304,16 +300,8 @@ const reservaController = {
                 return res.status(403).json({ error: 'Você não tem permissão para deletar esta reserva' });
             }
 
-            // Limpar status do patrimonio e estoques relacionados
-            await prisma.patrimonio.update({
-                where: { id: reserva.patrimonioId },
-                data: { status: null }
-            });
-
-            await prisma.estoque.updateMany({
-                where: { patrimonioId: reserva.patrimonioId },
-                data: { status: null }
-            });
+            // Limpar status do patrimonio e estoques relacionados usando função centralizada
+            await statusSync.clearPatrimonioStatus(reserva.patrimonioId);
 
             await prisma.reserva.delete({
                 where: { id: reservaId }

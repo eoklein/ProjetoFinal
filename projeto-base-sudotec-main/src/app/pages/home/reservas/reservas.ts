@@ -254,6 +254,10 @@ export class ReservasComponent implements OnInit {
             message: 'Tem certeza que deseja deletar esta reserva?',
             header: 'Confirmar Deleção',
             icon: 'pi pi-exclamation-triangle',
+            acceptLabel: 'Sim',
+            rejectLabel: 'Não',
+            acceptButtonStyleClass: 'p-button-success',
+            rejectButtonStyleClass: 'p-button-danger',
             accept: () => {
                 this.deleteReserva(reserva.id!);
             }

@@ -73,6 +73,15 @@ app.get('/', (req, res) => {
         'POST /lancamentos/com-retiradas': 'Criar estoque com retiradas (auth required)',
         'PUT /lancamentos/:id': 'Atualizar estoque (auth required)',
         'DELETE /lancamentos/:id': 'Deletar estoque (auth required)'
+      },
+      reservas: {
+        'GET /reservas': 'Listar todas as reservas do usuário (auth required)',
+        'GET /reservas/disponivel': 'Listar patrimônios disponíveis para reserva (auth required)',
+        'POST /reservas': 'Criar nova reserva (auth required)',
+        'PUT /reservas/:id': 'Atualizar reserva (auth required)',
+        'DELETE /reservas/:id': 'Deletar reserva (auth required)',
+        'GET /reservas/admin/verificar-consistencia/:patrimonioId': 'Verificar consistência de status (admin only)',
+        'POST /reservas/admin/reparar-consistencia/:patrimonioId': 'Reparar inconsistências de status (admin only)'
       }
     }
   });

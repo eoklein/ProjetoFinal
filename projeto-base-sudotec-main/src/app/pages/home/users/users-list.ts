@@ -76,6 +76,8 @@ export class UsersList implements OnInit {
             icon: 'pi pi-exclamation-triangle',
             acceptLabel: 'Sim',
             rejectLabel: 'Não',
+            acceptButtonStyleClass: 'p-button-success',
+            rejectButtonStyleClass: 'p-button-danger',
             accept: () => {
                 this.deleteUser(user.id);
             }
