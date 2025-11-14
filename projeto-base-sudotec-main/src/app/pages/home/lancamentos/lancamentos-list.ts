@@ -16,7 +16,7 @@ import { Toolbar } from 'primeng/toolbar';
 import { TooltipModule } from 'primeng/tooltip';
 import { TagModule } from 'primeng/tag';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { LancamentoService } from '@/services/lancamento.service';
+import { EstoqueService } from '@/services/estoque.service';
 import { TipoPatrimonioService } from '@/services/tipoPatrimonio.service';
 import { PatrimonioService } from '@/services/patrimonio.service';
 import { AuthService } from '@/services/auth.service';
@@ -35,7 +35,7 @@ import { InputIcon } from 'primeng/inputicon';
     providers: [MessageService, ConfirmationService]
 })
 export class LancamentosList implements OnInit {
-    lancamentoService = inject(LancamentoService);
+    estoqueService = inject(EstoqueService);
     tipoPatrimonioService = inject(TipoPatrimonioService);
     patrimonioService = inject(PatrimonioService);
     authService = inject(AuthService);
@@ -123,7 +123,7 @@ export class LancamentosList implements OnInit {
     loadEstoques() {
         this.loading = true;
         console.log('Recarregando estoques...');
-        this.lancamentoService.getLancamentosCompartilhados().subscribe({
+        this.estoqueService.getEstoquesCompartilhados().subscribe({
             next: (estoques) => {
                 // Os dados já vêm do backend com patrimonioId
                 console.log('Estoques carregados:', estoques);
@@ -249,9 +249,9 @@ export class LancamentosList implements OnInit {
                 // Update
                 // Guarda o estoque original para comparar mudanças no saldo
                 const estoqueOriginalId = this.estoque.id;
-                this.lancamentoService.getLancamentoById(estoqueOriginalId).subscribe({
+                this.estoqueService.getEstoqueById(estoqueOriginalId).subscribe({
                     next: (estoqueOriginal) => {
-                        this.lancamentoService.updateLancamento(estoqueOriginalId, this.estoque).subscribe({
+                        this.estoqueService.updateEstoque(estoqueOriginalId, this.estoque).subscribe({
                             next: () => {
                                 // Atualiza o saldo se necessário
                                 if (
@@ -292,7 +292,7 @@ export class LancamentosList implements OnInit {
                     // Guarda uma cópia do estoque antes de salvar
                     const estoqueParaSalvar = { ...this.estoque };
 
-                    this.lancamentoService.createLancamento(estoqueParaSalvar).subscribe({
+                    this.estoqueService.createEstoque(estoqueParaSalvar).subscribe({
                         next: () => {
                             // Atualiza o saldo se o lançamento está efetivado e tem Patrimonio
                             // Usa a cópia guardada ao invés de this.lancamento
@@ -393,7 +393,7 @@ export class LancamentosList implements OnInit {
     }
 
     deleteEstoque(id: number) {
-        this.lancamentoService.deleteLancamento(id).subscribe({
+        this.estoqueService.deleteEstoque(id).subscribe({
             next: () => {
                 this.messageService.add({
                     severity: 'success',
@@ -456,7 +456,7 @@ export class LancamentosList implements OnInit {
                 retiradaAtual: i + 1
             };
 
-            this.lancamentoService.createLancamento(retirada).subscribe({
+            this.estoqueService.createEstoque(retirada).subscribe({
                 next: () => {
                     retirasRestantes--;
                     if (retirasRestantes === 0 && retirasErro === 0) {
@@ -514,7 +514,7 @@ export class LancamentosList implements OnInit {
         console.log('Novo status efetivado:', novoStatus);
 
         // Atualiza apenas o status do estoque
-        this.lancamentoService.updateLancamento(estoque.id!, estoqueAtualizado).subscribe({
+        this.estoqueService.updateEstoque(estoque.id!, estoqueAtualizado).subscribe({
             next: () => {
                 this.messageService.add({
                     severity: 'success',
@@ -635,7 +635,7 @@ export class LancamentosList implements OnInit {
                             efetivado: false
                         } as Estoque;
 
-                        this.lancamentoService.createLancamento(estoqueDoPatrimonio).subscribe({
+                        this.estoqueService.createEstoque(estoqueDoPatrimonio).subscribe({
                             next: () => {
                                 console.log('Estoque criado, recarregando lista...');
                                 // Forçar recarregar os estoques sem cache

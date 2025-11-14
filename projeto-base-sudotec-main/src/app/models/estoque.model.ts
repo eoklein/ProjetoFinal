@@ -11,4 +11,6 @@ export interface Estoque {
     estoquePaiId?: number;
     efetivado: boolean;
     status?: string; // Reservado / devolvido / cancelado
+    dataDevolucao?: Date; // Data de devolução da reserva ativa
 }
+
